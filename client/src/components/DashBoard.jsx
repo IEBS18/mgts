@@ -1,9 +1,11 @@
 import React from 'react'
-import { Search, Grid, Calendar, Eye, Briefcase, Bell } from 'lucide-react'
+import { Bell, Search } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
+import Sidebar from './Sidebar'
+import SearchResults from './SearchResults'
+
 
 export default function Dashboard() {
   const workflows = [
@@ -14,24 +16,15 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 relative">
       {/* Sidebar */}
-      <aside className="w-16 bg-white shadow-md">
-        <div className="flex flex-col items-center py-4">
-          <div className="w-10 h-10 bg-gray-200 rounded-full mb-8"></div>
-          <Button variant="ghost" size="icon" className="mb-4"><Grid className="h-6 w-6" /></Button>
-          <Button variant="ghost" size="icon" className="mb-4"><Search className="h-6 w-6" /></Button>
-          <Button variant="ghost" size="icon" className="mb-4"><Calendar className="h-6 w-6" /></Button>
-          <Button variant="ghost" size="icon" className="mb-4"><Eye className="h-6 w-6" /></Button>
-          <Button variant="ghost" size="icon" className="mb-4"><Briefcase className="h-6 w-6" /></Button>
-        </div>
-      </aside>
 
+        <Sidebar />
       {/* Main Content */}
       <main className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
           <header className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold">Welcome to Mindgram Copilot <span className="text-sm font-normal bg-yellow-200 px-2 py-1 rounded">BETA</span></h1>
+            <h1 className="text-3xl font-bold">Welcome to PharmaX Copilot <span className="text-sm font-normal bg-yellow-200 px-2 py-1 rounded">BETA</span></h1>
             <Bell className="h-6 w-6" />
           </header>
 
@@ -60,7 +53,9 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+        <SearchResults />
       </main>
+
     </div>
   )
 }
