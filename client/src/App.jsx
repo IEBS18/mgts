@@ -8,7 +8,7 @@ const App = () => {
   return (
     <div>
       <Layout>
-        <Dashboard1 />
+        <Dashboard />
         {/* <SearchResults /> */}
         {/* <AdvancedSearch /> */}
       </Layout>
