@@ -16,10 +16,10 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="flex h-screen bg-gray-100 relative">
+    <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-
-        <Sidebar />
+{/* 
+        <Sidebar /> */}
       {/* Main Content */}
       <main className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
