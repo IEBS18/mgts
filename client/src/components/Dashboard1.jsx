@@ -35,6 +35,7 @@ export default function Dashboard1() {
     } catch (error) {
       console.error('Error making POST request:', error)
     } finally {
+      
       setIsLoading(false)
     }
   }

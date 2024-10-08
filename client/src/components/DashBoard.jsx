@@ -177,6 +177,7 @@ export default function Dashboard() {
   const [chatMessages, setChatMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchData, setSearchData] = useState([]);
+  const [list, setList] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const itemsPerPage = 10;
@@ -198,12 +199,12 @@ export default function Dashboard() {
       });
 
       const result = await response.json();
-      setSearchData(result); // Update search data state
-
+      setSearchData(result.results); // Update search data state
+      setList(result.list);
       // Once results are fetched, update chatbot message with the count
       setChatMessages(prev => [
         ...prev,
-        { type: 'bot', content: `Showing ${result.length} Relevant Documents`, bgColor: 'bg-blue-200' }
+        { type: 'bot', content: `Showing ${(result?.results).length} Relevant Documents`, bgColor: 'bg-blue-200' }
       ]);
     } catch (error) {
       console.error('Error making POST request:', error);
@@ -282,7 +283,7 @@ export default function Dashboard() {
 
       {/* ChatBot */}
       {isChatOpen && (
-        <ChatBot chatMessages={chatMessages} setChatMessages={setChatMessages} />
+        <ChatBot chatMessages={chatMessages} setChatMessages={setChatMessages} list={list} />
       )}
     </div>
   );

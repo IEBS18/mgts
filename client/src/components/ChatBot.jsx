@@ -1,29 +1,55 @@
-// ChatBot.jsx
 import React, { useState } from 'react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send } from 'lucide-react';
 
-export default function ChatBot({ chatMessages, setChatMessages }) {
+export default function ChatBot({ chatMessages, setChatMessages, list }) {
   const [newMessage, setNewMessage] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false); // Track analyzing state
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (newMessage.trim() === "") return; // Avoid sending empty messages
 
-    // Add the user's message
+    // Add the user's message to the chat
     setChatMessages((prev) => [
       ...prev,
       { type: 'user', content: newMessage }
     ]);
 
-    // Simulate bot's response
-    setTimeout(() => {
+    // Show "Analyzing..." as the bot's initial response
+    setChatMessages((prev) => [
+      ...prev,
+      { type: 'bot', content: 'Analyzing...' }
+    ]);
+
+    setIsAnalyzing(true); // Set analyzing state to true
+
+    try {
+      // Make a POST request to the backend
+      const response = await fetch('http://localhost:5000/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: newMessage, list: list })
+      });
+
+      const result = await response.json();
+      console.log(result.list);
+
+      // Replace "Analyzing..." with the actual response from the backend
       setChatMessages((prev) => [
-        ...prev,
-        { type: 'bot', content: "Thank you for your message!" }
+        ...prev.slice(0, -1), // Remove the "Analyzing..." message
+        { type: 'bot', content: result.results }
       ]);
-    }, 1000);
+    } catch (error) {
+      console.error('Error making POST request:', error);
+      setChatMessages((prev) => [
+        ...prev.slice(0, -1), // Remove the "Analyzing..." message
+        { type: 'bot', content: 'Error fetching response' }
+      ]);
+    } finally {
+      setIsAnalyzing(false); // Reset analyzing state
+    }
 
     // Clear the input
     setNewMessage("");
@@ -55,8 +81,9 @@ export default function ChatBot({ chatMessages, setChatMessages }) {
             className="flex-1 rounded-lg"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
+            disabled={isAnalyzing} // Disable input while analyzing
           />
-          <Button size="icon" onClick={handleSendMessage}>
+          <Button size="icon" onClick={handleSendMessage} disabled={isAnalyzing}>
             <Send className="h-4 w-4" />
           </Button>
         </div>
