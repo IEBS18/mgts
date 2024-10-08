@@ -22,7 +22,15 @@ def search():
             "date": "Aug 01, 2018",
             "citations": 13,
             "relevantText": "CONCLUSIONS Real-world data from US indicate that many patients with multiple receive optimal therapy for bone disease ... More"
-        }
+        },
+        {
+            "title": "US Budget Impact Model for Selinexor in Relapsed or Refractory Multiple Myeloma",
+            "journal": "Clinicoecon Outcomes Res, Vol 12",
+            "date": "Feb 25, 2020",
+            "citations": 6,
+            "relevantText": "Introduction Multiple myeloma (MM) is a cancer that develops as a plasma cell malignancy in the bone marrow.1 Clinical manifestations of ..."
+        },
+
     ]
     
     return jsonify(results), 200

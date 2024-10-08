@@ -22,13 +22,13 @@ import { Button } from "@/components/ui/button"
 
 export default function SearchResults({data}) {
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen">
       {/* Sidebar (same as in Dashboard component) */}
       
       <main className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
           <header className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold">Showing 308 Most Relevant Documents</h1>
+            <h1 className="text-2xl font-bold">Showing {data.length} Most Relevant Documents</h1>
             <Button variant="outline">
               <FileText className="mr-2 h-4 w-4" />
               Export
@@ -37,7 +37,7 @@ export default function SearchResults({data}) {
 
           <div className="space-y-6">
             {data.map((pub, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow">
+              <div key={index} className="bg-white p-6 rounded-lg border bg-background md:shadow-xl">
                 <div className="flex justify-between items-start mb-2">
                   <h2 className="text-lg font-semibold">{pub.title}</h2>
                   <Button variant="ghost" size="sm">

@@ -97,7 +97,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-full">
       {/* Main Content */}
       <main className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
@@ -122,7 +122,7 @@ export default function Dashboard() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {workflows.map((workflow, index) => (
-              <Card key={index}>
+              <Card key={index} className='rounded-lg border bg-background md:shadow-xl'>
                 <CardHeader>
                   <CardTitle>{workflow.title}</CardTitle>
                 </CardHeader>
