@@ -2,25 +2,25 @@ import React from 'react'
 import { ChevronDown, FileText } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 
-const publications = [
-  {
-    title: "US Budget Impact Model for Selinexor in Relapsed or Refractory Multiple Myeloma",
-    journal: "Clinicoecon Outcomes Res, Vol 12",
-    date: "Feb 25, 2020",
-    citations: 6,
-    relevantText: "Introduction Multiple myeloma (MM) is a cancer that develops as a plasma cell malignancy in the bone marrow.1 Clinical manifestations of ... co..."
-  },
-  {
-    title: "Patterns of bisphosphonate treatment among patients with multiple myeloma treated at oncology clinics across the USA: observations from real-world data",
-    journal: "Support Care Cancer, Vol 26 Issue 8",
-    date: "Aug 01, 2018",
-    citations: 13,
-    relevantText: "CONCLUSIONS Real-world data from US indicate that many patients with multiple receive optimal therapy for bone disease ... More"
-  },
-  // Add more publications as needed
-]
+// const publications = [
+//   {
+//     title: "US Budget Impact Model for Selinexor in Relapsed or Refractory Multiple Myeloma",
+//     journal: "Clinicoecon Outcomes Res, Vol 12",
+//     date: "Feb 25, 2020",
+//     citations: 6,
+//     relevantText: "Introduction Multiple myeloma (MM) is a cancer that develops as a plasma cell malignancy in the bone marrow.1 Clinical manifestations of ... co..."
+//   },
+//   {
+//     title: "Patterns of bisphosphonate treatment among patients with multiple myeloma treated at oncology clinics across the USA: observations from real-world data",
+//     journal: "Support Care Cancer, Vol 26 Issue 8",
+//     date: "Aug 01, 2018",
+//     citations: 13,
+//     relevantText: "CONCLUSIONS Real-world data from US indicate that many patients with multiple receive optimal therapy for bone disease ... More"
+//   },
+//   // Add more publications as needed
+// ]
 
-export default function SearchResults() {
+export default function SearchResults({data}) {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar (same as in Dashboard component) */}
@@ -36,7 +36,7 @@ export default function SearchResults() {
           </header>
 
           <div className="space-y-6">
-            {publications.map((pub, index) => (
+            {data.map((pub, index) => (
               <div key={index} className="bg-white p-6 rounded-lg shadow">
                 <div className="flex justify-between items-start mb-2">
                   <h2 className="text-lg font-semibold">{pub.title}</h2>

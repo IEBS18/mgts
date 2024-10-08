@@ -65,6 +65,7 @@ import { Bell } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import SearchResults from './SearchResults'
 
 export default function Dashboard() {
   const workflows = [
@@ -85,7 +86,7 @@ export default function Dashboard() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query }),  // Send the query as the POST body
+        body: JSON.stringify({ 'keyword': query }),  // Send the query as the POST body
       });
 
       const result = await response.json();
@@ -109,7 +110,7 @@ export default function Dashboard() {
             {/* Input field with onChange handler */}
             <Input
               type="text"
-              placeholder="prevalence of multiple myeloma in the us"
+              placeholder="Enter your search query"
               className="w-full mr-2"
               value={query}
               onChange={(e) => setQuery(e.target.value)}  // Update query state
@@ -134,10 +135,11 @@ export default function Dashboard() {
 
           {/* Display the response data if available */}
           {data && (
-            <div className="mt-8">
-              <h2 className="text-xl font-semibold">Search Results:</h2>
-              <pre>{JSON.stringify(data, null, 2)}</pre>
-            </div>
+            <SearchResults data={data}/>
+            // <div className="mt-8">
+            //   <h2 className="text-xl font-semibold">Search Results:</h2>
+            //   <pre>{JSON.stringify(data, null, 2)}</pre>
+            // </div>
           )}
         </div>
       </main>
