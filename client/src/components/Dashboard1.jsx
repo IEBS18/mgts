@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import { Bell, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import SearchResults from './SearchResults'
+import Pagination from './Pagination'
 
-export default function Dashboard() {
+export default function Dashboard1() {
   const workflows = [
     { title: "Search Drugs", description: "Find approved and pipeline drugs" },
     { title: "Research Disease Epidemiology", description: "Research disease epidemiology and patient population" },
@@ -13,34 +14,36 @@ export default function Dashboard() {
     { title: "Find Clinical Data", description: "Access and analyze clinical trial data" },
   ]
 
-  const [query, setQuery] = useState("");
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [query, setQuery] = useState("")
+  const [data, setData] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   const handleSearch = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       const response = await fetch('http://localhost:5000/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 'keyword': query }),
-      });
+      })
 
-      const result = await response.json();
-      setData(result);
-      setCurrentPage(1); // Reset to first page on new search
+      const result = await response.json()
+      setData(result)
+      setCurrentPage(1) // Reset to first page on new search
     } catch (error) {
-      console.error('Error making POST request:', error);
+      console.error('Error making POST request:', error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentData = data ? data.slice(indexOfFirstItem, indexOfLastItem) : [];
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const currentData = data ? data.slice(indexOfFirstItem, indexOfLastItem) : []
+
+  const totalPages = data ? Math.ceil(data.length / itemsPerPage) : 0
 
   return (
     <div className="flex h-full">
@@ -78,80 +81,17 @@ export default function Dashboard() {
           </div>
 
           {data && (
-            <>
-              <SearchResults data={currentData} />
+            <div className="space-y-8">
+              <SearchResults data={currentData} length={data.length} fulldata={data} />
               <Pagination
-                totalItems={data.length}
-                itemsPerPage={itemsPerPage}
                 currentPage={currentPage}
-                setCurrentPage={setCurrentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
               />
-            </>
+            </div>
           )}
         </div>
       </main>
     </div>
   )
-}
-
-function Pagination({ totalItems, itemsPerPage, currentPage, setCurrentPage }) {
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
-  const renderPageNumbers = () => {
-    const pageNumbers = [];
-    const maxVisiblePages = 5;
-
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pageNumbers.push(
-        <Button
-          key={i}
-          variant={currentPage === i ? "default" : "outline"}
-          size="sm"
-          onClick={() => goToPage(i)}
-          className="mx-1"
-        >
-          {i}
-        </Button>
-      );
-    }
-
-    return pageNumbers;
-  };
-
-  return (
-    <nav className="flex justify-center items-center space-x-2 mt-8" aria-label="Pagination">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => goToPage(currentPage - 1)}
-        disabled={currentPage === 1}
-      >
-        <ChevronLeft className="h-4 w-4" />
-        <span className="sr-only">Previous page</span>
-      </Button>
-      {renderPageNumbers()}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => goToPage(currentPage + 1)}
-        disabled={currentPage === totalPages}
-      >
-        <ChevronRight className="h-4 w-4" />
-        <span className="sr-only">Next page</span>
-      </Button>
-    </nav>
-  );
 }
