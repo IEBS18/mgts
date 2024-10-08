@@ -53,7 +53,7 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-        <SearchResults />
+        {/* <SearchResults /> */}
       </main>
 
     </div>
