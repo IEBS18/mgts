@@ -77,9 +77,11 @@ export default function Dashboard() {
 
   const [query, setQuery] = useState("");  // State for storing input value
   const [data, setData] = useState(null);  // State for storing response data
+  const [isLoading, setisLoading] = useState(false);
 
   // Function to handle the POST request
   const handleSearch = async () => {
+    setisLoading(true);
     try {
       const response = await fetch('http://localhost:5000/search', {
         method: 'POST',
@@ -94,6 +96,8 @@ export default function Dashboard() {
       setData(result);  // Update the data state with the response
     } catch (error) {
       console.error('Error making POST request:', error);
+    } finally{
+      setisLoading(false);
     }
   }
 
@@ -118,7 +122,14 @@ export default function Dashboard() {
             />
 
             {/* Button to trigger POST request */}
-            <Button variant="secondary" onClick={handleSearch} className="ml-2">Search</Button>
+            {/* <Button variant="secondary" onClick={handleSearch} className="ml-2">Search</Button> */}
+            <Button
+              onClick={handleSearch}
+              className="ml-2"
+              disabled={isLoading} // Disable button when loading
+            >
+              {isLoading ? 'Searching...' : 'Search'} {/* Update text to "Creating..." */}
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

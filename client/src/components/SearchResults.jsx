@@ -1,26 +1,44 @@
 import React from 'react'
-import { ChevronDown, FileText } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronDown, FileText, X } from 'lucide-react'
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog"
 
-// const publications = [
-//   {
-//     title: "US Budget Impact Model for Selinexor in Relapsed or Refractory Multiple Myeloma",
-//     journal: "Clinicoecon Outcomes Res, Vol 12",
-//     date: "Feb 25, 2020",
-//     citations: 6,
-//     relevantText: "Introduction Multiple myeloma (MM) is a cancer that develops as a plasma cell malignancy in the bone marrow.1 Clinical manifestations of ... co..."
-//   },
-//   {
-//     title: "Patterns of bisphosphonate treatment among patients with multiple myeloma treated at oncology clinics across the USA: observations from real-world data",
-//     journal: "Support Care Cancer, Vol 26 Issue 8",
-//     date: "Aug 01, 2018",
-//     citations: 13,
-//     relevantText: "CONCLUSIONS Real-world data from US indicate that many patients with multiple receive optimal therapy for bone disease ... More"
-//   },
-//   // Add more publications as needed
-// ]
+import * as XLSX from 'xlsx'; 
 
 export default function SearchResults({data}) {
+  // const handleExport = () => {
+  //   console.log('exporting');
+  //   // Create a new workbook and add data to the sheet
+  //   const worksheet = XLSX.utils.json_to_sheet(data); // Convert JSON to worksheet
+  //   const workbook = XLSX.utils.book_new(); // Create a new workbook
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "SearchResults"); // Append the sheet
+    
+  //   // Export the Excel file
+  //   XLSX.writeFile(workbook, 'search_results.xlsx');
+  // };
+  const [exporting, setExporting] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedPub, setSelectedPub] = useState(null)
+
+  const handleExport = () => {
+    setExporting(true);
+
+    // Create Excel file
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "SearchResults");
+    
+    // Export the file and reset the button state
+    XLSX.writeFile(workbook, 'search_results.xlsx');
+    setExporting(false);
+  };
+
+  const openDialog = (pub) => {
+    setSelectedPub(pub)
+    setDialogOpen(true)
+  }
+
   return (
     <div className="flex h-screen">
       {/* Sidebar (same as in Dashboard component) */}
@@ -28,10 +46,14 @@ export default function SearchResults({data}) {
       <main className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
           <header className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold">Showing {data.length} Most Relevant Documents</h1>
-            <Button variant="outline">
+            <h1 className="text-2xl font-bold">Showing {data.length} Relevant Documents</h1>
+            <Button 
+              variant="outline" 
+              onClick={handleExport} 
+              disabled={exporting}
+            >
               <FileText className="mr-2 h-4 w-4" />
-              Export
+              {exporting ? 'Exporting...' : 'Export'}
             </Button>
           </header>
 
@@ -40,7 +62,7 @@ export default function SearchResults({data}) {
               <div key={index} className="bg-white p-6 rounded-lg border bg-background md:shadow-xl">
                 <div className="flex justify-between items-start mb-2">
                   <h2 className="text-lg font-semibold">{pub.Product_Name}</h2>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => openDialog(pub)}>
                     <FileText className="h-4 w-4" />
                   </Button>
                 </div>
@@ -59,6 +81,42 @@ export default function SearchResults({data}) {
           </div>
         </div>
       </main>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className='bg-white'>
+        <DialogContent className="max-w-4xl max-h-[80vh] bg-white overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedPub?.Product_Name}</DialogTitle>
+            <DialogDescription>
+              {selectedPub?.Organization_Name} • {selectedPub?.Territory_Code}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </DialogClose>
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-semibold">Routes of Administration</h3>
+              <p>{selectedPub?.Routes_of_Administration}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold">Ingredients</h3>
+              <p>{selectedPub?.Ingredients}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold">Clinical Pharmacology</h3>
+              <p>{selectedPub?.Clinical_Pharmacology}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold">Indications and Usage</h3>
+              <p>{selectedPub?.Indications_and_Usage}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold">Warnings</h3>
+              <p>{selectedPub?.Warnings}</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
