@@ -90,6 +90,7 @@ export default function Dashboard() {
       });
 
       const result = await response.json();
+      // console.log(result);
       setData(result);  // Update the data state with the response
     } catch (error) {
       console.error('Error making POST request:', error);

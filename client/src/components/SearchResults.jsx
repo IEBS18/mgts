@@ -39,18 +39,21 @@ export default function SearchResults({data}) {
             {data.map((pub, index) => (
               <div key={index} className="bg-white p-6 rounded-lg border bg-background md:shadow-xl">
                 <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-lg font-semibold">{pub.title}</h2>
+                  <h2 className="text-lg font-semibold">{pub.Product_Name}</h2>
                   <Button variant="ghost" size="sm">
                     <FileText className="h-4 w-4" />
                   </Button>
                 </div>
                 <div className="text-sm text-gray-600 mb-2">
-                  {pub.journal} • {pub.citations} citations
+                  {pub.Organization_Name} • {pub.Territory_Code}
                 </div>
                 <div className="text-sm text-gray-600 mb-4">
-                  Published: {pub.date} | <Button variant="link" size="sm" className="p-0">View</Button>
+                  Routes of Administration: {pub.Routes_of_Administration}
                 </div>
-                <p className="text-sm text-gray-800">{pub.relevantText}</p>
+                <p className="text-sm text-gray-800">Ingredients: {pub.Ingredients}</p>
+                {/* <p className="text-sm text-gray-800">Clinical Pharmacology: {pub.Clinical_Pharmacology}</p>
+                <p className="text-sm text-gray-800">Indications and Usage: {pub.Indications_and_Usage}</p>
+                <p className="text-sm text-gray-800">Warnings: {pub.Warnings}</p> */}
               </div>
             ))}
           </div>
