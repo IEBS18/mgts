@@ -190,7 +190,7 @@ export default function Dashboard() {
     setChatMessages(prev => [...prev, { type: 'bot', content: 'Working on it...', bgColor: 'bg-blue-200' }]);
 
     try {
-      const response = await fetch('http://localhost:5000/search', {
+      const response = await fetch('http://54.211.78.164:5000/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

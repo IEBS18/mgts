@@ -27,7 +27,7 @@ export default function ChatBot({ chatMessages, setChatMessages, list, fulldata 
 
     try {
       // Make a POST request to the backend
-      const response = await fetch('http://localhost:5000/chatbot', {
+      const response = await fetch('http://54.211.78.164:5000/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: newMessage, list: list , results: fulldata })

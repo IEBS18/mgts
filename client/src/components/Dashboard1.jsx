@@ -23,7 +23,7 @@ export default function Dashboard1() {
   const handleSearch = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('http://localhost:5000/search', {
+      const response = await fetch('http://54.211.78.164:5000/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 'keyword': query }),
