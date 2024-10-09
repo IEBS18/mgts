@@ -1,2 +1,8 @@
 flask
 flask-cors
+llama_index
+nltk
+openpyxl
+pandas
+python-dotenv
+Requests

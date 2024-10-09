@@ -4,8 +4,8 @@ import json
 from flask_cors import CORS
 import pandas as pd
 
-from PharmaX.search import process_multiple_files
-from PharmaX.reference.Models import callLLMChatBot
+from PharmaX1.search import process_multiple_files
+from PharmaX1.reference.Models import callLLMChatBot
 from llama_index.core import Document, StorageContext, VectorStoreIndex, load_index_from_storage
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.openai import OpenAIEmbedding
@@ -70,7 +70,7 @@ def chatbot():
         # Check if embeddings already exist
         if os.path.exists(persist_dir):
             print(f"Embeddings for '{display_key}' already exist. Skipping creation.")
-            return  # Exit the function if embeddings exist
+            continue  # Exit the function if embeddings exist
         
         print(f"Creating embeddings for '{display_key}'.")
         documents = [Document(text=f"{key}: {val}") for key, val in rowData.items()]
