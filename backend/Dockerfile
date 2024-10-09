@@ -23,4 +23,4 @@ EXPOSE 5000
 ENV FLASK_APP=app_prod.py
 
 # Use Gunicorn as the WSGI server for a production environment
-CMD ["gunicorn", "-w", "4", "-k", "gevent", "-b", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "-w", "4", "-k", "gevent", "-b", "0.0.0.0:5000", "--timeout", "30000", "app:app"]
