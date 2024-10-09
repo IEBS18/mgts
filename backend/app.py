@@ -5,8 +5,11 @@ from flask_cors import CORS
 import pandas as pd
 
 from PharmaX.search import process_multiple_files
-from PharmaX.reference.Models import callLLMChatBot, IndexLoader
-from PharmaX.reference.util import ExcelFileProcessor
+from PharmaX.reference.Models import callLLMChatBot
+from llama_index.core import Document, StorageContext, VectorStoreIndex, load_index_from_storage
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.embeddings.openai import OpenAIEmbedding
+
 
 app = Flask(__name__)
 CORS(app)
@@ -56,31 +59,38 @@ def chatbot():
     query = request.json.get('query')
     print(query)
     list = request.json.get('list')
-    folder_path = 'Output_Files'
-    file_list = [f for f in os.listdir(folder_path) if f.endswith('.csv') or f.endswith('.xlsx')]
- 
-    # Iterate through each file in the folder
-    for file_name in file_list:
-        file_path = os.path.join(folder_path, file_name)
+    results = request.json.get('results')
     
-        # if csv file, convert to excel
-        if file_name.endswith('.csv'):
-            data = pd.read_csv(file_path)
-            data.to_excel(file_path.replace('.csv', '.xlsx'), index=False)
-            file_path = file_path.replace('.csv', '.xlsx')
+    for rowData in results:
+        
+        display_key = rowData['unique_key']
+        # title = rowData['title']
+        persist_dir = os.path.join('./storage', display_key)
+
+        # Check if embeddings already exist
+        if os.path.exists(persist_dir):
+            print(f"Embeddings for '{display_key}' already exist. Skipping creation.")
+            return  # Exit the function if embeddings exist
+        
+        print(f"Creating embeddings for '{display_key}'.")
+        documents = [Document(text=f"{key}: {val}") for key, val in rowData.items()]
+        # print(documents)
+        # To store the index
+
+        storage_context = StorageContext.from_defaults()
+
+        VectorStoreIndex.from_documents(
+            documents=documents,
+            storage_context=storage_context,
+            transformations=[
+                SentenceSplitter(chunk_size=128, chunk_overlap=5),
+                OpenAIEmbedding(),
+            ]
+        )
+        
+        storage_context.persist(persist_dir=persist_dir)
+
     
-        # Load and process the file
-        processor = ExcelFileProcessor(file_path)
-        processor.ensure_unique_key_column()
-        datalist = processor.extractor()
-    
-        # Remove rows with empty or None 'unique_key'
-        while datalist[-1]['unique_key'] == '' or datalist[-1]['unique_key'] is None:
-            datalist.pop(-1)
-    
-        # Create embeddings for each row in the current file
-        for rowdata in datalist:
-            IndexLoader.create_embeddings(rowdata)
             
     response = callLLMChatBot(list, query)
     # print(list)

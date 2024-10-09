@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send } from 'lucide-react';
 
-export default function ChatBot({ chatMessages, setChatMessages, list }) {
+export default function ChatBot({ chatMessages, setChatMessages, list, fulldata }) {
   const [newMessage, setNewMessage] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false); // Track analyzing state
 
@@ -30,7 +30,7 @@ export default function ChatBot({ chatMessages, setChatMessages, list }) {
       const response = await fetch('http://localhost:5000/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: newMessage, list: list })
+        body: JSON.stringify({ query: newMessage, list: list , results: fulldata })
       });
 
       const result = await response.json();

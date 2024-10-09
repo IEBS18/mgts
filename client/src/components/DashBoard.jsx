@@ -283,7 +283,7 @@ export default function Dashboard() {
 
       {/* ChatBot */}
       {isChatOpen && (
-        <ChatBot chatMessages={chatMessages} setChatMessages={setChatMessages} list={list} />
+        <ChatBot chatMessages={chatMessages} setChatMessages={setChatMessages} list={list} fulldata ={searchData} />
       )}
     </div>
   );
