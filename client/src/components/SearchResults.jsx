@@ -40,8 +40,8 @@ export default function SearchResults({ data, length, fulldata }) {
         <h1 className="text-2xl font-bold">
           Showing {length} Relevant Documents
         </h1>
-        <Button variant="outline" onClick={handleExport} disabled={exporting}>
-          <FileText className="mr-2 h-4 w-4" />
+        <Button variant="outline" className='text-black border-green border-2 rounded-lg'onClick={handleExport} disabled={exporting}>
+          <FileText className="mr-2 h-4 w-4" color="green" />
           {exporting ? "Exporting..." : "Export"}
         </Button>
       </header>
@@ -55,7 +55,7 @@ export default function SearchResults({ data, length, fulldata }) {
             <div className="flex justify-between items-start mb-2">
               <h2 className="text-lg font-semibold">{pub.Product_Name}</h2>
               <Button variant="ghost" size="sm" onClick={() => openDialog(pub)}>
-                <FileText className="h-4 w-4" />
+                <FileText className="h-4 w-4" color="green" />
               </Button>
             </div>
             <div className="text-sm text-gray-600 mb-2">

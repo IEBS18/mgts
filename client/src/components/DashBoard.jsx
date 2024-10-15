@@ -360,11 +360,11 @@ export default function Dashboard() {
               <Input
                 type="text"
                 placeholder="Enter your search query"
-                className="w-full mr-2"
+                className="w-full mr-2 rounded-lg"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
-              <Button variant="secondary" onClick={handleSearch} className="ml-2" disabled={isLoading}>
+              <Button variant="secondary" onClick={handleSearch} className="ml-2 bg-[#95D524] rounded-lg hover:bg-black hover:text-white" disabled={isLoading}>
                 {isLoading ? 'Searching...' : 'Search'}
               </Button>
             </div>

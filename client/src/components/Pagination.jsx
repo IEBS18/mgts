@@ -21,7 +21,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
         size="sm"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="px-2 py-1 bg-black text-white hover:bg-white hover:text-black"
+        className="px-2 py-1 bg-green text-white hover:bg-white hover:text-black"
       >
         <ChevronLeft className="h-4 w-4" />
         <span className="sr-only">Previous</span>
@@ -33,7 +33,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
           variant={currentPage === number ? "default" : "outline"}
           size="sm"
           onClick={() => onPageChange(number)}
-          className={`px-3 py-1 ${currentPage === number ? 'bg-white text-black' : 'bg-black text-white hover:bg-white hover:text-black'}`}
+          className={`px-3 py-1 ${currentPage === number ? 'bg-white text-black' : 'bg-green text-white hover:bg-white hover:text-black'}`}
         >
           {number}
         </Button>
@@ -44,7 +44,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
         size="sm"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="px-2 py-1 bg-black text-white hover:bg-white hover:text-black"
+        className="px-2 py-1 bg-green text-white hover:bg-white hover:text-black"
       >
         <ChevronRight className="h-4 w-4" />
         <span className="sr-only">Next</span>
