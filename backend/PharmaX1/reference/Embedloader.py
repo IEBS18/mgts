@@ -57,7 +57,7 @@ class EmbeddingProcessor:
         if self.store_locally:
             index_set = {}
             for title in titles:
-                print(title)
+                # print(title)
                 storage_context = StorageContext.from_defaults(
                     persist_dir=os.path.join(self.base_path, title)
                 )

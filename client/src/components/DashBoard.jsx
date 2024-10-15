@@ -307,19 +307,20 @@ export default function Dashboard() {
     setChatMessages(prev => [...prev, { type: 'bot', content: 'Working on it...', bgColor: 'bg-blue-200' }]);
 
     try {
-      const response = await fetch('http://54.211.78.164:5000/search', {
+      const response = await fetch('http://localhost:5000/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 'keyword': query }),
       });
 
       const result = await response.json();
-      setSearchData(result.results);
-      setList(result.list);
+      console.log(result);
+      setSearchData(result);
+      setList(result);
 
       setChatMessages(prev => [
         ...prev,
-        { type: 'bot', content: `Showing ${(result?.results).length} Relevant Documents`, bgColor: 'bg-blue-200' }
+        { type: 'bot', content: `Showing ${result?.length} Relevant Documents`, bgColor: 'bg-blue-200' }
       ]);
     } catch (error) {
       console.error('Error making POST request:', error);
