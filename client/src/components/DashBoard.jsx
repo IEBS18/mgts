@@ -371,8 +371,7 @@ export default function Dashboard() {
             </div>
 
             {/* Workflow Cards */}
-            {searchData.length === 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {workflows.map((workflow, index) => (
                   <motion.div 
                     key={index} 
@@ -399,7 +398,7 @@ export default function Dashboard() {
                   </motion.div>
                 ))}
               </div>
-            )}
+            
 
             {/* Display Search Results */}
             {searchData.length > 0 && (

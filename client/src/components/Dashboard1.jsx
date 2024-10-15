@@ -62,8 +62,10 @@ export default function Dashboard1() {
               className="w-full mr-2"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              
             />
-            <Button onClick={handleSearch} className="ml-2" disabled={isLoading}>
+            
+            <Button onClicking={handleSearch} className="ml-2" disabled={isLoading}>
               {isLoading ? 'Searching...' : 'Search'}
             </Button>
           </div>
