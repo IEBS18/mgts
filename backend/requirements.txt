@@ -6,3 +6,4 @@ openpyxl
 pandas
 python-dotenv
 Requests
+elasticsearch
