@@ -35,7 +35,7 @@ export default function SearchResults({ data, length, fulldata }) {
   };
 
   return (
-    <div className="flex-1">
+    <div className="flex-1 mt-6">
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">
           Showing {length} Relevant Documents

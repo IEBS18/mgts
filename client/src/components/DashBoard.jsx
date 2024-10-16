@@ -285,7 +285,7 @@ import ChatBot from './ChatBot';
 
 export default function Dashboard() {
   const workflows = [
-    { title: "Search Drugs", description: "Find approved and pipeline drugs" },
+    { title: "Search Drugs and Diseases", description: "Find approved and pipeline drugs" },
     { title: "Research Disease Epidemiology", description: "Research disease epidemiology and patient population" },
     { title: "Find Clinical Data", description: "Access and analyze clinical trial data" }
   ];

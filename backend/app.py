@@ -45,55 +45,52 @@ def search():
 
     # Perform the search in Elasticsearch
     try:
-        response = es.search(
-            index="drug-disease-indication",
-            body={
-                "query": {
-                    "multi_match": {
-                        "query": query,
-                        "fields": ["*"],  # Adjust this to specify the fields you want to search
-                        "fuzziness": "AUTO"  # Optional: allows for fuzzy searching
-                    }
-                },
-                "size": 10000  # Include the size parameter
-            }
-        )
+        # response = es.search(
+        #     index="drug-disease-indication",
+        #     body={
+        #         "query": query,
+        #         "size": 10000  # Include the size parameter
+        #     }
+        # )
+        response = es.search(index='drug-disease-indication', q= query, size=10000 )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
     # Extract hits from the response
     hits = response['hits']['hits']
     documents = [hit['_source'] for hit in hits]
+    print(documents)
 
     # Convert the documents to a DataFrame for easier manipulation if needed
-    df = pd.DataFrame(documents)
+    # df = pd.DataFrame(documents)
     
-    df.fillna("", inplace=True)
+    # df.fillna("", inplace=True)
     
     
-    # Print the DataFrame for debugging purposes
-    print(df)
+    # # Print the DataFrame for debugging purposes
+    # print(df)
 
-    # Convert the DataFrame back to a list of dictionaries before returning
-    documents = df.to_dict(orient='records')
+    # # Convert the DataFrame back to a list of dictionaries before returning
+    # documents = df.to_dict(orient='records')
 
-    # Save the DataFrame to an Excel file
-    excel_file_path = "search_results_app.xlsx"
-    df.to_excel(excel_file_path, index=False)
+    # # Save the DataFrame to an Excel file
+    # excel_file_path = "search_results_app.xlsx"
+    # df.to_excel(excel_file_path, index=False)
 
-    # Ensure the Excel file is saved successfully
-    if os.path.exists(excel_file_path):
-        print(f"Excel file saved successfully at {excel_file_path}")
+    # # Ensure the Excel file is saved successfully
+    # if os.path.exists(excel_file_path):
+    #     print(f"Excel file saved successfully at {excel_file_path}")
     
-    print("count:", df.count())
+    # print("count:", df.count())
     
-    # print(len(df))
+    # # print(len(df))
     
-    # Print the DataFrame for debugging purposes
-    print(df)
+    # # Print the DataFrame for debugging purposes
+    # print(df)
 
     # Return the documents in a JSON response
     return jsonify(documents), 200
+
 # @app.route('/search', methods=['POST'])
 # def search():
 #     search_keyword = request.json.get('keyword')
