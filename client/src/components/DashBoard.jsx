@@ -22,7 +22,7 @@ export default function Dashboard() {
   ];
 
   const [query, setQuery] = useState("");
-  const [ resultquery, setresultquery] = useState('');
+  const [resultquery, setresultquery] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchData, setSearchData] = useState([]);
@@ -32,6 +32,8 @@ export default function Dashboard() {
   const itemsPerPage = 10;
   const searchResultsRef = useRef(null);
   const [allData, setAllData] = useState([]);
+  const [selectedCard, setSelectedCard] = useState(null);
+
 
   const handleSearch = async () => {
     setIsLoading(true);
@@ -83,17 +85,37 @@ export default function Dashboard() {
   const handleChatToggle = () => {
     setIsChatMinimized(!isChatMinimized); // Toggle chat minimized state
   };
+  // const handleWorkflowClick = (id) => {
+  //   if (id === 1) {
+  //     const filteredData = allData.filter((doc) => doc.type === "drugdisease");
+  //     setSearchData(filteredData);
+  //     setCurrentPage(1); // Reset to the first page when new data is loaded
+  //   }
+  //   else if(id === 2){
+  //     const filteredData = allData.filter((doc) => doc.type === "pregranted");
+  //     setSearchData(filteredData);
+  //     setCurrentPage(1);
+  //   }
+  // };
   const handleWorkflowClick = (id) => {
-    if (id === 1) {
-      const filteredData = allData.filter((doc) => doc.type === "drugdisease");
-      setSearchData(filteredData);
-      setCurrentPage(1); // Reset to the first page when new data is loaded
+    if (selectedCard === id) {
+      // If the same card is clicked again, reset to full data
+      setSearchData(allData);
+      setSelectedCard(null); // Unselect the card
+    } else {
+      setSelectedCard(id); // Select this card
+      if (id === 1) {
+        const filteredData = allData.filter((doc) => doc.type === "drugdisease");
+        setSearchData(filteredData);
+      }
+      else if (id === 2) {
+        const filteredData = allData.filter((doc) => doc.type === "pregranted");
+        setSearchData(filteredData);
+        setCurrentPage(1);
+      }
+      // Add logic for other workflows if needed
     }
-    else if(id === 2){
-      const filteredData = allData.filter((doc) => doc.type === "pregranted");
-      setSearchData(filteredData);
-      setCurrentPage(1);
-    }
+    setCurrentPage(1); // Reset to the first page when new data is loaded
   };
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -103,9 +125,8 @@ export default function Dashboard() {
 
   return (
     <div
-      className={`flex h-full bg-gray-100 transition-all duration-300 ${
-        isChatMinimized ? "w-full" : "w-2/3"
-      }`}
+      className={`flex h-full bg-gray-100 transition-all duration-300 ${isChatMinimized ? "w-full" : "w-2/3"
+        }`}
     >
       <div className="flex-1">
         <main className="flex-1 p-8 overflow-auto">
@@ -140,35 +161,35 @@ export default function Dashboard() {
             </div>
 
             {/* Workflow Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {workflows.map((workflow, index) => (
-                  <motion.div 
-                    key={index} 
-                    initial={{ opacity: 0, y: 20 }} 
-                    animate={{ opacity: 1, y: 0 }} 
-                    whileHover={{ boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.1)' }}
-                    transition={{ delay: index * 0.1 }}
-                    className="p-6 bg-white rounded-lg shadow-lg cursor-pointer"
-                    style={{
-                      border: '2px solid #95D524', // Green border
-                      borderRadius: '8px',
-                      boxShadow: '0px 6px 15px rgba(0, 0, 0, 0.1)', // Regular box shadow
-                      minHeight: '100px', // Uniform height for all boxes
-                    }}
-                    onClick={() => handleWorkflowClick(workflow.id)}
-                  >
-                    <Card className='border-none'>
-                      <CardHeader>
-                        <CardTitle className="text-[20px] font-bold">{workflow.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <CardDescription>{workflow.description}</CardDescription>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {workflows.map((workflow, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.1)' }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`p-6 bg-white rounded-lg shadow-lg cursor-pointer transition-transform ${selectedCard === workflow.id ? 'translate-y-2' : ''}`}
+                  style={{
+                    border: selectedCard === workflow.id ? '2px solid #000' : '2px solid #95D524', // Green border
+                    borderRadius: '8px',
+                    boxShadow: '0px 6px 15px rgba(0, 0, 0, 0.1)', // Regular box shadow
+                    minHeight: '100px', // Uniform height for all boxes
+                  }}
+                  onClick={() => handleWorkflowClick(workflow.id)}
+                >
+                  <Card className='border-none'>
+                    <CardHeader>
+                      <CardTitle className="text-[20px] font-bold">{workflow.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription>{workflow.description}</CardDescription>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+
 
             {/* Display Search Results */}
             {searchData?.length > 0 && (

@@ -15,6 +15,10 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 
 from elasticsearch import Elasticsearch
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -166,7 +170,41 @@ def search():
 #     #     json.dump(list, f, indent=2)
 #     # return jsonify({'results': results, 'list': list}), 200
 #     return 200
+def search_with_tfidf(results, query):
+    """
+    Search for relevant results using TF-IDF based on the provided query.
+    
+    Parameters:
+        results (list): List of dictionaries containing the documents to search.
+        query (str): The search query to find relevant documents.
+    
+    Returns:
+        list: Sorted list of tuples containing the matched result and its relevance score.
+    """
+    # Flattening the dictionaries into a list of concatenated strings (corpus for TF-IDF)
+    corpus = [" ".join(result.values()) for result in results]
 
+    # Add the query as part of the corpus to compare its similarity to the documents
+    corpus_with_query = corpus + [query]
+
+    # Initialize the TfidfVectorizer
+    vectorizer = TfidfVectorizer()
+
+    # Compute the TF-IDF matrix for the corpus
+    tfidf_matrix = vectorizer.fit_transform(corpus_with_query)
+
+    # Compute cosine similarity between the query (last document in matrix) and all others
+    cosine_similarities = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1]).flatten()
+
+    # Get the index of documents sorted by relevance score (highest first)
+    sorted_indices = np.argsort(-cosine_similarities)
+
+    full_results = [(results[i], cosine_similarities[i]) for i in sorted_indices if cosine_similarities[i] > 0]
+
+    # Extract only the dictionaries (without scores)
+    filtered_results = [results[i] for i in sorted_indices if cosine_similarities[i] > 0]
+
+    return full_results, filtered_results
 
 @app.route('/chatbot', methods=['POST'])
 def chatbot():
@@ -234,7 +272,7 @@ def get_elasticsearch_results(query):
 def create_openai_prompt(results):
     context = ""
     for hit in results:
-        source_fields = hit["_source"]
+        source_fields = hit
         # print(source_fields)
         # Concatenate all fields for context
         context += '\n'.join(f"{key}: {value}" for key, value in source_fields.items()) + "\n\n"
@@ -273,11 +311,24 @@ def ask():
     data = request.json
     # question = data.get('question')
     query = data.get('query')
+    results = data.get('results')
+    full_results, filtered_results = search_with_tfidf(results, query)
+
+    # Output the full results with scores
+    print("Full Results with Scores:")
+    for result, score in full_results[:3]:
+        print(f"Result: {result}, Relevance Score: {score}")
+
+    # Output the filtered results without scores
+    print("\nFiltered Results without Scores:")
+    for result in filtered_results:
+        print(f"Filtered Result: {result}")
+
 
     # Get Elasticsearch results
-    elasticsearch_results = get_elasticsearch_results(query)
+    # elasticsearch_results = get_elasticsearch_results(query)
     # Create OpenAI prompt
-    context_prompt = create_openai_prompt(elasticsearch_results)
+    context_prompt = create_openai_prompt(filtered_results[:5])
     # Generate OpenAI completion
     openai_completion = generate_openai_completion(context_prompt, query)
 
