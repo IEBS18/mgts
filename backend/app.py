@@ -7,11 +7,12 @@ import pandas as pd
 from openai import OpenAI
 import requests
 
-from PharmaX1.search import process_multiple_files, preprocess
-from PharmaX1.reference.Models import callLLMChatBot
-from llama_index.core import Document, StorageContext, VectorStoreIndex, load_index_from_storage
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.embeddings.openai import OpenAIEmbedding
+from Utilities.search import process_multiple_files, preprocess
+# from PharmaX1.reference.Models import callLLMChatBot
+# from llama_index.core import Document, StorageContext, VectorStoreIndex, load_index_from_storage
+# from llama_index.core.node_parser import SentenceSplitter
+# from llama_index.embeddings.openai import OpenAIEmbedding
+
 
 from elasticsearch import Elasticsearch
 
@@ -206,133 +207,146 @@ def search_with_tfidf(results, query):
 
     return full_results, filtered_results
 
-@app.route('/chatbot', methods=['POST'])
-def chatbot():
-    query = request.json.get('query')
-    print(query)
-    list = request.json.get('list')
-    results = request.json.get('results')
+# @app.route('/chatbot', methods=['POST'])
+# def chatbot():
+#     query = request.json.get('query')
+#     print(query)
+#     list = request.json.get('list')
+#     results = request.json.get('results')
     
-    for rowData in results:
+#     for rowData in results:
         
-        display_key = rowData['unique_key']
-        # title = rowData['title']
-        persist_dir = os.path.join('./storage', display_key)
+#         display_key = rowData['unique_key']
+#         # title = rowData['title']
+#         persist_dir = os.path.join('./storage', display_key)
 
-        # Check if embeddings already exist
-        if os.path.exists(persist_dir):
-            print(f"Embeddings for '{display_key}' already exist. Skipping creation.")
-            continue  # Exit the function if embeddings exist
+#         # Check if embeddings already exist
+#         if os.path.exists(persist_dir):
+#             print(f"Embeddings for '{display_key}' already exist. Skipping creation.")
+#             continue  # Exit the function if embeddings exist
         
-        print(f"Creating embeddings for '{display_key}'.")
-        documents = [Document(text=f"{key}: {val}") for key, val in rowData.items()]
-        # print(documents)
-        # To store the index
+#         print(f"Creating embeddings for '{display_key}'.")
+#         documents = [Document(text=f"{key}: {val}") for key, val in rowData.items()]
+#         # print(documents)
+#         # To store the index
 
-        storage_context = StorageContext.from_defaults()
+#         storage_context = StorageContext.from_defaults()
 
-        VectorStoreIndex.from_documents(
-            documents=documents,
-            storage_context=storage_context,
-            transformations=[
-                SentenceSplitter(chunk_size=128, chunk_overlap=5),
-                OpenAIEmbedding(),
-            ]
-        )
+#         VectorStoreIndex.from_documents(
+#             documents=documents,
+#             storage_context=storage_context,
+#             transformations=[
+#                 SentenceSplitter(chunk_size=128, chunk_overlap=5),
+#                 OpenAIEmbedding(),
+#             ]
+#         )
         
-        storage_context.persist(persist_dir=persist_dir)
+#         storage_context.persist(persist_dir=persist_dir)
 
     
             
-    response = callLLMChatBot(list, query)
-    # print(list)
-    return jsonify({'results': response, 'list': list}), 200
+#     response = callLLMChatBot(list, query)
+#     # print(list)
+#     return jsonify({'results': response, 'list': list}), 200
 
 
-# Initialize OpenAI client
 openai_client = OpenAI(
     api_key=os.environ["OPENAI_API_KEY"],
 )
 
+# Initialize conversation history
+conversation_history = []
+ 
 # Function to get Elasticsearch results
 def get_elasticsearch_results(query):
     es_query = {
         "query": {
             "multi_match": {
                 "query": query,
-                "fields": ['*']
+                "fields": [
+                    "Diseases",
+                    "Ingredients",
+                    "Organization_Name",
+                    "Product_Name",
+                    "Routes_of_Administration",
+                    "Territory_Code"
+                ]
             }
         },
-        "size": 3  # Fetch the top 10 documents
+        "size": 5  # Fetch the top 10 documents
     }
-    result = es.search(index="categorix_v2", body=es_query)
+    result = es.search(index="drug-disease-indication", body=es_query)
     return result["hits"]["hits"]
-
+ 
 # Function to create OpenAI prompt
 def create_openai_prompt(results):
     context = ""
     for hit in results:
-        source_fields = hit
-        # print(source_fields)
+        source_fields = hit["_source"]
         # Concatenate all fields for context
         context += '\n'.join(f"{key}: {value}" for key, value in source_fields.items()) + "\n\n"
-
+ 
     prompt = f"""
   Instructions:
-  
+ 
   - You are an assistant for question-answering tasks.
   - Answer questions truthfully and factually using only the context presented.
   - If you don't know the answer, just say that you don't know, don't make up an answer.
-  - You must always cite the document where the answer was extracted using inline academic citation style [], using the position.
-  - Use markdown format for code examples.
+  - You must always cite the product_name where the answer was extracted using inline academic citation style [], using the position.
+  - Use plain text only, no HTML or markdown.
+  - provide hyperlinks to the sources of the information.
   - You are correct, factual, precise, and reliable.
-  
+ 
   Context:
   {context}
-  
+ 
   """
-    print(context)
     return prompt
-
+ 
 # Function to generate OpenAI completion
-def generate_openai_completion(user_prompt, question):
+def generate_openai_completion(question):
+   
+
+    # Add the user question to the conversation history
+    conversation_history.append({"role": "user", "content": question})
+
     response = openai_client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": user_prompt},
-            {"role": "user", "content": question},
-        ]
+        messages=conversation_history
     )
-    return response.choices[0].message.content
 
+    # Extract the assistant's response
+    assistant_response = response.choices[0].message.content
+
+    # Add the assistant's response to the conversation history
+    conversation_history.append({"role": "assistant", "content": assistant_response})
+
+    return assistant_response
+ 
 # Define the route for the API
 @app.route('/ask', methods=['POST'])
 def ask():
+    global conversation_history
     data = request.json
-    # question = data.get('question')
     query = data.get('query')
     results = data.get('results')
-    full_results, filtered_results = search_with_tfidf(results, query)
-
-    # Output the full results with scores
-    print("Full Results with Scores:")
-    for result, score in full_results[:3]:
-        print(f"Result: {result}, Relevance Score: {score}")
-
-    # Output the filtered results without scores
-    print("\nFiltered Results without Scores:")
-    for result in filtered_results:
-        print(f"Filtered Result: {result}")
-
-
+    top_n = 5  # Number of top results to consider
+    
     # Get Elasticsearch results
-    # elasticsearch_results = get_elasticsearch_results(query)
+    elasticsearch_results = get_elasticsearch_results(query)
+    print(elasticsearch_results)
+    elasticsearch_results1 = results[:top_n]
+    print(elasticsearch_results1)
     # Create OpenAI prompt
-    context_prompt = create_openai_prompt(filtered_results[:5])
+    context_prompt = create_openai_prompt(elasticsearch_results)
+    # Add context to conversation history
+    # if system role is not present, add it
+    if not any(d['role'] == 'system' for d in conversation_history):
+        conversation_history.append({"role": "system", "content": context_prompt})
+        print("added system context.")
     # Generate OpenAI completion
-    openai_completion = generate_openai_completion(context_prompt, query)
-
+    openai_completion = generate_openai_completion(query)
+ 
     return jsonify({"results": openai_completion})
-
 if __name__ == '__main__':
     app.run(debug=True)

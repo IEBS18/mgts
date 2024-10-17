@@ -1,1 +1,0 @@
-zindagi dhoop pharmaX ghana chhaya
