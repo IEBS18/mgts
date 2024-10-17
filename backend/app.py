@@ -101,7 +101,7 @@ def search():
             "query": {
                 "query_string": {
                     "query": query, 
-                    "default_operator": "AND" # Search the same query across all fields
+                    "default_operator": "OR" # Search the same query across all fields
                 }
             },
             "size": 10000
@@ -111,7 +111,7 @@ def search():
             "query": {
                 "query_string": {
                     "query": query, 
-                    "default_operator": "AND" # Search the same query across all fields
+                    "default_operator": "OR" # Search the same query across all fields
                 }
             },
             "size": 10000
@@ -292,10 +292,11 @@ def get_elasticsearch_results(query):
 # Function to create OpenAI prompt
 def create_openai_prompt(results):
     context = ""
-    for hit in results:
-        source_fields = hit["_source"]
-        # Concatenate all fields for context
-        context += '\n'.join(f"{key}: {value}" for key, value in source_fields.items()) + "\n\n"
+    context+=results
+    # for hit in results:
+    #     # source_fields = hit["_source"]
+    #     # Concatenate all fields for context
+    #     context += '\n'.join(f"{key}: {value}" for key, value in source_fields.items()) + "\n\n"
  
     prompt = f"""
   Instructions:
@@ -363,12 +364,12 @@ def ask():
 
 
     # Get Elasticsearch results
-    elasticsearch_results = get_elasticsearch_results(query)
-    print(elasticsearch_results)
-    elasticsearch_results1 = results[:top_n]
-    print(elasticsearch_results1)
+    # elasticsearch_results = get_elasticsearch_results(query)
+    # print(elasticsearch_results)
+    # elasticsearch_results1 = results[:top_n]
+    # print(elasticsearch_results1)
     # Create OpenAI prompt
-    context_prompt = create_openai_prompt(elasticsearch_results)
+    context_prompt = create_openai_prompt(filtered_results[:5])
     # Add context to conversation history
     # if system role is not present, add it
     if not any(d['role'] == 'system' for d in conversation_history):
