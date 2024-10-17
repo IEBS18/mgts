@@ -278,41 +278,11 @@ import {
 } from "@/components/ui/dialog";
 import * as XLSX from "xlsx";
 
-// Helper function to highlight text and return a snippet around it
-const highlightText = (text = '', highlight = '', wordLimit = 150) => {
-  if (!text || !highlight.trim()) {
-    return text;
-  }
-
-  // Create a regex to find the highlighted word
-  const regex = new RegExp(`(${highlight})`, 'gi');
-  const matches = text.match(regex);
-
-  if (matches) {
-    const index = text.search(regex);  // Find where the highlight starts
-
-    // Get a snippet of 100-150 words around the highlighted part
-    const start = Math.max(0, index - wordLimit);  // Start of snippet
-    const end = Math.min(text.length, index + wordLimit);  // End of snippet
-    const snippet = text.substring(start, end);
-
-    return (
-      <>
-        <i>{snippet.split(regex).map((part, i) =>
-          regex.test(part) ? <mark key={i} className="bg-yellow-200">{part}</mark> : part
-        )}</i>
-      </>
-    );
-  }
-
-  // If no match found, return default truncated text
-  return <i>{text.substring(0, wordLimit)}...</i>;
-};
-
 export default function SearchResults({ data, length, fulldata, query }) {
   const [exporting, setExporting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPub, setSelectedPub] = useState(null);
+  console.log(data);
 
   const handleExport = () => {
     setExporting(true);
@@ -326,6 +296,44 @@ export default function SearchResults({ data, length, fulldata, query }) {
   const openDialog = (pub) => {
     setSelectedPub(pub);
     setDialogOpen(true);
+  };
+
+  const highlightText = (text = '', highlight = '', wordLimit = 150) => {
+    if (!text || !highlight.trim()) {
+      return text;
+    }
+
+    // Split the highlight string into individual words
+    const highlightWords = highlight.split(' ').filter(Boolean); // Removes empty strings
+    const regexPattern = highlightWords.map(word => `(${word})`).join('|'); // Create regex pattern for each word
+    const regex = new RegExp(regexPattern, 'gi');
+
+    const matches = text.match(regex);
+
+    if (matches) {
+      // Find the index of the first match
+      const index = text.search(regex);
+
+      // Get a snippet of words around the highlighted part
+      const start = Math.max(0, index - wordLimit);  // Start of snippet
+      const end = Math.min(text.length, index + wordLimit);  // End of snippet
+      const snippet = text.substring(start, end);
+
+      return (
+        <>
+          <i>{snippet.split(regex).map((part, i) =>
+            regex.test(part) ? (
+              <mark key={i} className="bg-yellow-200">{part}</mark>
+            ) : (
+              part
+            )
+          )}</i>
+        </>
+      );
+    }
+
+    // If no match found, return default truncated text
+    return <i>{text.substring(0, wordLimit)}...</i>;
   };
 
   return (
@@ -342,39 +350,62 @@ export default function SearchResults({ data, length, fulldata, query }) {
 
       <div className="space-y-6">
         {data.map((pub, index) => (
-          <div
-            key={index}
-            className="bg-white p-6 rounded-lg border bg-background md:shadow-xl flex justify-between"  // Flex for side-by-side layout
-          >
-            {/* Left Side - Publication Info */}
-            <div className="w-1/2 pr-4">  {/* Left half */}
+          pub.type === 'pregranted' ? (
+            <div
+              key={`pregranted-${index}`}  // Unique key for pregranted items
+              className="bg-white p-6 rounded-lg border bg-background md:shadow-xl flex flex-row justify-between items-start "
+            >
+              {/* Left Side - Publication Info */}
+              <div className="w-1/2 pr-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h2 className="text-lg font-semibold">{pub.title}</h2>
+                  <Button variant="ghost" size="sm" onClick={() => openDialog(pub)}>
+                    <FileText className="h-4 w-4" color="green" />
+                  </Button>
+                </div>
+                <div className="text-sm text-gray-600 mb-2">
+                  {pub.assignee_applicant} • {pub.jurisdiction}
+                </div>
+                <div className="text-sm text-gray-600 mb-4">
+                  Published: {pub.publication_date}
+                </div>
+                <p className="text-sm text-gray-800 break-words">
+                  CPC Classifications: {pub.cpc_classifications}
+                </p>
+              </div>
+
+              {/* Right Side - Relevant Match (with abstract and highlight search query) */}
+              <div className="w-1/2 bg-gray-100 p-4 rounded-lg">
+                <h3 className="text-sm font-semibold mb-2">Relevant Match:</h3>
+                <p className="text-sm italic break-words">
+                  {highlightText(pub.abstract, query, 150)}
+                </p>
+              </div>
+            </div>
+          ) : pub.type === 'drugdisease' ? (
+            <div
+              key={`drugdisease-${index}`}  // Unique key for drugdisease items
+              className="bg-white p-6 rounded-lg border bg-background md:shadow-xl"
+            >
               <div className="flex justify-between items-start mb-2">
-                <h2 className="text-lg font-semibold">{pub.title}</h2>
+                <h2 className="text-lg font-semibold">{pub.Product_Name}</h2>
                 <Button variant="ghost" size="sm" onClick={() => openDialog(pub)}>
                   <FileText className="h-4 w-4" color="green" />
                 </Button>
               </div>
               <div className="text-sm text-gray-600 mb-2">
-                {pub.assignee_applicant} • {pub.jurisdiction}
+                {pub.Organization_Name} • {pub.Territory_Code}
               </div>
               <div className="text-sm text-gray-600 mb-4">
-                Published: {pub.publication_date}
+                Routes of Administration: {pub.Routes_of_Administration}
               </div>
-              <p className="text-sm text-gray-800 break-words"> {/* Added break-words to avoid long text overflow */}
-                CPC Classifications: {pub.cpc_classifications}
+              <p className="text-sm text-gray-800">
+                Ingredients: {pub.Ingredients}
               </p>
             </div>
-
-            {/* Right Side - Relevant Match (with abstract and highlight search query) */}
-            <div className="w-1/2 bg-gray-100 p-4 rounded-lg">
-              <h3 className="text-sm font-semibold mb-2">Relevant Match:</h3>
-              <p className="text-sm italic break-words"> {/* Italicized snippet */}
-                {/* Highlight the abstract with search query and show 100-150 words around it */}
-                {highlightText(pub.abstract, query, 350)}
-              </p>
-            </div>
-          </div>
+          ) : null // Handle other cases if needed
         ))}
+
       </div>
 
       {/* Dialog Box for Detailed View */}
@@ -408,6 +439,8 @@ export default function SearchResults({ data, length, fulldata, query }) {
           </div>
         </DialogContent>
       </Dialog>
+
+
     </div>
   );
 }

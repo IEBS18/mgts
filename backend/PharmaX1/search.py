@@ -23,7 +23,58 @@ def preprocess(text):
     filtered = [word for word in tokens if word.isalnum() and word not in stop_words]
     
     # remove generic words
-    toremove = ['mg', 'ml', 'oral', 'tablet', 'tablets', 'capsule', 'capsules', 'solution', 'suspension', 'injection', 'injections', 'inhalation', 'inhaler', 'inhalers', 'drug', 'drugs', 'medication', 'medications', 'medicine', 'medicines', 'treatment', 'treatments', 'therapy', 'therapies', 'dose', 'doses', 'dosage', 'dosages', 'administration', ]
+    toremove = [
+        'mg', 'ml', 'oral', 'tablet', 'tablets', 'capsule', 'capsules', 'solution', 'suspension', 
+        'injection', 'injections', 'inhalation', 'inhaler', 'inhalers', 'drug', 'drugs', 'medication', 
+        'medications', 'medicine', 'medicines', 'treatment', 'treatments', 'therapy', 'therapies', 
+        'dose', 'doses', 'dosage', 'dosages', 'administration', 'acid', 'acids', 'documents', 
+        'document', 'information', 'patient', 'patients', 'report', 'reports', 'study', 'studies', 
+        'result', 'results', 'data', 'file', 'files', 'details', 'description', 'content', 
+        'publication', 'publications', 'article', 'articles', 'reference', 'references', 'content', 
+        'version', 'versions', 'test', 'tests', 'trial', 'trials', 'method', 'methods', 'system', 
+        'systems', 'evaluation', 'evaluations', 'protocol', 'protocols', 'dose', 'level', 'levels', 
+        'standard', 'standards', 'procedures', 'review', 'reviews', 'procedure', 'objectives', 
+        'objective', 'category', 'categories', 'class', 'classes', 'group', 'groups',
+        
+        # Add more generic words to remove
+        'regarding', 'about', 'concerning', 'related', 'associated', 'in', 'on', 'by', 'of', 
+        'with', 'to', 'from', 'as', 'for', 'and', 'the', 'a', 'an', 'that', 'this', 'these', 
+        'those', 'which', 'such', 'any', 'all', 'each', 'many', 'much', 'other', 'others', 
+        'more', 'few', 'overview', 'insights', 'analysis', 'guidelines', 'effects', 'factors', 
+        'methods', 'results', 'research', 'data', 'researchers', 'patients', 'trials', 
+        'studies', 'criteria', 'conclusions', 'summary', 'implications', 'applications', 
+        'results', 'evidence', 'findings', 'presentation', 'exploration',
+        
+        # Expanded terms
+        'chemical', 'chemicals', 'compound', 'compounds', 'substance', 'substances', 
+        'formula', 'formulas', 'properties', 'property', 'characteristics', 
+        'characteristic', 'composition', 'components', 'component', 'ingredients', 
+        'ingredient', 'mechanism', 'mechanisms', 'action', 'actions', 'impact', 
+        'effects', 'administration', 'route', 'routes', 'indication', 'indications', 
+        'usage', 'usage', 'use', 'uses', 'recommendations', 'recommendation', 
+        'safety', 'safeness', 'risk', 'risks', 'adverse', 'reactions', 'reaction', 
+        'efficacy', 'efficacious', 'benefit', 'benefits', 'review', 'evaluation', 
+        'evaluation', 'implication', 'implications', 'impact', 'clinical', 'clinical trials', 
+        'clinical data', 'guidance', 'findings', 'treatment', 'treatment options',
+        
+        # Miscellaneous terms
+        'criteria', 'finding', 'suggestions', 'suggestion', 'analyses', 'analysis', 
+        'clinical', 'clinical findings', 'support', 'supports', 'considerations', 
+        'consideration', 'context', 'situations', 'case', 'cases', 'history', 
+        'pathway', 'pathways', 'evaluation', 'measure', 'measurement', 'recommend', 
+        'effectiveness', 'guide', 'reporting', 'results', 'summary', 'future', 'studies',
+        
+        # General filler words
+        'also', 'but', 'or', 'if', 'then', 'however', 'meanwhile', 'during', 
+        'after', 'before', 'although', 'while', 'despite', 'since', 'unless', 
+        'yet', 'so', 'therefore', 'thus', 'hence', 'but', 'although', 'where', 
+        'when', 'which', 'that', 'is', 'are', 'was', 'were', 'be', 'been',
+        
+        'advantage', 'advantages', 'disadvantage', 'disadvantages', 'pros', 'cons', 
+        'benefit', 'benefits', 'drawback', 'drawbacks', 'merit', 'merits', 'downside', 
+        'downsides', 'upside', 'upsides', 'positive', 'negatives', 'negative', 'impact', 
+        'outcome', 'outcomes', 'effect', 'effects',
+    ]
     
     filtered = [word for word in filtered if word not in toremove]
     

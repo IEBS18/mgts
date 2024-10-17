@@ -16,21 +16,13 @@ import ChatBot from "./ChatBot";
 
 export default function Dashboard() {
   const workflows = [
-    {
-      title: "Search Drugs and Diseases",
-      description: "Find approved and pipeline drugs",
-    },
-    {
-      title: "Research Disease Epidemiology",
-      description: "Research disease epidemiology and patient population",
-    },
-    {
-      title: "Find Clinical Data",
-      description: "Access and analyze clinical trial data",
-    },
+    { id: 1, title: "Search Drugs and Diseases", description: "Find approved and pipeline drugs" },
+    { id: 2, title: "Research Paper and Patents", description: "Find scientific research papers and patents " },
+    { id: 3, title: "Find Clinical Data", description: "Access and analyze clinical trial data" }
   ];
 
   const [query, setQuery] = useState("");
+  const [ resultquery, setresultquery] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchData, setSearchData] = useState([]);
@@ -39,6 +31,7 @@ export default function Dashboard() {
   const [isChatMinimized, setIsChatMinimized] = useState(true); // Start with chat minimized
   const itemsPerPage = 10;
   const searchResultsRef = useRef(null);
+  const [allData, setAllData] = useState([]);
 
   const handleSearch = async () => {
     setIsLoading(true);
@@ -58,16 +51,15 @@ export default function Dashboard() {
 
       const result = await response.json();
       console.log(result);
-      setSearchData(result);
-      setList(result);
+      console.log(result.documents)
+      setAllData(result.documents);
+      setSearchData(result.documents);
+      setresultquery(result.query);
+      setList(result.drugdisease);
 
       setChatMessages((prev) => [
         ...prev,
-        {
-          type: "bot",
-          content: `Showing ${result?.length} Relevant Documents`,
-          bgColor: "bg-blue-200",
-        },
+        { type: 'bot', content: `Showing ${result?.documents?.length} Relevant Documents`, bgColor: 'bg-blue-200' }
       ]);
     } catch (error) {
       console.error("Error making POST request:", error);
@@ -81,6 +73,7 @@ export default function Dashboard() {
       ]);
     } finally {
       setIsLoading(false);
+      // console.log(searchData);
       if (searchResultsRef.current) {
         searchResultsRef.current.scrollIntoView({ behavior: "smooth" });
       }
@@ -90,15 +83,23 @@ export default function Dashboard() {
   const handleChatToggle = () => {
     setIsChatMinimized(!isChatMinimized); // Toggle chat minimized state
   };
+  const handleWorkflowClick = (id) => {
+    if (id === 1) {
+      const filteredData = allData.filter((doc) => doc.type === "drugdisease");
+      setSearchData(filteredData);
+      setCurrentPage(1); // Reset to the first page when new data is loaded
+    }
+    else if(id === 2){
+      const filteredData = allData.filter((doc) => doc.type === "pregranted");
+      setSearchData(filteredData);
+      setCurrentPage(1);
+    }
+  };
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentData = searchData
-    ? searchData.slice(indexOfFirstItem, indexOfLastItem)
-    : [];
-  const totalPages = searchData
-    ? Math.ceil(searchData.length / itemsPerPage)
-    : 0;
+  const currentData = searchData ? searchData?.slice(indexOfFirstItem, indexOfLastItem) : [];
+  const totalPages = searchData ? Math.ceil(searchData?.length / itemsPerPage) : 0;
 
   return (
     <div
@@ -108,7 +109,7 @@ export default function Dashboard() {
     >
       <div className="flex-1">
         <main className="flex-1 p-8 overflow-auto">
-          <div className={`${isChatMinimized ? 'max-w-4xl' : 'max-w-3xl'} mx-auto`}>
+          <div className={`${isChatMinimized ? "max-w-4xl" : "max-w-2xl"} mx-auto`}>
             <header className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-bold">
                 Welcome to <span className="text-[#95D524]">PharmaX</span>{" "}
@@ -139,46 +140,40 @@ export default function Dashboard() {
             </div>
 
             {/* Workflow Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {workflows.map((workflow, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.1)" }}
-                  transition={{ delay: index * 0.1 }}
-                  className="p-6 bg-white rounded-lg shadow-lg cursor-pointer"
-                  style={{
-                    border: "2px solid #95D524", // Green border
-                    borderRadius: "8px",
-                    boxShadow: "0px 6px 15px rgba(0, 0, 0, 0.1)", // Regular box shadow
-                    minHeight: "100px", // Uniform height for all boxes
-                  }}
-                >
-                  <Card className="border-none">
-                    <CardHeader>
-                      <CardTitle className="text-[20px] font-bold">
-                        {workflow.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription>{workflow.description}</CardDescription>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {workflows.map((workflow, index) => (
+                  <motion.div 
+                    key={index} 
+                    initial={{ opacity: 0, y: 20 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    whileHover={{ boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.1)' }}
+                    transition={{ delay: index * 0.1 }}
+                    className="p-6 bg-white rounded-lg shadow-lg cursor-pointer"
+                    style={{
+                      border: '2px solid #95D524', // Green border
+                      borderRadius: '8px',
+                      boxShadow: '0px 6px 15px rgba(0, 0, 0, 0.1)', // Regular box shadow
+                      minHeight: '100px', // Uniform height for all boxes
+                    }}
+                    onClick={() => handleWorkflowClick(workflow.id)}
+                  >
+                    <Card className='border-none'>
+                      <CardHeader>
+                        <CardTitle className="text-[20px] font-bold">{workflow.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription>{workflow.description}</CardDescription>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            
 
             {/* Display Search Results */}
-            {searchData.length > 0 && (
+            {searchData?.length > 0 && (
               <div className="space-y-8" ref={searchResultsRef}>
-                {/* <SearchResults
-                  data={currentData}
-                  length={searchData.length}
-                  fulldata={searchData}
-                /> */}
-                <SearchResults data={currentData} length={searchData.length} fulldata={searchData} query={query} />
-
+                <SearchResults data={currentData} length={searchData.length} fulldata={searchData} query={resultquery} />
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}

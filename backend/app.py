@@ -4,6 +4,8 @@ import json
 from flask_cors import CORS
 import pandas as pd
 
+from openai import OpenAI
+import requests
 
 from PharmaX1.search import process_multiple_files, preprocess
 from PharmaX1.reference.Models import callLLMChatBot
@@ -31,65 +33,88 @@ def search():
     # Get the search keyword from the request
     search_keyword = request.json.get('keyword')
     
+    # openai_api_key = os.environ.get('OPENAI_API_KEY')
+    # headers = {
+    #     'Authorization': f'Bearer {openai_api_key}',
+    #     'Content-Type': 'application/json'
+    # }
+
+    # openai_payload = {
+    #     'model': 'gpt-4o-mini',
+    #     'messages': [
+    #         {'role': 'system', 
+    #          'content': 'You are a chemical expert. You will be given a query, you have to return only drugs/chemical names and important words only. Return your answer in just plain text.'},
+    #         {'role': 'user', 
+    #          'content': f"Query: {search_keyword}"}
+    #     ]
+    # }
+
+    # openai_response = requests.post(
+    #     'https://api.openai.com/v1/chat/completions',
+    #     headers=headers,
+    #     json=openai_payload
+    # )
+
+    # openai_data = openai_response.json()
+
+    # Handle response from OpenAI and extract the SQL query
+    # if openai_response.status_code == 200:
+    #     query = openai_data['choices'][0]['message']['content']
+    #     # print(f"Generated SQL Query: {sql_query}")
+    # else:
+    #     raise Exception(f"OpenAI API failed: {openai_data}")
+    
+    # Ensure the keyword is provided before further processing
+    if not search_keyword:
+        return jsonify({"error": "No search keyword provided."}), 400
+
+    # Preprocess the search keyword
     query = preprocess(search_keyword)
     
     if isinstance(query, set):
         query = ' '.join(query)
     
     print(query)
-    
 
-    # Ensure the keyword is provided
-    if not search_keyword:
-        return jsonify({"error": "No search keyword provided."}), 400
+    # Define two separate queries: one for `categorix_v2` and one for `drug-disease-indication`
+    es_query = [
+        # Query for categorix_v2 (specific fields: title, abstract)
+        {"index": "categorix_v2"},
+        {
+            "query": {
+                "query_string": {
+                    "query": query,
+                    "fields": ["title", "abstract"],
+                    "default_operator": "AND"# Search only in title and abstract fields
+                }
+            },
+            "size": 10000
+        },
+        # Query for drug-disease-indication (search all fields)
+        {"index": "drug-disease-indication"},
+        {
+            "query": {
+                "query_string": {
+                    "query": query, 
+                    "default_operator": "AND" # Search the same query across all fields
+                }
+            },
+            "size": 10000
+        }
+    ]
 
-    # Perform the search in Elasticsearch
+    # Perform the multi-search in Elasticsearch
     try:
-        # response = es.search(
-        #     index="drug-disease-indication",
-        #     body={
-        #         "query": query,
-        #         "size": 10000  # Include the size parameter
-        #     }
-        # )
-        response = es.search(index='categorix_v2', q= query, size=10 )
+        response = es.msearch(body=es_query)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    # Extract hits from the response
-    hits = response['hits']['hits']
-    documents = [hit['_source'] for hit in hits]
-    print(documents)
+    # Extract and combine hits from both queries directly
+    documents = [hit['_source'] for res in response['responses'] for hit in res['hits']['hits']]
 
-    # Convert the documents to a DataFrame for easier manipulation if needed
-    # df = pd.DataFrame(documents)
-    
-    # df.fillna("", inplace=True)
-    
-    
-    # # Print the DataFrame for debugging purposes
-    # print(df)
+    # Return the combined results as a single list of documents
+    return jsonify({"documents": documents, "query": query}), 200
 
-    # # Convert the DataFrame back to a list of dictionaries before returning
-    # documents = df.to_dict(orient='records')
-
-    # # Save the DataFrame to an Excel file
-    # excel_file_path = "search_results_app.xlsx"
-    # df.to_excel(excel_file_path, index=False)
-
-    # # Ensure the Excel file is saved successfully
-    # if os.path.exists(excel_file_path):
-    #     print(f"Excel file saved successfully at {excel_file_path}")
-    
-    # print("count:", df.count())
-    
-    # # print(len(df))
-    
-    # # Print the DataFrame for debugging purposes
-    # print(df)
-
-    # Return the documents in a JSON response
-    return jsonify(documents), 200
 
 # @app.route('/search', methods=['POST'])
 # def search():
@@ -184,6 +209,79 @@ def chatbot():
     response = callLLMChatBot(list, query)
     # print(list)
     return jsonify({'results': response, 'list': list}), 200
+
+
+# Initialize OpenAI client
+openai_client = OpenAI(
+    api_key=os.environ["OPENAI_API_KEY"],
+)
+
+# Function to get Elasticsearch results
+def get_elasticsearch_results(query):
+    es_query = {
+        "query": {
+            "multi_match": {
+                "query": query,
+                "fields": ['*']
+            }
+        },
+        "size": 3  # Fetch the top 10 documents
+    }
+    result = es.search(index="categorix_v2", body=es_query)
+    return result["hits"]["hits"]
+
+# Function to create OpenAI prompt
+def create_openai_prompt(results):
+    context = ""
+    for hit in results:
+        source_fields = hit["_source"]
+        # print(source_fields)
+        # Concatenate all fields for context
+        context += '\n'.join(f"{key}: {value}" for key, value in source_fields.items()) + "\n\n"
+
+    prompt = f"""
+  Instructions:
+  
+  - You are an assistant for question-answering tasks.
+  - Answer questions truthfully and factually using only the context presented.
+  - If you don't know the answer, just say that you don't know, don't make up an answer.
+  - You must always cite the document where the answer was extracted using inline academic citation style [], using the position.
+  - Use markdown format for code examples.
+  - You are correct, factual, precise, and reliable.
+  
+  Context:
+  {context}
+  
+  """
+    print(context)
+    return prompt
+
+# Function to generate OpenAI completion
+def generate_openai_completion(user_prompt, question):
+    response = openai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": user_prompt},
+            {"role": "user", "content": question},
+        ]
+    )
+    return response.choices[0].message.content
+
+# Define the route for the API
+@app.route('/ask', methods=['POST'])
+def ask():
+    data = request.json
+    # question = data.get('question')
+    query = data.get('query')
+
+    # Get Elasticsearch results
+    elasticsearch_results = get_elasticsearch_results(query)
+    # Create OpenAI prompt
+    context_prompt = create_openai_prompt(elasticsearch_results)
+    # Generate OpenAI completion
+    openai_completion = generate_openai_completion(context_prompt, query)
+
+    return jsonify({"results": openai_completion})
 
 if __name__ == '__main__':
     app.run(debug=True)

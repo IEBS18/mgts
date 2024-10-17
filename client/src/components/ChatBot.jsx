@@ -19,14 +19,13 @@ export default function ChatBot({ chatMessages, setChatMessages, list, fulldata,
     setIsAnalyzing(true);
 
     try {
-      const response = await fetch('http://54.211.78.164:5000/chatbot', {
+      const response = await fetch('http://localhost:5000/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: newMessage, list, results: fulldata })
       });
 
       const result = await response.json();
-
       setChatMessages((prev) => [
         ...prev.slice(0, -1),
         { type: 'bot', content: result.results }
