@@ -52,7 +52,7 @@ def search():
         #         "size": 10000  # Include the size parameter
         #     }
         # )
-        response = es.search(index='drug-disease-indication', q= query, size=10000 )
+        response = es.search(index='categorix_v2', q= query, size=10 )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

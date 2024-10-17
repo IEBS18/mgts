@@ -108,12 +108,12 @@ export default function Dashboard() {
     >
       <div className="flex-1">
         <main className="flex-1 p-8 overflow-auto">
-          <div className="max-w-4xl mx-auto">
+          <div className={`${isChatMinimized ? 'max-w-4xl' : 'max-w-3xl'} mx-auto`}>
             <header className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-bold">
                 Welcome to <span className="text-[#95D524]">PharmaX</span>{" "}
                 Copilot
-                <span className="text-sm font-normal bg-yellow-200 px-2 py-1 rounded">
+                <span className="text-sm font-normal bg-yellow-200 px-2 py-1 rounded ml-2">
                   BETA
                 </span>
               </h1>
@@ -172,11 +172,13 @@ export default function Dashboard() {
             {/* Display Search Results */}
             {searchData.length > 0 && (
               <div className="space-y-8" ref={searchResultsRef}>
-                <SearchResults
+                {/* <SearchResults
                   data={currentData}
                   length={searchData.length}
                   fulldata={searchData}
-                />
+                /> */}
+                <SearchResults data={currentData} length={searchData.length} fulldata={searchData} query={query} />
+
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
