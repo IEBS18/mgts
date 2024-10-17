@@ -118,6 +118,7 @@ def search():
         }
     ]
 
+    # chat
     # Perform the multi-search in Elasticsearch
     try:
         response = es.msearch(body=es_query)
