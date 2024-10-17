@@ -105,6 +105,16 @@ def search():
                 }
             },
             "size": 10000
+        },
+        {"index": "clinical-trial-outcomes"},
+        {
+            "query": {
+                "query_string": {
+                    "query": query, 
+                    "default_operator": "AND" # Search the same query across all fields
+                }
+            },
+            "size": 10000
         }
     ]
 
@@ -183,7 +193,8 @@ def search_with_tfidf(results, query):
         list: Sorted list of tuples containing the matched result and its relevance score.
     """
     # Flattening the dictionaries into a list of concatenated strings (corpus for TF-IDF)
-    corpus = [" ".join(result.values()) for result in results]
+
+    corpus = [" ".join(str(value) if value is not None else "" for value in result.values()) for result in results]
 
     # Add the query as part of the corpus to compare its similarity to the documents
     corpus_with_query = corpus + [query]
@@ -301,6 +312,7 @@ def create_openai_prompt(results):
   {context}
  
   """
+    # print(context)
     return prompt
  
 # Function to generate OpenAI completion
@@ -330,8 +342,26 @@ def ask():
     data = request.json
     query = data.get('query')
     results = data.get('results')
-    top_n = 5  # Number of top results to consider
-    
+    removed_english_descriptions = []
+    for result in results:  # Check if 'type' is 'pregranted'
+        if result.get('type') == 'pregranted':
+            removed_english_description = result.pop('english_description', '')  
+            # if removed_english_description is not None:
+            removed_english_descriptions.append(removed_english_description)
+    print(removed_english_descriptions[:5])
+    full_results, filtered_results = search_with_tfidf(results, query)
+
+    # Output the full results with scores
+    # print("Full Results with Scores:")
+    # for result, score in full_results[:3]:
+    #     print(f"Result: {result}, Relevance Score: {score}")
+
+    # Output the filtered results without scores
+    # print("\nFiltered Results without Scores:")
+    # for result in filtered_results:
+    #     print(f"Filtered Result: {result}")
+
+
     # Get Elasticsearch results
     elasticsearch_results = get_elasticsearch_results(query)
     print(elasticsearch_results)

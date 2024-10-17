@@ -113,6 +113,11 @@ export default function Dashboard() {
         setSearchData(filteredData);
         setCurrentPage(1);
       }
+      else if (id === 3) {
+        const filteredData = allData.filter((doc) => doc.type === "clinicaltrial");
+        setSearchData(filteredData);
+        setCurrentPage(1);
+      }
       // Add logic for other workflows if needed
     }
     setCurrentPage(1); // Reset to the first page when new data is loaded

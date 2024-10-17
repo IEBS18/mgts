@@ -126,7 +126,7 @@ export default function SearchResults({ data, length, fulldata, query }) {
               <div className="w-1/2 pr-4">
                 <div className="flex justify-between items-start mb-2">
                   <h2 className="text-lg font-semibold">{pub.title}</h2>
-                  <Button variant="ghost" size="sm" onClick={(e) => {e.stopPropagation(); openDialog(pub);}}>
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openDialog(pub); }}>
                     <FileText className="h-4 w-4" color="green" />
                   </Button>
                 </div>
@@ -156,7 +156,7 @@ export default function SearchResults({ data, length, fulldata, query }) {
             >
               <div className="flex justify-between items-start mb-2">
                 <h2 className="text-lg font-semibold">{pub.Product_Name}</h2>
-                <Button variant="ghost" size="sm" onClick={(e) => {e.stopPropagation(); openDialog(pub);}}>
+                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openDialog(pub); }}>
                   <FileText className="h-4 w-4" color="green" />
                 </Button>
               </div>
@@ -170,7 +170,39 @@ export default function SearchResults({ data, length, fulldata, query }) {
                 Ingredients: {pub.Ingredients}
               </p>
             </div>
-          ) : null // Handle other cases if needed
+          ) : pub.type === 'clinicaltrial' ? (
+            <div
+              key={`clinicaltrial-${index}`} // Unique key for clinical trial items
+              className={`bg-white p-6 rounded-lg border bg-background md:shadow-xl flex flex-row justify-between items-start 
+              ${selectedCards.includes(pub) ? 'border-2 border-[#95D524] bg-green-100' : ''}`} // Highlight selected cards
+              onClick={() => toggleCardSelection(pub)} // Toggle selection on click
+            >
+              <div className="w-1/2 pr-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h2 className="text-lg font-semibold">{pub["Study Title"]} • {pub["NCT Number"]} </h2>
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openDialog(pub); }}>
+                    <FileText className="h-4 w-4" color="green" />
+                  </Button>
+                </div>
+                <div className="text-sm text-gray-600 mb-2">
+                  {pub["Sponsor"]} • {pub["Locations"]}
+                </div>
+                <div className="text-sm text-gray-600 mb-4">
+                  Completion Date: {pub["Completion Date"]}
+                </div>
+                <p className="text-sm text-gray-800 break-words">
+                  Conditions: {pub["Conditions"]}
+                </p>
+              </div>
+              <div className="w-1/2 bg-gray-100 p-4 rounded-lg">
+                <h3 className="text-sm font-semibold mb-2">Brief Summary:</h3>
+                <p className="text-sm italic break-words">
+                  {highlightText(pub["Brief Summary"], query, 150)}
+                </p>
+              </div>
+            </div>
+          ) : null
+          // Handle other cases if needed
         ))}
       </div>
 
