@@ -1,22 +1,41 @@
 import React, { useState, useRef } from "react";
 import { Bell } from "lucide-react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import SearchResults from "./SearchResults";
 import Pagination from "./Pagination";
 import ChatBot from "./ChatBot";
 
 export default function Dashboard() {
   const workflows = [
-    { id: 1, title: "Search Drugs and Diseases", description: "Find approved and pipeline drugs" },
-    { id: 2, title: "Research Paper and Patents", description: "Find scientific research papers and patents " },
-    { id: 3, title: "Find Clinical Data", description: "Access and analyze clinical trial data" }
+    {
+      id: 1,
+      title: "Search Drugs and Diseases",
+      description: "Find approved and pipeline drugs",
+    },
+    {
+      id: 2,
+      title: "Research Paper and Patents",
+      description: "Find scientific research papers and patents ",
+    },
+    {
+      id: 3,
+      title: "Find Clinical Data",
+      description: "Access and analyze clinical trial data",
+    },
   ];
 
   const [query, setQuery] = useState("");
-  const [resultquery, setResultQuery] = useState('');
+  const [resultquery, setResultQuery] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchData, setSearchData] = useState([]);
@@ -29,11 +48,16 @@ export default function Dashboard() {
   const [selectedCard, setSelectedCard] = useState(null);
   const [summaryResponse, setSummaryResponse] = useState(""); // To store summary
 
+  const navigate = useNavigate(); // Initialize useNavigate
+
   const handleSearch = async () => {
     setIsLoading(true);
     setIsChatMinimized(false);
     setChatMessages([{ type: "user", content: query }]);
-    setChatMessages((prev) => [...prev, { type: "bot", content: "Working on it...", bgColor: "bg-blue-200" }]);
+    setChatMessages((prev) => [
+      ...prev,
+      { type: "bot", content: "Working on it...", bgColor: "bg-blue-200" },
+    ]);
 
     try {
       const response = await fetch("http://localhost:5000/search", {
@@ -50,7 +74,11 @@ export default function Dashboard() {
 
       setChatMessages((prev) => [
         ...prev,
-        { type: 'bot', content: `Showing ${result?.documents?.length} Relevant Documents`, bgColor: 'bg-blue-200' }
+        {
+          type: "bot",
+          content: `Showing ${result?.documents?.length} Relevant Documents`,
+          bgColor: "bg-blue-200",
+        },
       ]);
     } catch (error) {
       console.error("Error making POST request:", error);
@@ -81,16 +109,19 @@ export default function Dashboard() {
     } else {
       setSelectedCard(id);
       if (id === 1) {
-        const filteredData = allData.filter((doc) => doc.type === "drugdisease");
+        const filteredData = allData.filter(
+          (doc) => doc.type === "drugdisease"
+        );
         setSearchData(filteredData);
       }
       else if (id === 2) {
         const filteredData = allData.filter((doc) => doc.type === "pubmed" || doc.type === "pregranted");
         setSearchData(filteredData);
         setCurrentPage(1);
-      }
-      else if (id === 3) {
-        const filteredData = allData.filter((doc) => doc.type === "clinicaltrial");
+      } else if (id === 3) {
+        const filteredData = allData.filter(
+          (doc) => doc.type === "clinicaltrial"
+        );
         setSearchData(filteredData);
         setCurrentPage(1);
       }
@@ -100,24 +131,41 @@ export default function Dashboard() {
   };
 
   const handleSummaryGenerated = (summary) => {
-    setSummaryResponse(summary);  // Save the generated summary
+    setSummaryResponse(summary); // Save the generated summary
     // Remove the raw "Summary:" message and pass it only as markdown
+  };
+
+  const handleVisualize = () => {
+    navigate("/visualize", { state: { searchData: allData } }); // Navigate and pass data
   };
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentData = searchData ? searchData?.slice(indexOfFirstItem, indexOfLastItem) : [];
-  const totalPages = searchData ? Math.ceil(searchData?.length / itemsPerPage) : 0;
+  const currentData = searchData
+    ? searchData?.slice(indexOfFirstItem, indexOfLastItem)
+    : [];
+  const totalPages = searchData
+    ? Math.ceil(searchData?.length / itemsPerPage)
+    : 0;
 
   return (
-    <div className={`flex h-full bg-gray-100 transition-all duration-300 ${isChatMinimized ? "w-full" : "w-2/3"}`}>
+    <div
+      className={`flex h-full bg-gray-100 transition-all duration-300 ${
+        isChatMinimized ? "w-full" : "w-2/3"
+      }`}
+    >
       <div className="flex-1">
         <main className="flex-1 p-8 overflow-auto">
-          <div className={`${isChatMinimized ? "max-w-4xl" : "max-w-2xl"} mx-auto`}>
+          <div
+            className={`${isChatMinimized ? "max-w-4xl" : "max-w-2xl"} mx-auto`}
+          >
             <header className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-bold">
-                Welcome to <span className="text-[#95D524]">PharmaX</span> Copilot
-                <span className="text-sm font-normal bg-yellow-200 px-2 py-1 rounded ml-2">BETA</span>
+                Welcome to <span className="text-[#95D524]">PharmaX</span>{" "}
+                Copilot
+                <span className="text-sm font-normal bg-yellow-200 px-2 py-1 rounded ml-2">
+                  BETA
+                </span>
               </h1>
               <Bell className="h-6 w-6" />
             </header>
@@ -138,6 +186,16 @@ export default function Dashboard() {
               >
                 {isLoading ? "Searching..." : "Search"}
               </Button>
+              {allData.length !== 0 && (
+                <Button
+                  variant="outline"
+                  className="text-black border-green border-2 rounded-lg ml-4"
+                  onClick={handleVisualize} // Call handleVisualize on click
+                  disabled={allData.length === 0}
+                >
+                  Visualize
+                </Button>
+              )}
             </div>
 
             {/* Workflow Cards */}
@@ -147,20 +205,27 @@ export default function Dashboard() {
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.1)' }}
+                  whileHover={{ boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.1)" }}
                   transition={{ delay: index * 0.1 }}
-                  className={`p-6 bg-white rounded-lg shadow-lg cursor-pointer transition-transform ${selectedCard === workflow.id ? 'translate-y-2' : ''}`}
+                  className={`p-6 bg-white rounded-lg shadow-lg cursor-pointer transition-transform ${
+                    selectedCard === workflow.id ? "translate-y-2" : ""
+                  }`}
                   style={{
-                    border: selectedCard === workflow.id ? '2px solid #000' : '2px solid #95D524',
-                    borderRadius: '8px',
-                    boxShadow: '0px 6px 15px rgba(0, 0, 0, 0.1)',
-                    minHeight: '100px',
+                    border:
+                      selectedCard === workflow.id
+                        ? "2px solid #000"
+                        : "2px solid #95D524",
+                    borderRadius: "8px",
+                    boxShadow: "0px 6px 15px rgba(0, 0, 0, 0.1)",
+                    minHeight: "100px",
                   }}
                   onClick={() => handleWorkflowClick(workflow.id)}
                 >
-                  <Card className='border-none'>
+                  <Card className="border-none">
                     <CardHeader>
-                      <CardTitle className="text-[20px] font-bold">{workflow.title}</CardTitle>
+                      <CardTitle className="text-[20px] font-bold">
+                        {workflow.title}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <CardDescription>{workflow.description}</CardDescription>
@@ -173,8 +238,18 @@ export default function Dashboard() {
             {/* Display Search Results */}
             {searchData?.length > 0 && (
               <div className="space-y-8" ref={searchResultsRef}>
-                <SearchResults data={currentData} length={searchData.length} fulldata={searchData} query={resultquery} onSummaryGenerated={handleSummaryGenerated} />
-                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                <SearchResults
+                  data={currentData}
+                  length={searchData.length}
+                  fulldata={searchData}
+                  query={resultquery}
+                  onSummaryGenerated={handleSummaryGenerated}
+                />
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
               </div>
             )}
           </div>
@@ -194,4 +269,3 @@ export default function Dashboard() {
     </div>
   );
 }
-

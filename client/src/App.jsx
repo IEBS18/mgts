@@ -1,19 +1,65 @@
-import React from 'react'
-import Dashboard from './components/DashBoard'
-import SearchResults from './components/SearchResults'
-import AdvancedSearch from './components/AdvancedSearch'
-import Layout from './pages/Layout'
-import Dashboard1 from './components/Dashboard1'
-const App = () => {
+// import React from "react";
+// import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+// import Dashboard from "@/components/Dashboard";
+// import Visualize from "@/components/Visualize";
+
+// function App() {
+//   return (
+//     <Router>
+//       <Routes>
+//         <Route
+//           path="/"
+//           element={
+//             <Layout>
+//               <Dashboard />
+//             </Layout>
+//           }
+//         />
+//         <Route
+//           path="/visualize"
+//           element={
+//             <Layout>
+//               <Visualize />
+//             </Layout>
+//           }
+//         />
+//       </Routes>
+//     </Router>
+//   );
+// }
+
+// export default App;
+
+
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Dashboard from "@/components/Dashboard";
+import Visualize from "@/components/Visualize";
+import Layout from "@/pages/Layout";
+
+function App() {
   return (
-    <div>
-      <Layout>
-        <Dashboard />
-        {/* <SearchResults /> */}
-        {/* <AdvancedSearch /> */}
-      </Layout>
-    </div>
-  )
+    <Router>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Layout type="dashboard"> {/* Pass type as 'dashboard' */}
+              <Dashboard />
+            </Layout>
+          }
+        />
+        <Route
+          path="/visualize"
+          element={
+            <Layout type="visualize"> {/* Pass type as 'visualize' */}
+              <Visualize />
+            </Layout>
+          }
+        />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
