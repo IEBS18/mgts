@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send, Minimize, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Input } from './ui/input';
+import ReactMarkdown from 'react-markdown'; // Import react-markdown
 
-export default function ChatBot({ chatMessages, setChatMessages, list, fulldata, isMinimized, onToggle }) {
+export default function ChatBot({ chatMessages, setChatMessages, list, fulldata, isMinimized, onToggle, summaryResponse }) {
   const [newMessage, setNewMessage] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -42,20 +43,21 @@ export default function ChatBot({ chatMessages, setChatMessages, list, fulldata,
     setNewMessage("");
   };
 
+  // Only display the floating icon when minimized
   if (isMinimized) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }} // Ensure smooth fade-in effect
+        animate={{ opacity: 1 }}
         className="fixed bottom-6 right-6 z-50"
-        style={{ height: 'auto' }} // Fix height issue by explicitly setting it to auto
+        style={{ height: 'auto' }}
       >
         <Button
           variant="ghost"
-          className="bg-[#95D524] text-white rounded-full p-4 shadow-lg h-12 w-12 flex justify-center items-center" // Fixed size for button
+          className="bg-[#95D524] text-white rounded-full p-4 shadow-lg h-12 w-12 flex justify-center items-center"
           onClick={onToggle}
         >
-          <MessageCircle className="h-6 w-6" /> {/* Chat icon */}
+          <MessageCircle className="h-6 w-6" />
         </Button>
       </motion.div>
     );
@@ -64,7 +66,7 @@ export default function ChatBot({ chatMessages, setChatMessages, list, fulldata,
   return (
     <motion.div
       initial={{ height: '100px' }}
-      animate={{ height: '100vh' }} // Full height when expanded
+      animate={{ height: '100vh' }}
       exit={{ height: 0 }}
       className="fixed bottom-0 right-0 w-1/3 bg-white border-l border-gray-300 flex flex-col shadow-lg z-50"
       style={{ borderRadius: '16px', backdropFilter: 'blur(10px)' }}
@@ -94,14 +96,33 @@ export default function ChatBot({ chatMessages, setChatMessages, list, fulldata,
                 <AvatarFallback>{message.type === 'user' ? 'U' : 'B'}</AvatarFallback>
               </Avatar>
 
-              <div
-                className={`p-2 rounded-xl shadow-md ${message.type === 'user' ? 'bg-blue-500 text-white' : 'bg-[#95D524] text-white'}`} // Bot message with green background
-              >
-                <p className="text-sm">{message.content}</p>
+              <div className={`p-2 rounded-xl shadow-md ${message.type === 'user' ? 'bg-blue-500 text-white' : 'bg-[#95D524] text-white'}`}>
+                <p className="text-sm">
+                  {message.content}
+                </p>
               </div>
             </div>
           </motion.div>
         ))}
+
+        {/* Display only markdown rendered content for summary */}
+        {summaryResponse && (
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="flex justify-start"
+          >
+            <div className="flex items-start space-x-2">
+              <Avatar className="w-8 h-8 bg-gray-200">
+                <AvatarFallback>B</AvatarFallback>
+              </Avatar>
+              <div className="p-2 rounded-xl shadow-md bg-[#95D524] text-white">
+                <ReactMarkdown>{summaryResponse}</ReactMarkdown> {/* Only markdown-rendered content */}
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       <div className="p-4 border-t border-gray-300">

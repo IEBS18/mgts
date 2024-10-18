@@ -380,5 +380,76 @@ def ask():
     openai_completion = generate_openai_completion(query)
  
     return jsonify({"results": openai_completion})
+
+def summarize_with_openai(document_text):
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",  
+            messages=[
+                {"role": "system", "content": "You are a summarizer. Your job is to summarize the documents provided to in concise way and with fine information for the user. This limit should be till max tokens and you need to complete all the summarisation of the provided documents for the user."},
+                {"role": "user", "content": f"Summarize the following document: {document_text}"}
+            ],
+            #min_tokens=150,  # Adjust as per your need
+            max_tokens=600,  # Adjust as per your need
+            temperature=0.3,
+        )
+        summary = response.choices[0].message.content
+        return summary.strip()
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+def summarize_by_title_or_org(search_results):
+
+    combined_text = ""
+    organization_names = set()  
+    for document in search_results:
+        title = document.get('title', '')
+        org_name = document.get('Organization_Name', '')
+        
+        # Prioritize title or organization name 
+        if title:
+            combined_text += f"Title: {title}\n"
+        if org_name:
+            combined_text += f"Organization: {org_name}\n"
+            organization_names.add(org_name)
+        
+        
+        abstract = document.get('abstract', '')
+        english_description = document.get('english_description', '')
+        ingredients = document.get('Ingredients', '')
+        diseases = document.get('Diseases', '')
+        
+        # Append relevant content for each document
+        if abstract:
+            combined_text += f"Abstract: {abstract}\n"
+        if english_description:
+            combined_text += f"Description: {english_description}\n"
+        if ingredients:
+            combined_text += f"Ingredients: {ingredients}\n"
+        if diseases:
+            combined_text += f"Diseases: {diseases}\n"
+        
+        combined_text += "\n"  
+    
+    
+    if len(organization_names) > 1:
+        combined_text = f"Multiple organizations found: {', '.join(organization_names)}\n\n" + combined_text
+    
+    # Summarize the combined text using OpenAI
+    if combined_text:
+        summary = summarize_with_openai(combined_text)
+        return summary
+    else:
+        return "No content available to summarize."
+
+@app.route('/generate-summary', methods=['POST'])
+def generate_summary():
+    data = request.json
+    selected_cards = data.get('selectedCards')
+    print(selected_cards)
+    summary = summarize_by_title_or_org(selected_cards)
+    return jsonify({"summary": summary})
+    
+    
 if __name__ == '__main__':
     app.run(debug=True)

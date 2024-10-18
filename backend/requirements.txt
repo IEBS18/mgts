@@ -9,3 +9,4 @@ Requests
 elasticsearch
 scikit-learn
 numpy
+openai
