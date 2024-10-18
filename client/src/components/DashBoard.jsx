@@ -1,13 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Bell } from "lucide-react";
 import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SearchResults from "./SearchResults";
@@ -22,27 +16,24 @@ export default function Dashboard() {
   ];
 
   const [query, setQuery] = useState("");
-  const [resultquery, setresultquery] = useState('');
+  const [resultquery, setResultQuery] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchData, setSearchData] = useState([]);
   const [list, setList] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isChatMinimized, setIsChatMinimized] = useState(true); // Start with chat minimized
+  const [isChatMinimized, setIsChatMinimized] = useState(true);
   const itemsPerPage = 10;
   const searchResultsRef = useRef(null);
   const [allData, setAllData] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
-
+  const [summaryResponse, setSummaryResponse] = useState(""); // To store summary
 
   const handleSearch = async () => {
     setIsLoading(true);
-    setIsChatMinimized(false); // Automatically expand chatbot on search
+    setIsChatMinimized(false);
     setChatMessages([{ type: "user", content: query }]);
-    setChatMessages((prev) => [
-      ...prev,
-      { type: "bot", content: "Working on it...", bgColor: "bg-blue-200" },
-    ]);
+    setChatMessages((prev) => [...prev, { type: "bot", content: "Working on it...", bgColor: "bg-blue-200" }]);
 
     try {
       const response = await fetch("http://localhost:5000/search", {
@@ -52,11 +43,9 @@ export default function Dashboard() {
       });
 
       const result = await response.json();
-      console.log(result);
-      console.log(result.documents)
       setAllData(result.documents);
       setSearchData(result.documents);
-      setresultquery(result.query);
+      setResultQuery(result.query);
       setList(result.drugdisease);
 
       setChatMessages((prev) => [
@@ -75,7 +64,6 @@ export default function Dashboard() {
       ]);
     } finally {
       setIsLoading(false);
-      // console.log(searchData);
       if (searchResultsRef.current) {
         searchResultsRef.current.scrollIntoView({ behavior: "smooth" });
       }
@@ -83,27 +71,15 @@ export default function Dashboard() {
   };
 
   const handleChatToggle = () => {
-    setIsChatMinimized(!isChatMinimized); // Toggle chat minimized state
+    setIsChatMinimized(!isChatMinimized);
   };
-  // const handleWorkflowClick = (id) => {
-  //   if (id === 1) {
-  //     const filteredData = allData.filter((doc) => doc.type === "drugdisease");
-  //     setSearchData(filteredData);
-  //     setCurrentPage(1); // Reset to the first page when new data is loaded
-  //   }
-  //   else if(id === 2){
-  //     const filteredData = allData.filter((doc) => doc.type === "pregranted");
-  //     setSearchData(filteredData);
-  //     setCurrentPage(1);
-  //   }
-  // };
+
   const handleWorkflowClick = (id) => {
     if (selectedCard === id) {
-      // If the same card is clicked again, reset to full data
       setSearchData(allData);
-      setSelectedCard(null); // Unselect the card
+      setSelectedCard(null);
     } else {
-      setSelectedCard(id); // Select this card
+      setSelectedCard(id);
       if (id === 1) {
         const filteredData = allData.filter((doc) => doc.type === "drugdisease");
         setSearchData(filteredData);
@@ -120,7 +96,12 @@ export default function Dashboard() {
       }
       // Add logic for other workflows if needed
     }
-    setCurrentPage(1); // Reset to the first page when new data is loaded
+    setCurrentPage(1);
+  };
+
+  const handleSummaryGenerated = (summary) => {
+    setSummaryResponse(summary);  // Save the generated summary
+    // Remove the raw "Summary:" message and pass it only as markdown
   };
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -129,20 +110,14 @@ export default function Dashboard() {
   const totalPages = searchData ? Math.ceil(searchData?.length / itemsPerPage) : 0;
 
   return (
-    <div
-      className={`flex h-full bg-gray-100 transition-all duration-300 ${isChatMinimized ? "w-full" : "w-2/3"
-        }`}
-    >
+    <div className={`flex h-full bg-gray-100 transition-all duration-300 ${isChatMinimized ? "w-full" : "w-2/3"}`}>
       <div className="flex-1">
         <main className="flex-1 p-8 overflow-auto">
           <div className={`${isChatMinimized ? "max-w-4xl" : "max-w-2xl"} mx-auto`}>
             <header className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-bold">
-                Welcome to <span className="text-[#95D524]">PharmaX</span>{" "}
-                Copilot
-                <span className="text-sm font-normal bg-yellow-200 px-2 py-1 rounded ml-2">
-                  BETA
-                </span>
+                Welcome to <span className="text-[#95D524]">PharmaX</span> Copilot
+                <span className="text-sm font-normal bg-yellow-200 px-2 py-1 rounded ml-2">BETA</span>
               </h1>
               <Bell className="h-6 w-6" />
             </header>
@@ -176,10 +151,10 @@ export default function Dashboard() {
                   transition={{ delay: index * 0.1 }}
                   className={`p-6 bg-white rounded-lg shadow-lg cursor-pointer transition-transform ${selectedCard === workflow.id ? 'translate-y-2' : ''}`}
                   style={{
-                    border: selectedCard === workflow.id ? '2px solid #000' : '2px solid #95D524', // Green border
+                    border: selectedCard === workflow.id ? '2px solid #000' : '2px solid #95D524',
                     borderRadius: '8px',
-                    boxShadow: '0px 6px 15px rgba(0, 0, 0, 0.1)', // Regular box shadow
-                    minHeight: '100px', // Uniform height for all boxes
+                    boxShadow: '0px 6px 15px rgba(0, 0, 0, 0.1)',
+                    minHeight: '100px',
                   }}
                   onClick={() => handleWorkflowClick(workflow.id)}
                 >
@@ -195,16 +170,11 @@ export default function Dashboard() {
               ))}
             </div>
 
-
             {/* Display Search Results */}
             {searchData?.length > 0 && (
               <div className="space-y-8" ref={searchResultsRef}>
-                <SearchResults data={currentData} length={searchData.length} fulldata={searchData} query={resultquery} />
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
+                <SearchResults data={currentData} length={searchData.length} fulldata={searchData} query={resultquery} onSummaryGenerated={handleSummaryGenerated} />
+                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
               </div>
             )}
           </div>
@@ -219,6 +189,7 @@ export default function Dashboard() {
         fulldata={searchData}
         isMinimized={isChatMinimized}
         onToggle={handleChatToggle}
+        summaryResponse={summaryResponse} // Pass the summary response to chatbot
       />
     </div>
   );
