@@ -8,6 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from dotenv import load_dotenv
 load_dotenv()
+
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -19,6 +20,14 @@ es = Elasticsearch(
     os.getenv('elasticsearchendpoint'),
     api_key=os.getenv('elasticapikey')
 )
+
+def remove_english_description(data_list):
+    for entry in data_list:
+        # Check if the 'type' is 'pregranted'
+        if entry.get('type') == 'pregranted':
+            # Remove the 'english_description' key if it exists
+            entry.pop('english_description', None)
+    return data_list
 
 def search_with_tfidf(results, query):
     """
@@ -86,16 +95,26 @@ def get_elasticsearch_results(query):
             },
             "size": 10
         },
-        # {"index": "clinical-trial-outcomes"},
-        # {
-        #     "query": {
-        #         "query_string": {
-        #             "query": query, 
-        #             "default_operator": "OR" # Search the same query across all fields
-        #         }
-        #     },
-        #     "size": 10000
-        # }
+        {"index": "clinical-trial-outcomes"},
+        {
+            "query": {
+                "query_string": {
+                    "query": query, 
+                    "default_operator": "OR" # Search the same query across all fields
+                }
+            },
+            "size": 1
+        },
+        {"index": "pubmed"},
+        {
+            "query": {
+                "query_string": {
+                    "query": query, 
+                    "default_operator": "OR" # Search the same query across all fields
+                }
+            },
+            "size": 1
+        }
     ]
     result = es.msearch(body=es_query)
     return [hit['_source'] for res in result['responses'] for hit in res['hits']['hits']]
@@ -109,12 +128,13 @@ def create_openai_prompt(results):
     prompt = f"""
   Instructions:
  
-  - You are an assistant for question-answering tasks.
+  - You are an research consultant for question-answering tasks.
+  - context has 4 types of data: pregranted, drugdisease, clinicaltrial, and pubmed.
+  - the pregranted data are patents which are pregranted, they contain cpc_classifications, application_year, jurisdiction, ipc_classifications, abstract, title, type, patent_legal_status, assignee_applicant, display_key, publication_year, pgpub_id, publication_date, application_date, claim, earliest_priority_date, inventor
   - Answer questions truthfully and factually using only the context presented.
   - If you don't know the answer, just say that you don't know, don't make up an answer.
   - You must always cite the product_name where the answer was extracted using inline academic citation style [], using the position.
   - Use plain text only, no HTML or markdown.
-  - provide hyperlinks to the sources of the information.
   - You are correct, factual, precise, and reliable.
  
   Context:
@@ -146,12 +166,14 @@ def generate_openai_completion(question):
 def process_question(question):
     # Get Elasticsearch results for the user query
     results = get_elasticsearch_results(question)
+    updated_results = remove_english_description(results)
     # Create an OpenAI prompt using the search results
-    prompt = create_openai_prompt(results)
-    
+    context_prompt = create_openai_prompt(updated_results)
+    conversation_history.append({"role": "system", "content": context_prompt})
+    print("added system context.")
     # Generate an OpenAI completion for the user question
-    # answer = generate_openai_completion(prompt)
-    return prompt
+    # answer = generate_openai_completion(question)
+    return context_prompt
 
 if __name__ == "__main__":
 
