@@ -69,6 +69,16 @@ def search():
                 }
             },
             "size": 10000
+        },
+        {"index": "pubmed"},
+        {
+            "query": {
+                "query_string": {
+                    "query": query, 
+                    "default_operator": "OR" # Search the same query across all fields
+                }
+            },
+            "size": 10000
         }
     ]
 

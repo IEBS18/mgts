@@ -85,7 +85,7 @@ export default function Dashboard() {
         setSearchData(filteredData);
       }
       else if (id === 2) {
-        const filteredData = allData.filter((doc) => doc.type === "pregranted");
+        const filteredData = allData.filter((doc) => doc.type === "pubmed" || doc.type === "pregranted");
         setSearchData(filteredData);
         setCurrentPage(1);
       }

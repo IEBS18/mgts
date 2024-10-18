@@ -206,7 +206,42 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
                 </p>
               </div>
             </div>
-          ) : null
+          ) :pub.type === 'pubmed' ? (
+            <div
+              key={`pubmed-${index}`} // Unique key for pregranted items
+              className={`bg-white p-6 rounded-lg border bg-background md:shadow-xl flex flex-row justify-between items-start 
+              ${selectedCards.includes(pub) ? 'border-2 border-[#95D524] bg-green-100' : ''}`}
+              onClick={() => toggleCardSelection(pub)}
+            >
+              <div className="w-1/2 pr-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h2 className="text-lg font-semibold">{pub['Title']}</h2>
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openDialog(pub); }}>
+                    <FileText className="h-4 w-4" color="green" />
+                  </Button>
+                </div>
+                <p>{pub['Journal Issue']} • {pub['Country']}</p>
+                <p className="text-sm font-semibold mt-2">Publication Date: {pub['PubDate']}</p>
+                
+                <div className="text-sm text-gray-600 mb-2 flex flex-row gap-x-1 mt-2">
+                {/* <p className="text-sm text-gray-600 mb-2 flex flex-row">ISSN Type: {pub['ISSN Type']} |</p> */}
+                  <a href={`https://pubmed.ncbi.nlm.nih.gov/${pub.PMID}`} target="_blank">View</a>
+                </div>
+                {/* <div className="text-sm text-gray-600 mb-4">
+                  Published: {pub.publication_date}
+                </div>
+                <p className="text-sm text-gray-800 break-words">
+                  CPC Classifications: {pub.cpc_classifications}
+                </p> */}
+              </div>
+              <div className="w-1/2 bg-gray-100 p-4 rounded-lg">
+                <h3 className="text-sm font-semibold mb-2">Relevant Match:</h3>
+                <p className="text-sm italic break-words">
+                  {highlightText(pub['AbstractText'], query, 150)}
+                </p>
+              </div>
+            </div>
+          ): null
         ))}
       </div>
 
