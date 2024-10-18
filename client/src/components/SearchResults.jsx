@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,11 +11,16 @@ import {
 } from "@/components/ui/dialog";
 import * as XLSX from "xlsx";
 
-export default function SearchResults({ data, length, fulldata, query }) {
+export default function SearchResults({ data, length, fulldata, query, onSummaryGenerated }) {
   const [exporting, setExporting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPub, setSelectedPub] = useState(null);
   const [selectedCards, setSelectedCards] = useState([]); // Track selected cards
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+
+  useEffect(() => {
+    setSelectedCards([]); // Reset selected cards when new data is fetched
+  }, [data]);
 
   const handleExport = () => {
     setExporting(true);
@@ -35,12 +40,10 @@ export default function SearchResults({ data, length, fulldata, query }) {
     if (!text || !highlight.trim()) {
       return text;
     }
-
     const highlightWords = highlight.split(' ').filter(Boolean);
     const regexPattern = highlightWords.map(word => `(${word})`).join('|');
     const regex = new RegExp(regexPattern, 'gi');
     const matches = text.match(regex);
-
     if (matches) {
       const index = text.search(regex);
       const start = Math.max(0, index - wordLimit);
@@ -72,18 +75,20 @@ export default function SearchResults({ data, length, fulldata, query }) {
   };
 
   const handleGenerateSummary = async () => {
+    setIsGeneratingSummary(true);
     try {
       const response = await fetch('http://localhost:5000/generate-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ selectedCards }), // Send selected cards to backend
+        body: JSON.stringify({ selectedCards }),
       });
 
       const result = await response.json();
-      console.log("Summary result:", result);
-      // Handle result (you could display the summary here)
+      onSummaryGenerated(result.summary); // Send summary to parent component
     } catch (error) {
       console.error('Error generating summary:', error);
+    } finally {
+      setIsGeneratingSummary(false);
     }
   };
 
@@ -107,9 +112,9 @@ export default function SearchResults({ data, length, fulldata, query }) {
             variant="outline"
             className="text-black border-green border-2 rounded-lg"
             onClick={handleGenerateSummary}
-            disabled={selectedCards.length === 0} // Disable if no cards selected
+            disabled={selectedCards.length === 0 || isGeneratingSummary}
           >
-            Generate Summary ({selectedCards.length}) {/* Show count */}
+            {isGeneratingSummary ? "Generating Summary..." : `Generate Summary (${selectedCards.length})`}
           </Button>
         </div>
       </header>
@@ -120,8 +125,8 @@ export default function SearchResults({ data, length, fulldata, query }) {
             <div
               key={`pregranted-${index}`} // Unique key for pregranted items
               className={`bg-white p-6 rounded-lg border bg-background md:shadow-xl flex flex-row justify-between items-start 
-              ${selectedCards.includes(pub) ? 'border-2 border-[#95D524] bg-green-100' : ''}`} // Highlight selected cards
-              onClick={() => toggleCardSelection(pub)} // Toggle selection on click
+              ${selectedCards.includes(pub) ? 'border-2 border-[#95D524] bg-green-100' : ''}`}
+              onClick={() => toggleCardSelection(pub)}
             >
               <div className="w-1/2 pr-4">
                 <div className="flex justify-between items-start mb-2">
@@ -151,8 +156,8 @@ export default function SearchResults({ data, length, fulldata, query }) {
             <div
               key={`drugdisease-${index}`} // Unique key for drugdisease items
               className={`bg-white p-6 rounded-lg border bg-background md:shadow-xl 
-              ${selectedCards.includes(pub) ? 'border-2 border-[#95D524] bg-green-100' : ''}`} // Highlight selected cards
-              onClick={() => toggleCardSelection(pub)} // Toggle selection on click
+              ${selectedCards.includes(pub) ? 'border-2 border-[#95D524] bg-green-100' : ''}`}
+              onClick={() => toggleCardSelection(pub)}
             >
               <div className="flex justify-between items-start mb-2">
                 <h2 className="text-lg font-semibold">{pub.Product_Name}</h2>
@@ -170,10 +175,10 @@ export default function SearchResults({ data, length, fulldata, query }) {
                 Ingredients: {pub.Ingredients}
               </p>
             </div>
-          ) : pub.type === 'clinicaltrial' ? (
+          ) :  pub.type === 'clinicaltrial' ? (
             <div
               key={`clinicaltrial-${index}`} // Unique key for clinical trial items
-              className={`bg-white p-6 rounded-lg border bg-background md:shadow-xl flex flex-row justify-between items-start 
+              className={`bg-white p-6 rounded-lg border bg-background md:shadow-xl flex flex-row justify-between items-start
               ${selectedCards.includes(pub) ? 'border-2 border-[#95D524] bg-green-100' : ''}`} // Highlight selected cards
               onClick={() => toggleCardSelection(pub)} // Toggle selection on click
             >
@@ -202,7 +207,6 @@ export default function SearchResults({ data, length, fulldata, query }) {
               </div>
             </div>
           ) : null
-          // Handle other cases if needed
         ))}
       </div>
 
@@ -215,7 +219,7 @@ export default function SearchResults({ data, length, fulldata, query }) {
               {selectedPub?.assignee_applicant} • {selectedPub?.jurisdiction}
             </DialogDescription>
           </DialogHeader>
-          <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+          <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </DialogClose>
@@ -228,12 +232,6 @@ export default function SearchResults({ data, length, fulldata, query }) {
               <h3 className="font-semibold">Claim</h3>
               <p>{selectedPub?.claim}</p>
             </div>
-            {selectedPub?.relevantText && (
-              <div>
-                <h3 className="font-semibold">Relevant Match</h3>
-                <p>{highlightText(selectedPub.relevantText, query)}</p>
-              </div>
-            )}
           </div>
         </DialogContent>
       </Dialog>
