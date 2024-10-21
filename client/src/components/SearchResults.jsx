@@ -26,6 +26,10 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
     return paragraph.replace(/_x000D_/g, '');
   }
 
+  function formatParagraph(paragraph) {
+    return paragraph.replace(/\n/g, `<br/>`);
+  }
+
   const handleExport = () => {
     setExporting(true);
     const worksheet = XLSX.utils.json_to_sheet(fulldata);
@@ -137,7 +141,7 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
             disabled={exporting}
           >
             <FileText className="mr-2 h-4 w-4" color="green" />
-            {exporting ? "Exporting..." : "Export"}
+            {exporting ? "Exporting..." : `Export (${selectedCards.length})`}
           </Button>
           <Button
             variant="outline"
@@ -161,25 +165,25 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
             >
               <div className="w-1/2 pr-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-lg font-semibold">{highlightText(pub.title, query)}</h2>
+                  <h2 className="text-lg font-semibold">{highlightText(pub.Title, query)}</h2>
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openDialog(pub); }}>
                     <FileText className="h-4 w-4" color="green" />
                   </Button>
                 </div>
                 <div className="text-sm text-gray-600 mb-2">
-                  {pub.assignee_applicant} • {pub.jurisdiction}
+                  {pub.Assignee_Applicant} • {pub.Jurisdiction}
                 </div>
                 <div className="text-sm text-gray-600 mb-4">
-                  Published: {pub.publication_date}
+                  Published: {pub.Publication_Date}
                 </div>
                 <p className="text-sm text-gray-800 break-words">
-                  CPC Classifications: {pub.cpc_classifications}
+                  CPC Classifications: {pub.CPC_Classifications}
                 </p>
               </div>
               <div className="w-1/2 bg-gray-100 p-4 rounded-lg">
                 <h3 className="text-sm font-semibold mb-2">Relevant Match:</h3>
                 <p className="text-sm italic break-words">
-                  {highlightText(pub.abstract, query, 150)}
+                  {highlightText(pub.Abstract, query, 150)}
                 </p>
               </div>
             </div>
@@ -201,6 +205,9 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
               </div>
               <div className="text-sm text-gray-600 mb-4">
                 Routes of Administration: {pub.Routes_of_Administration}
+              </div>
+              <div className="text-sm text-gray-600 mb-4">
+                Diseases: {highlightText(pub.Diseases, query)}
               </div>
               <p className="text-sm text-gray-800">
                 Ingredients: {highlightText(pub.Ingredients, query)}
@@ -280,10 +287,10 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white">
           <DialogHeader>
-            <DialogTitle>{selectedPub?.title || selectedPub?.["Study Title"] || selectedPub?.Product_Name || selectedPub?.Title}</DialogTitle>
+            <DialogTitle>{selectedPub?.Title || selectedPub?.["Study Title"] || selectedPub?.Product_Name || selectedPub?.Title}</DialogTitle>
             <DialogDescription>
-              {selectedPub?.assignee_applicant || selectedPub?.Organization_Name || selectedPub?.Sponsor || selectedPub?.["Journal Issue"]}, <br></br>
-              {selectedPub?.jurisdiction || selectedPub?.Territory_Code || selectedPub?.["NCT Number"] || selectedPub?.Country}
+              {selectedPub?.Assignee_Applicant || selectedPub?.Organization_Name || selectedPub?.Sponsor || selectedPub?.["Journal Issue"]}, <br></br>
+              {selectedPub?.Jurisdiction || selectedPub?.Territory_Code || selectedPub?.["NCT Number"] || selectedPub?.Country}
             </DialogDescription>
           </DialogHeader>
           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
@@ -296,19 +303,19 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
               <>
                 <div>
                   <h3 className="font-semibold">Abstract</h3>
-                  <p>{highlightText(selectedPub?.abstract || '', query)}</p>
+                  <p>{highlightText(selectedPub?.Abstract || '', query)}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold">Description</h3>
-                  <p>{highlightText(selectedPub?.english_description || '', query)}</p>
+                  <p>{highlightText(selectedPub?.English_Description || '', query)}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold">Claim</h3>
-                  <p>{selectedPub?.claim}</p>
+                  <div dangerouslySetInnerHTML={{ __html: (formatParagraph((selectedPub?.Claim))) }} />
                 </div>
                 <div>
                   <h3 className="font-semibold">CPC Classifications</h3>
-                  <p>{selectedPub?.cpc_classifications}</p>
+                  <p>{selectedPub?.CPC_Classifications}</p>
                 </div>
               </>
             )}
@@ -320,8 +327,12 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
                   <p>{selectedPub?.Routes_of_Administration}</p>
                 </div>
                 <div>
+                  <h3 className="font-semibold">Diseases</h3>
+                  <p>{highlightText(selectedPub?.Diseases, query)}</p>
+                </div>
+                <div>
                   <h3 className="font-semibold">Ingredients</h3>
-                  <p>{selectedPub?.Ingredients}</p>
+                  <p>{highlightText(selectedPub?.Ingredients, query)}</p>
                 </div>
               </>
             )}
@@ -391,3 +402,4 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
     </div>
   );
 }
+

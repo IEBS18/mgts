@@ -38,12 +38,12 @@ def search():
     # Define two separate queries: one for `categorix_v2` and one for `drug-disease-indication`
     es_query = [
         # Query for categorix_v2 (specific fields: title, abstract)
-        {"index": "categorix_v2"},
+        {"index": "pregranted"},
         {
             "query": {
                 "query_string": {
                     "query": query,
-                    "fields": ["title", "abstract"],
+                    "fields": ["Title", "Abstract"],
                     "default_operator": "AND",  # Search only in title and abstract fields
                     "fuzziness": "AUTO"  # Adding fuzziness
                 }
@@ -67,7 +67,7 @@ def search():
             "query": {
                 "query_string": {
                     "query": query, 
-                    "default_operator": "OR",  # Search the same query across all fields
+                    "default_operator": "AND",  # Search the same query across all fields
                     "fuzziness": "AUTO"  # Adding fuzziness
                 }
             },
