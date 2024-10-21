@@ -26,6 +26,7 @@ def preprocess(text):
     toremove = [
         'mg', 'ml', 'oral', 'tablet', 'tablets', 'capsule', 'capsules', 'solution', 'suspension', 
         'injection', 'injections', 'inhalation', 'inhaler', 'inhalers', 'drug', 'drugs', 'medication', 
+        'disease', 'diseases',
         'medications', 'medicine', 'medicines', 'treatment', 'treatments', 'therapy', 'therapies', 
         'dose', 'doses', 'dosage', 'dosages', 'administration', 'acid', 'acids', 'documents', 
         'document', 'information', 'patient', 'patients', 'report', 'reports', 'study', 'studies', 

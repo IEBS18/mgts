@@ -62,7 +62,7 @@ def search():
             },
             "size": 10000
         },
-        {"index": "clinical-trial-outcomes"},
+        {"index": "clinicaltrial"},
         {
             "query": {
                 "query_string": {

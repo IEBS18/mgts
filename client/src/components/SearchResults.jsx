@@ -30,6 +30,11 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
     return paragraph.replace(/\n/g, `<br/>`);
   }
 
+  function replacePipesWithCommas(text) {
+    // Replace all pipes '|' with commas followed by a space
+    return text.replace(/\|/g, ', ');
+}
+
   const handleExport = () => {
     setExporting(true);
     const worksheet = XLSX.utils.json_to_sheet(fulldata);
@@ -177,7 +182,7 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
                   Published: {pub.Publication_Date}
                 </div>
                 <p className="text-sm text-gray-800 break-words">
-                  CPC Classifications: {pub.CPC_Classifications}
+                  CPC Classifications: {replacePipesWithCommas(pub.CPC_Classifications)}
                 </p>
               </div>
               <div className="w-1/2 bg-gray-100 p-4 rounded-lg">
@@ -210,7 +215,7 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
                 Diseases: {highlightText(pub.Diseases, query)}
               </div>
               <p className="text-sm text-gray-800">
-                Ingredients: {highlightText(pub.Ingredients, query)}
+                Ingredients: {highlightText(replacePipesWithCommas(pub.Ingredients), query)}
               </p>
             </div>
           ) : pub.type === 'clinicaltrial' ? (
@@ -315,7 +320,7 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
                 </div>
                 <div>
                   <h3 className="font-semibold">CPC Classifications</h3>
-                  <p>{selectedPub?.CPC_Classifications}</p>
+                  <p>{replacePipesWithCommas(selectedPub?.CPC_Classifications)}</p>
                 </div>
               </>
             )}
@@ -332,7 +337,7 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
                 </div>
                 <div>
                   <h3 className="font-semibold">Ingredients</h3>
-                  <p>{highlightText(selectedPub?.Ingredients, query)}</p>
+                  <p>{highlightText(replacePipesWithCommas(selectedPub?.Ingredients), query)}</p>
                 </div>
               </>
             )}
