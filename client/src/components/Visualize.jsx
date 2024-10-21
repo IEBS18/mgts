@@ -239,7 +239,7 @@ export default function Visualize() {
       <h1 className="text-3xl font-bold mb-6">PharmaX Dashboard</h1>
 
       <Tabs defaultValue="tab1" className="w-full">
-        <TabsList className="grid grid-cols-5 bg-gray-100 rounded-md p-1 mb-4 shadow-sm">
+        <TabsList className="grid grid-cols-3 bg-gray-100 rounded-md p-1 mb-4 shadow-sm">
           <TabsTrigger
             value="tab1"
             className="text-gray-700 font-semibold focus:outline-none transition-colors duration-200 ease-in-out 
@@ -261,7 +261,7 @@ export default function Visualize() {
           >
             Clinical Studies
           </TabsTrigger>
-          <TabsTrigger
+        {/* <TabsTrigger
             value="tab4"
             className="text-gray-700 font-semibold focus:outline-none transition-colors duration-200 ease-in-out 
                        data-[state=active]:bg-[#4CAF50] data-[state=active]:shadow-md data-[state=active]:text-white"
@@ -274,7 +274,7 @@ export default function Visualize() {
                        data-[state=active]:bg-[#4CAF50] data-[state=active]:shadow-md data-[state=active]:text-white"
           >
             Intellectual Property
-          </TabsTrigger>
+          </TabsTrigger>  */}
         </TabsList>
 
         {/* Tab 1: Product Intelligence */}

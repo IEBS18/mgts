@@ -29,7 +29,7 @@ export default function ChatBot({ chatMessages, setChatMessages, list, fulldata,
       const result = await response.json();
       setChatMessages((prev) => [
         ...prev.slice(0, -1),
-        { type: 'bot', content: result.results }
+        { type: 'bot', content: <ReactMarkdown>{result.results}</ReactMarkdown>  }
       ]);
     } catch (error) {
       setChatMessages((prev) => [
