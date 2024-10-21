@@ -34,7 +34,7 @@ def preprocess(text):
         'version', 'versions', 'test', 'tests', 'trial', 'trials', 'method', 'methods', 'system', 
         'systems', 'evaluation', 'evaluations', 'protocol', 'protocols', 'dose', 'level', 'levels', 
         'standard', 'standards', 'procedures', 'review', 'reviews', 'procedure', 'objectives', 
-        'objective', 'category', 'categories', 'class', 'classes', 'group', 'groups',
+        'objective', 'category', 'categories', 'class', 'classes', 'group', 'groups', 'show',
         
         # Add more generic words to remove
         'regarding', 'about', 'concerning', 'related', 'associated', 'in', 'on', 'by', 'of', 

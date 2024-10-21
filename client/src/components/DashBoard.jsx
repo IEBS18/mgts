@@ -177,6 +177,11 @@ export default function Dashboard() {
                 className="w-full mr-2 rounded-lg border-2 border-[#95D524] focus:border-[#95D524] focus:ring-[#95D524] hover:border-[#95D524] transition duration-200 ease-in-out"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch();
+                  }
+                }}
               />
               <Button
                 variant="secondary"

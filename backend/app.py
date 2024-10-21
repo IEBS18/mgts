@@ -56,7 +56,7 @@ def search():
             "query": {
                 "query_string": {
                     "query": query, 
-                    "default_operator": "OR",  # Search the same query across all fields
+                    "default_operator": "AND",  # Search the same query across all fields
                     "fuzziness": "AUTO"  # Adding fuzziness
                 }
             },
@@ -78,7 +78,7 @@ def search():
             "query": {
                 "query_string": {
                     "query": query, 
-                    "default_operator": "OR",  # Search the same query across all fields
+                    "default_operator": "AND",  # Search the same query across all fields
                     "fuzziness": "AUTO"  # Adding fuzziness
                 }
             },

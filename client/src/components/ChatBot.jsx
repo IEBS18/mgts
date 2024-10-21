@@ -133,6 +133,11 @@ export default function ChatBot({ chatMessages, setChatMessages, list, fulldata,
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             disabled={isAnalyzing}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSendMessage();
+              }
+            }}
           />
           <Button size="icon" onClick={handleSendMessage} disabled={isAnalyzing}>
             <Send className="h-4 w-4" />
