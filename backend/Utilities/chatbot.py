@@ -1,7 +1,7 @@
 import os
-import numpy as np
 from openai import OpenAI
 from elasticsearch import Elasticsearch
+from rapidfuzz import fuzz
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from dotenv import load_dotenv
@@ -23,6 +23,9 @@ es = Elasticsearch(
 MODEL = "gpt-4o-mini"
 TOP_N = 10
 
+# Initialize conversation history
+conversation_history = []
+
 def remove_english_description(data_list):
     for entry in data_list:
         # Check if the 'type' is 'pregranted'
@@ -31,19 +34,19 @@ def remove_english_description(data_list):
             entry.pop('english_description', None)
     return data_list
 
-def search_with_tfidf(results, query):
+def search_with_tfidf_and_fuzziness(results, query, fuzz_threshold=70):
     """
-    Search for relevant results using TF-IDF based on the provided query.
+    Search for relevant results using TF-IDF combined with fuzzy matching based on the provided query.
     
     Parameters:
         results (list): List of dictionaries containing the documents to search.
         query (str): The search query to find relevant documents.
+        fuzz_threshold (int): The minimum fuzzy match score (0-100) to consider a document as relevant.
     
     Returns:
         list: Sorted list of tuples containing the matched result and its relevance score.
     """
     # Flattening the dictionaries into a list of concatenated strings (corpus for TF-IDF)
-
     corpus = [" ".join(str(value) if value is not None else "" for value in result.values()) for result in results]
 
     # Add the query as part of the corpus to compare its similarity to the documents
@@ -58,19 +61,24 @@ def search_with_tfidf(results, query):
     # Compute cosine similarity between the query (last document in matrix) and all others
     cosine_similarities = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1]).flatten()
 
-    # Get the index of documents sorted by relevance score (highest first)
-    sorted_indices = np.argsort(-cosine_similarities)
+    # Apply fuzzy matching to further refine the results
+    fuzzy_scores = [fuzz.partial_ratio(query, doc) for doc in corpus]
 
-    full_results = [(results[i], cosine_similarities[i]) for i in sorted_indices if cosine_similarities[i] > 0]
+    # Combine TF-IDF and fuzzy matching scores
+    combined_results = []
+    for i in range(len(results)):
+        if fuzzy_scores[i] >= fuzz_threshold:
+            combined_score = cosine_similarities[i] * (fuzzy_scores[i] / 100)
+            combined_results.append((results[i], combined_score))
+
+    # Sort results by combined score in descending order
+    combined_results = sorted(combined_results, key=lambda x: -x[1])
 
     # Extract only the dictionaries (without scores)
-    filtered_results = [results[i] for i in sorted_indices if cosine_similarities[i] > 0]
+    filtered_results = [result for result, score in combined_results]
 
-    return full_results, filtered_results
+    return combined_results, filtered_results
 
-# Initialize conversation history
-conversation_history = []
- 
 # Function to get Elasticsearch results
 def get_elasticsearch_results(query):
     es_query = [
@@ -134,8 +142,8 @@ def create_openai_prompt(results):
     prompt = f"""
 INSTRUCTIONS:
  
-- You are a research consultant specializing in answering questions based on structured data.
-
+- You are a research consultant specializing in answering questions based on structured data provided by user.
+- user will provide a query and then the context using which you will answer the query.
 - The data will be provided in dictionaries and will include either of these four types: "pregranted", "drugdisease",  "clinicaltrial", and "pubmed".
 
 - Types of Data:
@@ -221,9 +229,6 @@ INSTRUCTIONS:
     Do not fabricate answers.
     Your responses should always be factually correct, reliable, and based on the context provided.
  
-CONTEXT:
-  {results}
- 
   """
     return prompt
  
@@ -260,13 +265,14 @@ def process_question(results, question, conversation_history):
     # context_prompt = create_openai_prompt(results[:5])
     
     updated_results = remove_english_description(results)
-    _, filtered_results = search_with_tfidf(updated_results, search_query)
+    _, filtered_results = search_with_tfidf_and_fuzziness(updated_results, search_query)
     
     # # Create an OpenAI prompt using the search results
     context_prompt = create_openai_prompt(filtered_results[:TOP_N])
     # print(context_prompt)
     conversation_history.append({"role": "system", "content": context_prompt})
     # print("added system context.")
+    question = question + "\n\n " + str(filtered_results[:TOP_N])
     # Generate an OpenAI completion for the user question
     answer = generate_openai_completion(question)
     return answer
@@ -275,10 +281,14 @@ if __name__ == "__main__":
 
     query = "lactose"
     results = get_elasticsearch_results(query)
-    # results = []
-    question = "which drugs use lactose monohydrate as an ingredient?"
-    response = process_question(results, question, conversation_history)
-    print(response)
+    while(True):
+        question = input("You: ")
+        if question == "exit":
+            print("Goodbye!")
+            break
+        
+        response = process_question(results, question, conversation_history)
+        print(f"Chatbot: {response}")
     
     
 # @app.route('/chatbot', methods=['POST'])
