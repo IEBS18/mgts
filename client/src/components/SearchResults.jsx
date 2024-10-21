@@ -21,6 +21,10 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
   useEffect(() => {
     setSelectedCards([]); // Reset selected cards when new data is fetched
   }, [data]);
+  
+  function cleanParagraph(paragraph) {
+    return paragraph.replace(/_x000D_/g, '');
+  }
 
   const handleExport = () => {
     setExporting(true);
@@ -234,7 +238,7 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
               <div className="w-1/2 bg-gray-100 p-4 rounded-lg">
                 <h3 className="text-sm font-semibold mb-2">Brief Summary:</h3>
                 <p className="text-sm italic break-words">
-                  {highlightText(pub["Brief Summary"], query, 150)}
+                  {highlightText(cleanParagraph(pub["Brief Summary"]), query, 150)}
                 </p>
               </div>
             </div>
@@ -338,11 +342,11 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
                 </div>
                 <div>
                   <h3 className="font-semibold">Brief Summary</h3>
-                  <p>{highlightText(selectedPub['Brief Summary'], query)}</p>
+                  <p>{highlightText(cleanParagraph(selectedPub["Brief Summary"]), query)}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold">Study Description</h3>
-                  <p>{highlightText(selectedPub['Study Description'], query)}</p>
+                  <p>{highlightText(cleanParagraph(selectedPub['Study Description']), query)}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold">Interventions</h3>
