@@ -36,22 +36,46 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
     setDialogOpen(true);
   };
 
-  const highlightText = (text = '', highlight = '', wordLimit = 150) => {
+  const highlightText = (text = '', highlight = '', wordLimit) => {
     if (!text || !highlight.trim()) {
       return text;
     }
+
     const highlightWords = highlight.split(' ').filter(Boolean);
     const regexPattern = highlightWords.map(word => `(${word})`).join('|');
     const regex = new RegExp(regexPattern, 'gi');
+
+    // Find matches in the text
     const matches = text.match(regex);
+
     if (matches) {
       const index = text.search(regex);
-      const start = Math.max(0, index - wordLimit);
-      const end = Math.min(text.length, index + wordLimit);
-      const snippet = text.substring(start, end);
+
+      // If wordLimit is provided, trim the text
+      if (wordLimit && wordLimit > 0) {
+        const start = Math.max(0, index - wordLimit);
+        const end = Math.min(text.length, index + wordLimit);
+        const snippet = text.substring(start, end);
+
+        // Highlight matching parts within the snippet
+        return (
+          <>
+            <i>{snippet.split(regex).map((part, i) =>
+              regex.test(part) ? (
+                <mark key={i} className="bg-yellow-200">{part}</mark>
+              ) : (
+                part
+              )
+            )}</i>
+            {end < text.length && '...'} {/* Add ellipsis if text is trimmed */}
+          </>
+        );
+      }
+
+      // If no wordLimit is provided, highlight throughout the entire text
       return (
         <>
-          <i>{snippet.split(regex).map((part, i) =>
+          <i>{text.split(regex).map((part, i) =>
             regex.test(part) ? (
               <mark key={i} className="bg-yellow-200">{part}</mark>
             ) : (
@@ -61,8 +85,11 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
         </>
       );
     }
-    return <i>{text.substring(0, wordLimit)}...</i>;
+
+    // If no match is found, return the text as is (or trimmed if wordLimit is provided)
+    return <i>{wordLimit ? text.substring(0, wordLimit) + '...' : text}</i>;
   };
+
 
   const toggleCardSelection = (pub) => {
     setSelectedCards((prevSelected) => {
@@ -130,7 +157,7 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
             >
               <div className="w-1/2 pr-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-lg font-semibold">{pub.title}</h2>
+                  <h2 className="text-lg font-semibold">{highlightText(pub.title, query)}</h2>
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openDialog(pub); }}>
                     <FileText className="h-4 w-4" color="green" />
                   </Button>
@@ -160,7 +187,7 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
               onClick={() => toggleCardSelection(pub)}
             >
               <div className="flex justify-between items-start mb-2">
-                <h2 className="text-lg font-semibold">{pub.Product_Name}</h2>
+                <h2 className="text-lg font-semibold">{highlightText(pub.Product_Name, query)}</h2>
                 <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openDialog(pub); }}>
                   <FileText className="h-4 w-4" color="green" />
                 </Button>
@@ -172,10 +199,10 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
                 Routes of Administration: {pub.Routes_of_Administration}
               </div>
               <p className="text-sm text-gray-800">
-                Ingredients: {pub.Ingredients}
+                Ingredients: {highlightText(pub.Ingredients, query)}
               </p>
             </div>
-          ) :  pub.type === 'clinicaltrial' ? (
+          ) : pub.type === 'clinicaltrial' ? (
             <div
               key={`clinicaltrial-${index}`} // Unique key for clinical trial items
               className={`bg-white p-6 rounded-lg border bg-background md:shadow-xl flex flex-row justify-between items-start
@@ -184,7 +211,7 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
             >
               <div className="w-1/2 pr-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-lg font-semibold">{pub["Study Title"]} • {pub["NCT Number"]} </h2>
+                  <h2 className="text-lg font-semibold">{highlightText(pub["Study Title"], query)} • {pub["NCT Number"]} </h2>
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openDialog(pub); }}>
                     <FileText className="h-4 w-4" color="green" />
                   </Button>
@@ -196,8 +223,13 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
                   Completion Date: {pub["Completion Date"]}
                 </div>
                 <p className="text-sm text-gray-800 break-words">
-                  Conditions: {pub["Conditions"]}
+                  Conditions: {highlightText(pub["Conditions"], query)}
                 </p>
+                <div>
+                  <a href={`https://clinicaltrials.gov/study/${pub['NCT Number']}`} target="_blank" className="text-blue-700">
+                    View  Study Record
+                  </a>
+                </div>
               </div>
               <div className="w-1/2 bg-gray-100 p-4 rounded-lg">
                 <h3 className="text-sm font-semibold mb-2">Brief Summary:</h3>
@@ -206,7 +238,7 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
                 </p>
               </div>
             </div>
-          ) :pub.type === 'pubmed' ? (
+          ) : pub.type === 'pubmed' ? (
             <div
               key={`pubmed-${index}`} // Unique key for pregranted items
               className={`bg-white p-6 rounded-lg border bg-background md:shadow-xl flex flex-row justify-between items-start 
@@ -215,24 +247,19 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
             >
               <div className="w-1/2 pr-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-lg font-semibold">{pub['Title']}</h2>
+                  <h2 className="text-lg font-semibold">{highlightText(pub['Title'], query)}</h2>
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openDialog(pub); }}>
                     <FileText className="h-4 w-4" color="green" />
                   </Button>
                 </div>
                 <p>{pub['Journal Issue']} • {pub['Country']}</p>
-                <p className="text-sm font-semibold mt-2">Publication Date: {pub['PubDate']}</p>
-                
+
+
                 <div className="text-sm text-gray-600 mb-2 flex flex-row gap-x-1 mt-2">
-                {/* <p className="text-sm text-gray-600 mb-2 flex flex-row">ISSN Type: {pub['ISSN Type']} |</p> */}
-                  <a href={`https://pubmed.ncbi.nlm.nih.gov/${pub.PMID}`} target="_blank">View</a>
+                  <p className="text-sm font-semibold">Published: {pub['PubDate']} |</p>
+                  {/* <p className="text-sm text-gray-600 mb-2 flex flex-row">ISSN Type: {pub['ISSN Type']} |</p> */}
+                  <a href={`https://pubmed.ncbi.nlm.nih.gov/${pub.PMID}`} target="_blank" className="text-blue-700">View</a>
                 </div>
-                {/* <div className="text-sm text-gray-600 mb-4">
-                  Published: {pub.publication_date}
-                </div>
-                <p className="text-sm text-gray-800 break-words">
-                  CPC Classifications: {pub.cpc_classifications}
-                </p> */}
               </div>
               <div className="w-1/2 bg-gray-100 p-4 rounded-lg">
                 <h3 className="text-sm font-semibold mb-2">Relevant Match:</h3>
@@ -241,7 +268,7 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
                 </p>
               </div>
             </div>
-          ): null
+          ) : null
         ))}
       </div>
 
@@ -249,9 +276,10 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white">
           <DialogHeader>
-            <DialogTitle>{selectedPub?.title}</DialogTitle>
+            <DialogTitle>{selectedPub?.title || selectedPub?.["Study Title"] || selectedPub?.Product_Name || selectedPub?.Title}</DialogTitle>
             <DialogDescription>
-              {selectedPub?.assignee_applicant} • {selectedPub?.jurisdiction}
+              {selectedPub?.assignee_applicant || selectedPub?.Organization_Name || selectedPub?.Sponsor || selectedPub?.["Journal Issue"]}, <br></br>
+              {selectedPub?.jurisdiction || selectedPub?.Territory_Code || selectedPub?.["NCT Number"] || selectedPub?.Country}
             </DialogDescription>
           </DialogHeader>
           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
@@ -259,14 +287,100 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
             <span className="sr-only">Close</span>
           </DialogClose>
           <div className="space-y-4">
-            <div>
-              <h3 className="font-semibold">Abstract</h3>
-              <p>{highlightText(selectedPub?.abstract || '', query)}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">Claim</h3>
-              <p>{selectedPub?.claim}</p>
-            </div>
+            {/* Render content conditionally based on the type */}
+            {selectedPub?.type === 'pregranted' && (
+              <>
+                <div>
+                  <h3 className="font-semibold">Abstract</h3>
+                  <p>{highlightText(selectedPub?.abstract || '', query)}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Description</h3>
+                  <p>{highlightText(selectedPub?.english_description || '', query)}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Claim</h3>
+                  <p>{selectedPub?.claim}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">CPC Classifications</h3>
+                  <p>{selectedPub?.cpc_classifications}</p>
+                </div>
+              </>
+            )}
+
+            {selectedPub?.type === 'drugdisease' && (
+              <>
+                <div>
+                  <h3 className="font-semibold">Routes of Administration</h3>
+                  <p>{selectedPub?.Routes_of_Administration}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Ingredients</h3>
+                  <p>{selectedPub?.Ingredients}</p>
+                </div>
+              </>
+            )}
+
+            {selectedPub?.type === 'clinicaltrial' && (
+              <>
+                {/* <div>
+                  <h3 className="font-semibold">Study Title</h3>
+                  <p>{highlightText(selectedPub['Study Title'], query)}</p>
+                </div> */}
+                <div>
+                  <h3 className="font-semibold">Study Status</h3>
+                  <p>{selectedPub['Study Status']}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Locations</h3>
+                  <p>{selectedPub['Locations']}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Brief Summary</h3>
+                  <p>{highlightText(selectedPub['Brief Summary'], query)}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Study Description</h3>
+                  <p>{highlightText(selectedPub['Study Description'], query)}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Interventions</h3>
+                  <p>{highlightText(selectedPub?.['Interventions'], query)}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Conditions</h3>
+                  <p>{selectedPub?.Conditions}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Completion Date</h3>
+                  <p>{selectedPub?.["Completion Date"]}</p>
+                </div>
+                <div>
+                  <a href={`https://clinicaltrials.gov/study/${selectedPub?.['NCT Number']}`} target="_blank" className="text-blue-700">
+                    View  Study Record
+                  </a>
+                </div>
+              </>
+            )}
+
+            {selectedPub?.type === 'pubmed' && (
+              <>
+                <div>
+                  <h3 className="font-semibold">Abstract</h3>
+                  <p>{highlightText(selectedPub?.AbstractText || '', query)}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Publication Date</h3>
+                  <p>{selectedPub?.PubDate}</p>
+                </div>
+                <div>
+                  <a href={`https://pubmed.ncbi.nlm.nih.gov/${selectedPub?.PMID}`} target="_blank" className="text-blue-700">
+                    View PubMed Article
+                  </a>
+                </div>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
