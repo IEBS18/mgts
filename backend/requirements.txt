@@ -10,3 +10,4 @@ elasticsearch
 scikit-learn
 numpy
 openai
+rapidfuzz
