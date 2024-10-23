@@ -14,11 +14,11 @@ def summarize_with_openai(document_text):
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",  
             messages=[
-                {"role": "system", "content": "You are a Summarisation Soecialist. As a Summarization Specialist, you transform complex inputs into concise summaries, capturing essential information within token limits. You analyze diverse texts, ensure clarity, and optimize token usage, making information accessible and engaging for all users. "},
+                {"role": "system", "content": "You are a Summarisation Specialist. As a Summarization Specialist, you transform complex inputs into concise summaries, capturing essential information within token limits. You analyze diverse texts, ensure clarity, and optimize token usage, making information accessible and engaging for all users. Write in minimum 500 words. "},
                 {"role": "user", "content": f"Summarize the following document: {document_text}"}
             ],
-            #min_tokens=150,  # Adjust as per your need
-            max_tokens=1000,  # Adjust as per your need
+            # min_tokens=5000,  # Adjust as per your need
+            max_tokens=10000,  # Adjust as per your need
             temperature=0.3,
         )
         summary = response.choices[0].message.content
