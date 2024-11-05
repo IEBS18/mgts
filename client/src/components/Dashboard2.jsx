@@ -165,6 +165,7 @@
 // }
 
 
+
 import React, { useState, useEffect } from 'react';
 import { Search, FileText, Activity } from 'lucide-react';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
@@ -338,7 +339,7 @@ export default function Dashboard2() {
                     <p className="text-sm text-muted-foreground">{report.description}</p>
                   </div>
                   <div className="flex items-center">
-                    <Button className="w-full md:w-auto bg-green-500 text-white">Get Started</Button>
+                    <Button className="w-full md:w-auto bg-[#a6ce39] text-black rounded-md">Get Started</Button>
                   </div>
                 </div>
               ))}
