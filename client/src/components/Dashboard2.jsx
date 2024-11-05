@@ -200,31 +200,32 @@ const countryData = {
   // Add more countries here
 };
 
+
 const reportTypes = [
   {
     icon: <Map className="w-6 h-6" />,
     title: "Competitive Landscape",
-    description: "Gain a comprehensive view of the competitive environment, including key players, product portfolios, and development themes in your area of interest. Use this report to benchmark your position, evaluate whitespace opportunities, and anticipate potential competitive threats.",
+    description: "View the competitive environment, key players, and product portfolios. Benchmark your position and spot opportunities.",
   },
   {
     icon: <Activity className="w-6 h-6" />,
     title: "Disease Overview",
-    description: "A high-level overview of the selected indication, covering disease biology, risk factors, standard treatment protocols, and key unmet needs. Ideal for developing a foundational understanding or refining strategic focus.",
+    description: "Overview of disease biology, risk factors, and treatment protocols. Useful for foundational understanding.",
   },
   {
     icon: <ClipboardList className="w-6 h-6" />,
     title: "Pipeline Analysis",
-    description: "Detailed analysis of clinical-stage programs within a given indication. Understand where new therapies are in development and which companies are driving innovation.",
+    description: "Analysis of clinical-stage programs. See where new therapies are being developed and key innovators.",
   },
   {
     icon: <Award className="w-6 h-6" />,
     title: "FDA Label Analysis",
-    description: "Compiles FDA-approved drug labels within a given indication for critical safety and efficacy data, indicated populations, and use guidelines. Useful for competitive benchmarking and opportunity positioning.",
+    description: "FDA-approved drug labels with safety, efficacy data, and use guidelines. Great for benchmarking.",
   },
   {
     icon: <Users className="w-6 h-6" />,
     title: "Epidemiology",
-    description: "Analysis of disease prevalence, incidence, and demographic factors. Designed to support initial market sizing, patient population estimation, and strategic planning efforts. Based on a targeted literature review.",
+    description: "Disease prevalence, incidence, and demographics. Supports market sizing and strategic planning.",
   },
 ];
 
@@ -330,7 +331,7 @@ export default function Dashboard2() {
           <div className="w-1/3 space-y-4 overflow-y-auto pr-2 scrollbar-hide">
             <div className="space-y-4 flex flex-col">
               {reportTypes.map((report, index) => (
-                <div key={index} className="flex flex-col p-4 gap-4 border rounded-md">
+                <div key={index} className="flex flex-col p-4 gap-4 border rounded-[12px]">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
                       {report.icon}
@@ -339,7 +340,7 @@ export default function Dashboard2() {
                     <p className="text-sm text-muted-foreground">{report.description}</p>
                   </div>
                   <div className="flex items-center">
-                    <Button className="w-full md:w-auto bg-[#a6ce39] text-black rounded-md">Get Started</Button>
+                    <Button className="w-full md:w-auto bg-[#a6ce39] text-black rounded-[12px]">Get Started</Button>
                   </div>
                 </div>
               ))}
