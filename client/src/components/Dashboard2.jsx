@@ -1,19 +1,12 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
+import { Search, FileText, Activity } from 'lucide-react';
+
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { Tooltip } from '@visx/tooltip';
-import { feature } from 'topojson-client';
-import geoGraphyData from './map.json'; // Your TopoJSON file
-import { motion } from 'framer-motion';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-// Sample data for countries
+import geoGraphyData from './custom.geo.json'; // Your GeoJSON file
+
 const countryData = {
-  "United States of America": {
+  "United States": {
     TradeName: 'MediCure',
     Price: 150,
     Disease: 'Influenza',
@@ -32,24 +25,15 @@ const countryData = {
   },
   // Add more countries here
 };
-
-const workflows = [
-  {
-    id: 1,
-    title: "Search Drugs and Diseases",
-    description: "Find approved and pipeline drugs",
-  },
-  {
-    id: 2,
-    title: "Research Paper and Patents",
-    description: "Find scientific research papers and patents ",
-  },
-  {
-    id: 3,
-    title: "Find Clinical Data",
-    description: "Access and analyze clinical trial data",
-  },
-];
+const FeatureCard = ({ icon: Icon, title, description }) => (
+  <div className="bg-white border border-[#a6ce39] rounded-lg p-4 shadow-sm h-full">
+    <div className="flex items-center mb-2">
+      <Icon className="w-5 h-5 text-[#a6ce39] mr-2 flex-shrink-0" />
+      <h3 className="text-base font-semibold text-gray-800 leading-tight">{title}</h3>
+    </div>
+    <p className="text-sm text-gray-600">{description}</p>
+  </div>
+);
 
 export default function Dashboard2() {
   const [tooltipContent, setTooltipContent] = useState(null);
@@ -82,37 +66,40 @@ export default function Dashboard2() {
     );
   };
 
-  const geographies = feature(geoGraphyData, geoGraphyData.objects.countries).features;
-
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold pt-4 px-4">
-          Welcome to <span className="text-[#95D524]">ToolX</span>{" "}
-          <span className="text-sm font-normal bg-yellow-200 px-2 py-1 rounded ml-2">
+    <div className="h-screen bg-gray-50 flex flex-col">
+      <div className="flex-grow overflow-hidden p-6">
+        {/* Header */}
+        <div className="flex items-center mb-4">
+          <h1 className="text-2xl font-bold text-gray-800">
+            Welcome to <span className="text-[#a6ce39]">ToolX</span>
+          </h1>
+          <span className="ml-3 px-2 py-1 bg-[#fff200] text-xs font-semibold rounded">
             BETA
           </span>
-        </h1>
-      </header>
-      <main className="flex flex-row container h-[430px] justify-center gap-x-12">
-        <div className="bg-white rounded-lg shadow-lg w-1/2" style={{
-                    border:"2px solid #95D524",
-                    borderRadius: "8px",
-                    boxShadow: "0px 6px 15px rgba(0, 0, 0, 0.1)",
-                    minHeight: "100px",
-                  }} >
-          {/* <h2 className="text-2xl font-semibold pt-2 pl-2">Interactive Disease Map</h2> */}
-          <div className="relative">
-            <ComposableMap className=''>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex h-[calc(100%-2rem)] gap-4">
+          {/* Map Section */}
+          <div className="flex-grow">
+            <div className="bg-white border border-[#a6ce39] rounded-lg p-4 shadow-sm h-full">
+              {/* <img
+                src="/placeholder.svg?height=400&width=600"
+                alt="World Map"
+                className="w-full h-full object-contain"
+              /> */}
+              <div className="relative">
+            <ComposableMap>
               <Geographies geography={geoGraphyData}>
                 {({ geographies }) =>
                   geographies.map((geo) => (
                     <Geography
-                      key={geo.id}
+                      key={geo.rsmKey}
                       geography={geo}
                       onMouseEnter={(event) => {
-                        const { name } = geo.properties;
-                        setTooltipContent(renderTooltipContent(name));
+                        const { NAME } = geo.properties;
+                        setTooltipContent(renderTooltipContent(NAME));
                         handleMouseMove(event);
                       }}
                       onMouseMove={handleMouseMove}
@@ -121,12 +108,12 @@ export default function Dashboard2() {
                       }}
                       style={{
                         default: {
-                          fill: countryData[geo.properties.name] ? '#95d524' : '#29c4f8',
-                          outline: 'black'
+                          fill: countryData[geo.properties.NAME] ? '#95d524' : '#29c4f8',
+                          outline: 'none'
                         },
                         hover: {
                           fill: "#04165d",
-                          outline: 'black',
+                          outline: 'none',
                         },
                         pressed: {
                           fill: '#04165d',
@@ -150,51 +137,46 @@ export default function Dashboard2() {
                   padding: '10px',
                   borderRadius: '5px',
                   fontSize: '14px',
-                  pointerEvents: 'none', // Prevents blocking of mouse events
+                  pointerEvents: 'none',
                   boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 {tooltipContent}
               </Tooltip>
             )}
+            </div>
+            </div>
+          </div>
+
+          {/* Feature Cards */}
+          <div className="w-1/3 space-y-4 overflow-y-auto pr-2 scrollbar-hide">
+            <FeatureCard
+              icon={Search}
+              title="Search Drugs and Diseases"
+              description="Find approved and pipeline drugs"
+            />
+            <FeatureCard
+              icon={FileText}
+              title="Research Paper and Patents"
+              description="Find scientific research papers and patents"
+            />
+            <FeatureCard
+              icon={Activity}
+              title="Find Clinical Data"
+              description="Access and analyze clinical trial data"
+            />
           </div>
         </div>
-        <div className='flex flex-col gap-y-2'>
-        {workflows.map((workflow, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.1)" }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`p-6 bg-white rounded-lg shadow-lg cursor-pointer transition-transform ${
-                    selectedCard === workflow.id ? "translate-y-2" : ""
-                  }`}
-                  style={{
-                    border:
-                      selectedCard === workflow.id
-                        ? "2px solid #000"
-                        : "2px solid #95D524",
-                    borderRadius: "8px",
-                    boxShadow: "0px 6px 15px rgba(0, 0, 0, 0.1)",
-                    minHeight: "100px",
-                  }}
-                  onClick={() => handleWorkflowClick(workflow.id)}
-                >
-                  <Card className="border-none">
-                    <CardHeader>
-                      <CardTitle className="text-[20px] font-bold">
-                        {workflow.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription>{workflow.description}</CardDescription>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-        </div>
-      </main>
+      </div>
+      <style jsx global>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 }
