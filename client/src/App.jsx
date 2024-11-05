@@ -36,6 +36,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from "@/components/Dashboard";
 import Visualize from "@/components/Visualize";
 import Layout from "@/pages/Layout";
+import Dashboard2 from "./components/Dashboard2";
 
 function App() {
   return (
@@ -45,7 +46,7 @@ function App() {
           path="/"
           element={
             <Layout type="dashboard"> {/* Pass type as 'dashboard' */}
-              <Dashboard />
+              <Dashboard2 />
             </Layout>
           }
         />
