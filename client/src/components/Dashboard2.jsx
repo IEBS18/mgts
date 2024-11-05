@@ -311,9 +311,9 @@ export default function Dashboard2() {
           <h1 className="text-2xl font-bold text-gray-800">
             Welcome to <span className="text-[#a6ce39]">ToolX</span>
           </h1>
-          <span className="ml-3 px-2 py-1 bg-[#fff200] text-xs font-semibold rounded">
+          {/* <span className="ml-3 px-2 py-1 bg-[#fff200] text-xs font-semibold rounded">
             BETA
-          </span>
+          </span> */}
         </div>
 
         {/* Main Content */}
@@ -322,7 +322,7 @@ export default function Dashboard2() {
           <div className="flex-grow">
             <div className="bg-white border border-[#a6ce39] rounded-lg p-4 shadow-sm h-full">
               <div className="">
-                <WorldMap width={550} height={450} data={{ worldPopulation, topography }} />
+                <WorldMap width={650} height={350} data={{ worldPopulation, topography }} />
               </div>
             </div>
           </div>
@@ -331,7 +331,7 @@ export default function Dashboard2() {
           <div className="w-1/3 space-y-4 overflow-y-auto pr-2 scrollbar-hide">
             <div className="space-y-4 flex flex-col">
               {reportTypes.map((report, index) => (
-                <div key={index} className="flex flex-col p-4 gap-4 border rounded-[12px]">
+                <div key={index} className="flex flex-col p-4 gap-4 border border-[#a6ce39] rounded-[12px]">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
                       {report.icon}
@@ -340,7 +340,7 @@ export default function Dashboard2() {
                     <p className="text-sm text-muted-foreground">{report.description}</p>
                   </div>
                   <div className="flex items-center">
-                    <Button className="w-full md:w-auto bg-[#a6ce39] text-black rounded-[12px]">Get Started</Button>
+                    <Button className="w-full md:w-auto bg-[#a6ce39] text-black rounded-[12px] hover:bg-lightBlue">Get Started</Button>
                   </div>
                 </div>
               ))}

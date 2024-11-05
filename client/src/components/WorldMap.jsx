@@ -85,7 +85,7 @@ const WorldMap = ({ width, height, data }) => {
       {/* Tooltip */}
       {tooltipData && (
         <div
-          className={`tooltip ${tooltipVisible ? "visible" : ""}`}
+          className={`tooltip font-bold ${tooltipVisible ? "visible" : ""}`}
           style={{
             left: tooltipData.left,
             top: tooltipData.top,
@@ -93,7 +93,7 @@ const WorldMap = ({ width, height, data }) => {
         >
           {tooltipData.name}
           <br />
-          {tooltipData.population}
+          Population: {tooltipData.population}
         </div>
       )}
     </div>
