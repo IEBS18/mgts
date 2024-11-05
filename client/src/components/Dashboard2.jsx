@@ -4,7 +4,10 @@ import { Search, FileText, Activity } from 'lucide-react';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { Tooltip } from '@visx/tooltip';
 import geoGraphyData from './custom.geo.json'; // Your GeoJSON file
+import { useEffect} from "react";
+import * as d3 from "d3";
 
+import WorldMap from './WorldMap';
 const countryData = {
   "United States": {
     TradeName: 'MediCure',
@@ -39,6 +42,39 @@ export default function Dashboard2() {
   const [tooltipContent, setTooltipContent] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [selectedCard, setSelectedCard] = useState(null);
+  const [worldPopulation, setWorldPopulation] = useState(null);
+  const [topography, setTopography] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getData = async () => {
+      setLoading(true);
+
+      let populationData = {};
+      await Promise.all([
+        d3.json(
+          "https://res.cloudinary.com/tropicolx/raw/upload/v1/Building%20Interactive%20Data%20Visualizations%20with%20D3.js%20and%20React/world.geojson"
+        ),
+        d3.csv(
+          "https://res.cloudinary.com/tropicolx/raw/upload/v1/Building%20Interactive%20Data%20Visualizations%20with%20D3.js%20and%20React/world_population.csv",
+          (d) => {
+            populationData = {
+              ...populationData,
+              [d.code]: +d.population,
+            };
+          }
+        ),
+      ]).then((fetchedData) => {
+        const topographyData = fetchedData[0];
+        setWorldPopulation(populationData);
+        setTopography(topographyData);
+      });
+
+      setLoading(false);
+    };
+
+    getData();
+  }, []);
 
   const handleMouseMove = (event) => {
     const { clientX, clientY } = event;
@@ -65,7 +101,7 @@ export default function Dashboard2() {
       </div>
     );
   };
-
+  if (loading) return <div>Loading...</div>;
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
       <div className="flex-grow overflow-hidden p-6">
@@ -89,61 +125,8 @@ export default function Dashboard2() {
                 alt="World Map"
                 className="w-full h-full object-contain"
               /> */}
-              <div className="relative">
-            <ComposableMap>
-              <Geographies geography={geoGraphyData}>
-                {({ geographies }) =>
-                  geographies.map((geo) => (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                      onMouseEnter={(event) => {
-                        const { NAME } = geo.properties;
-                        setTooltipContent(renderTooltipContent(NAME));
-                        handleMouseMove(event);
-                      }}
-                      onMouseMove={handleMouseMove}
-                      onMouseLeave={() => {
-                        setTooltipContent(null);
-                      }}
-                      style={{
-                        default: {
-                          fill: countryData[geo.properties.NAME] ? '#95d524' : '#29c4f8',
-                          outline: 'none'
-                        },
-                        hover: {
-                          fill: "#04165d",
-                          outline: 'none',
-                        },
-                        pressed: {
-                          fill: '#04165d',
-                          outline: 'none',
-                        },
-                      }}
-                    />
-                  ))
-                }
-              </Geographies>
-            </ComposableMap>
-            {tooltipContent && (
-              <Tooltip
-                style={{
-                  position: 'absolute',
-                  top: tooltipPosition.y,
-                  left: tooltipPosition.x,
-                  transform: 'translate(-50%, -100%)',
-                  backgroundColor: 'white',
-                  color: 'black',
-                  padding: '10px',
-                  borderRadius: '5px',
-                  fontSize: '14px',
-                  pointerEvents: 'none',
-                  boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                {tooltipContent}
-              </Tooltip>
-            )}
+              <div className="">
+              <WorldMap width={550} height={450} data={{ worldPopulation, topography }} />
             </div>
             </div>
           </div>
