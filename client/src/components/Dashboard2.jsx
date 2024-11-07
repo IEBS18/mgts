@@ -1,13 +1,16 @@
-// import React, {useState} from 'react';
+// import React, { useState, useEffect } from 'react';
 // import { Search, FileText, Activity } from 'lucide-react';
-
 // import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 // import { Tooltip } from '@visx/tooltip';
-// import geoGraphyData from './custom.geo.json'; // Your GeoJSON file
-// import { useEffect} from "react";
-// import * as d3 from "d3";
+
+// import * as d3 from 'd3';
 
 // import WorldMap from './WorldMap';
+// import { Button } from "@/components/ui/button";
+// import { ScrollArea } from "@/components/ui/scroll-area";
+// import { Separator } from "@/components/ui/separator";
+// import { X, Map, ClipboardList, Award, Users } from "lucide-react";
+
 // const countryData = {
 //   "United States": {
 //     TradeName: 'MediCure',
@@ -28,6 +31,36 @@
 //   },
 //   // Add more countries here
 // };
+
+
+// const reportTypes = [
+//   {
+//     icon: <Map className="w-6 h-6" />,
+//     title: "Competitive Landscape",
+//     description: "View the competitive environment, key players, and product portfolios. Benchmark your position and spot opportunities.",
+//   },
+//   {
+//     icon: <Activity className="w-6 h-6" />,
+//     title: "Disease Overview",
+//     description: "Overview of disease biology, risk factors, and treatment protocols. Useful for foundational understanding.",
+//   },
+//   {
+//     icon: <ClipboardList className="w-6 h-6" />,
+//     title: "Pipeline Analysis",
+//     description: "Analysis of clinical-stage programs. See where new therapies are being developed and key innovators.",
+//   },
+//   {
+//     icon: <Award className="w-6 h-6" />,
+//     title: "FDA Label Analysis",
+//     description: "FDA-approved drug labels with safety, efficacy data, and use guidelines. Great for benchmarking.",
+//   },
+//   {
+//     icon: <Users className="w-6 h-6" />,
+//     title: "Epidemiology",
+//     description: "Disease prevalence, incidence, and demographics. Supports market sizing and strategic planning.",
+//   },
+// ];
+
 // const FeatureCard = ({ icon: Icon, title, description }) => (
 //   <div className="bg-white border border-[#a6ce39] rounded-lg p-4 shadow-sm h-full">
 //     <div className="flex items-center mb-2">
@@ -110,9 +143,9 @@
 //           <h1 className="text-2xl font-bold text-gray-800">
 //             Welcome to <span className="text-[#a6ce39]">ToolX</span>
 //           </h1>
-//           <span className="ml-3 px-2 py-1 bg-[#fff200] text-xs font-semibold rounded">
+//           {/* <span className="ml-3 px-2 py-1 bg-[#fff200] text-xs font-semibold rounded">
 //             BETA
-//           </span>
+//           </span> */}
 //         </div>
 
 //         {/* Main Content */}
@@ -120,34 +153,30 @@
 //           {/* Map Section */}
 //           <div className="flex-grow">
 //             <div className="bg-white border border-[#a6ce39] rounded-lg p-4 shadow-sm h-full">
-//               {/* <img
-//                 src="/placeholder.svg?height=400&width=600"
-//                 alt="World Map"
-//                 className="w-full h-full object-contain"
-//               /> */}
 //               <div className="">
-//               <WorldMap width={550} height={450} data={{ worldPopulation, topography }} />
-//             </div>
+//                 <WorldMap width={650} height={350} data={{ worldPopulation, topography }} />
+//               </div>
 //             </div>
 //           </div>
 
-//           {/* Feature Cards */}
+//           {/* Report Types Cards */}
 //           <div className="w-1/3 space-y-4 overflow-y-auto pr-2 scrollbar-hide">
-//             <FeatureCard
-//               icon={Search}
-//               title="Search Drugs and Diseases"
-//               description="Find approved and pipeline drugs"
-//             />
-//             <FeatureCard
-//               icon={FileText}
-//               title="Research Paper and Patents"
-//               description="Find scientific research papers and patents"
-//             />
-//             <FeatureCard
-//               icon={Activity}
-//               title="Find Clinical Data"
-//               description="Access and analyze clinical trial data"
-//             />
+//             <div className="space-y-4 flex flex-col">
+//               {reportTypes.map((report, index) => (
+//                 <div key={index} className="flex flex-col p-4 gap-4 border border-[#a6ce39] rounded-[12px]">
+//                   <div className="flex-1 space-y-2">
+//                     <div className="flex items-center gap-2">
+//                       {report.icon}
+//                       <h3 className="text-xl font-bold">{report.title}</h3>
+//                     </div>
+//                     <p className="text-sm text-muted-foreground">{report.description}</p>
+//                   </div>
+//                   <div className="flex items-center">
+//                     <Button className="w-full md:w-auto bg-[#a6ce39] text-black rounded-[12px] hover:bg-lightBlue">Get Started</Button>
+//                   </div>
+//                 </div>
+//               ))}
+//             </div>
 //           </div>
 //         </div>
 //       </div>
@@ -165,7 +194,6 @@
 // }
 
 
-
 import React, { useState, useEffect } from 'react';
 import { Search, FileText, Activity } from 'lucide-react';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
@@ -174,6 +202,7 @@ import { Tooltip } from '@visx/tooltip';
 import * as d3 from 'd3';
 
 import WorldMap from './WorldMap';
+import DiseaseOverview from './DiseaseOverview';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -199,7 +228,6 @@ const countryData = {
   },
   // Add more countries here
 };
-
 
 const reportTypes = [
   {
@@ -239,7 +267,7 @@ const FeatureCard = ({ icon: Icon, title, description }) => (
   </div>
 );
 
-export default function Dashboard2() {
+export default function Dashboard() {
   const [tooltipContent, setTooltipContent] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [selectedCard, setSelectedCard] = useState(null);
@@ -302,7 +330,9 @@ export default function Dashboard2() {
       </div>
     );
   };
+
   if (loading) return <div>Loading...</div>;
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
       <div className="flex-grow overflow-hidden p-6">
@@ -311,9 +341,6 @@ export default function Dashboard2() {
           <h1 className="text-2xl font-bold text-gray-800">
             Welcome to <span className="text-[#a6ce39]">ToolX</span>
           </h1>
-          {/* <span className="ml-3 px-2 py-1 bg-[#fff200] text-xs font-semibold rounded">
-            BETA
-          </span> */}
         </div>
 
         {/* Main Content */}
@@ -340,7 +367,13 @@ export default function Dashboard2() {
                     <p className="text-sm text-muted-foreground">{report.description}</p>
                   </div>
                   <div className="flex items-center">
-                    <Button className="w-full md:w-auto bg-[#a6ce39] text-black rounded-[12px] hover:bg-lightBlue">Get Started</Button>
+                    {report.title === "Disease Overview" ? (
+                      <DiseaseOverview />
+                    ) : (
+                      <Button className="w-full md:w-auto bg-[#a6ce39] text-black rounded-[12px] hover:bg-[#95b833]">
+                        Get Started
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
