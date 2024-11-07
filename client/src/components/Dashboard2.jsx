@@ -170,7 +170,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, FileText, Activity } from 'lucide-react';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { Tooltip } from '@visx/tooltip';
-import geoGraphyData from './custom.geo.json'; // Your GeoJSON file
+
 import * as d3 from 'd3';
 
 import WorldMap from './WorldMap';
