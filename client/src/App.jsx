@@ -37,6 +37,7 @@ import Dashboard from "@/components/Dashboard";
 import Visualize from "@/components/Visualize";
 import Layout from "@/pages/Layout";
 import Dashboard2 from "./components/Dashboard2";
+import DiseaseSearchPage from "./components/DiseaseSearchPage";
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
             </Layout>
           }
         />
+        <Route path="/disease-search" element={<Layout><DiseaseSearchPage/></Layout>}/>
       </Routes>
     </Router>
   );

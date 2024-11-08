@@ -1,15 +1,18 @@
 import { useRef, useState } from "react";
 import * as d3 from "d3";
 
-const WorldMap = ({ width, height, data }) => {
-  const worldPopulation = data.worldPopulation;
-  const topography = data.topography;
-
+const WorldMap = ({ width, height, data, diseaseData }) => {
+  const { worldPopulation, topography } = data;
   const chartRef = useRef(null);
   const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [hoveredCountry, setHoveredCountry] = useState(null);
   const [tooltipData, setTooltipData] = useState({
     name: "",
     population: "",
+    diseaseCount: "",
+    avgMortality: "",
+    lowestPricedDrug: "",
+    drugSize: "",
     x: 0,
     y: 0,
   });
@@ -24,14 +27,14 @@ const WorldMap = ({ width, height, data }) => {
 
   const pathGenerator = path.projection(projection);
 
-  // Color scale
+  // Color scale for countries without diseaseData
   const colorScale = d3
     .scaleThreshold()
     .domain([100000, 1000000, 10000000, 30000000, 100000000, 500000000])
     .range(d3.schemeGreens[7]);
 
   return (
-    <div className="container">
+    <div className="container" style={{ position: "relative" }}>
       <svg
         ref={chartRef}
         className="viz"
@@ -40,60 +43,84 @@ const WorldMap = ({ width, height, data }) => {
         viewBox={`0 0 ${width} ${height}`}
       >
         <g className="topography">
-          {topography.features.map((d) => (
-            <path
-              key={d.id}
-              d={pathGenerator(d)}
-              fill={colorScale(worldPopulation[d.id] || 0)}
-              stroke="green"
-              strokeWidth={0.3}
-              onMouseEnter={() => {
-                setTooltipVisible(true);
-              }}
-              onMouseLeave={() => {
-                setTooltipVisible(false);
-              }}
-              onMouseMove={(event) => {
-                const population = (
-                  worldPopulation[d.id] || "N/A"
-                ).toLocaleString();
+          {topography.features.map((d) => {
+            const countryName = d.properties.name;
+            const countryCode = d.id;
+            const population = worldPopulation[countryCode] || 0; // Default to 0 if population is missing
 
-                // get x and y position relative to the chart
-                const [x, y] = d3.pointer(event, chartRef.current);
+            // Check if the country has disease data
+            const countryDiseaseData = diseaseData[countryName];
+            const isHovered = hoveredCountry === countryName;
 
-                setTooltipData({
-                  name: d.properties.name,
-                  population,
-                  left: x - 30,
-                  top: y - 80,
-                });
-              }}
-            />
-          ))}
+            // Ensure colorScale gets a valid value for countries without population data
+            const fillColor = countryDiseaseData
+              ? isHovered
+                ? "#04165d" // Darker blue when hovered
+                : "#29c4f8" // Blue for countries with diseaseData
+              : colorScale(population || 0); // Default to population-based color scale if no diseaseData
+
+            return (
+              <path
+                key={d.id}
+                d={pathGenerator(d)}
+                fill={fillColor}
+                stroke={isHovered ? "#29c4f8" : "#7f7f7f"} // Gray stroke for non-hovered countries
+                strokeWidth={isHovered ? 1 : 0.3}
+                onMouseEnter={() => {
+                  setTooltipVisible(true);
+                  setHoveredCountry(countryName);
+                }}
+                onMouseLeave={() => {
+                  setTooltipVisible(false);
+                  setHoveredCountry(null);
+                }}
+                onMouseMove={(event) => {
+                  const [x, y] = d3.pointer(event, chartRef.current);
+
+                  // Update tooltip based on disease data availability
+                  setTooltipData({
+                    name: countryName,
+                    population: population.toLocaleString(),
+                    diseaseCount: countryDiseaseData ? countryDiseaseData.diseaseCount : "",
+                    avgMortality: countryDiseaseData ? countryDiseaseData.avgMortality.toFixed(2) : "",
+                    lowestPricedDrug: countryDiseaseData ? countryDiseaseData.lowestPricedDrug.name : "N/A",
+                    drugSize: countryDiseaseData ? countryDiseaseData.lowestPricedDrug.size : "N/A",
+                    x: x + 10,
+                    y: y - 20,
+                  });
+                }}
+              />
+            );
+          })}
         </g>
-
-        {/* Legend */}
-        {/* <g className="legend" transform="translate(10,10)">
-          <Legend
-            color={colorScale}
-            width={height / 1.4}
-            tickFormat={d3.format("~s")}
-          />
-        </g> */}
       </svg>
 
       {/* Tooltip */}
-      {tooltipData && (
+      {tooltipVisible && (
         <div
-          className={`tooltip font-bold ${tooltipVisible ? "visible" : ""}`}
+          className="tooltip font-bold"
           style={{
-            left: tooltipData.left,
-            top: tooltipData.top,
+            position: "absolute",
+            left: tooltipData.x,
+            top: tooltipData.y,
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
+            padding: "8px",
+            border: "1px solid #ddd",
+            borderRadius: "4px",
+            pointerEvents: "none",
+            zIndex: 10, // Make sure tooltip is above the map
           }}
         >
-          {tooltipData.name}
-          <br />
-          Population: {tooltipData.population}
+          <div>{tooltipData.name}</div>
+          <div>Population: {tooltipData.population}</div>
+          {tooltipData.diseaseCount && (
+            <>
+              <div>Medicine Count: {tooltipData.diseaseCount}</div>
+              <div>Avg. Mortality: {tooltipData.avgMortality}</div>
+              <div>Lowest Priced Drug: {tooltipData.lowestPricedDrug}</div>
+              <div>Drug Size: {tooltipData.drugSize}</div>
+            </>
+          )}
         </div>
       )}
     </div>

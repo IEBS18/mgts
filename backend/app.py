@@ -101,6 +101,91 @@ def search():
     # Return the combined results as a single list of documents
     return jsonify({"documents": documents, "query": query}), 200
 
+@app.route('/disease-search', methods=['POST'])
+def disease_search():
+    data = request.json
+    search_type = data.get("search_type")
+    index = "combined_country_drug"
+
+    es_query = []
+
+    if search_type == "disease":
+        disease_names = data.get("disease_name", [])
+        country_names = data.get("country_name", [])
+
+        es_query.append({"index": index})
+        es_query.append({
+    "query": {
+        "bool": {
+            "must": [
+                # Exact match on the Disease field using the .keyword sub-field
+                {"term": {
+                    "Disease.keyword": disease_names  # Use the .keyword sub-field for exact matching
+                }},
+                # Exact match on the Country field using the .keyword sub-field
+                {"terms": {
+                    "Country.keyword": country_names  # Ensure you are using .keyword for exact match on Country as well
+                }}
+            ]
+        }
+    },
+    "size": 10000  # Control the number of results for performance
+})
+
+    elif search_type == "drug":
+        drug_names = data.get("drug_names", [])
+        country_names = data.get("country_name", [])
+
+        es_query.append({"index": index})
+        es_query.append({
+            "query": {
+                "bool": {
+                    "must": [
+                        {"term": {"Active Ingredient.keyword": drug_names}},        # Explicit field search for Drug
+                        {"terms": {"Country.keyword": country_names}}   # Explicit field search for Country
+                    ]
+                }
+            }
+        })
+
+    elif search_type == "symptoms":
+        search_keyword = data.get("search_keyword", "")
+        country_name = data.get("country_name", "")
+
+        es_query.append({"index": index})
+        es_query.append({
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "match": {
+                                "Symptoms": {
+                                    "query": search_keyword,
+                                    "fuzziness": "AUTO"
+                                }
+                            }
+                        },
+                        {"terms": {"Country.keyword": country_name}}  # Explicit field search for Country
+                    ]
+                }
+            }
+        })
+
+    try:
+        # Perform the multi-search query
+        response = es.msearch(body=es_query)
+
+        # Extract documents from responses
+        documents = [
+            hit['_source']
+            for res in response['responses']
+            for hit in res['hits']['hits']
+        ]
+
+        return jsonify({"status": "success", "data": documents})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Define the route for the API
 @app.route('/ask', methods=['POST'])

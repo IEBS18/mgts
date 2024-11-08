@@ -339,7 +339,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex items-center mb-4">
           <h1 className="text-2xl font-bold text-gray-800">
-            Welcome to <span className="text-[#a6ce39]">ToolX</span>
+            Welcome to <span className="text-[#a6ce39]">PharmaX</span>
           </h1>
         </div>
 
@@ -349,7 +349,7 @@ export default function Dashboard() {
           <div className="flex-grow">
             <div className="bg-white border border-[#a6ce39] rounded-lg p-4 shadow-sm h-full">
               <div className="">
-                <WorldMap width={650} height={350} data={{ worldPopulation, topography }} />
+                <WorldMap width={650} height={350} data={{ worldPopulation, topography }} diseaseData={{}}/>
               </div>
             </div>
           </div>
