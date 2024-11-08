@@ -38,6 +38,7 @@ import Visualize from "@/components/Visualize";
 import Layout from "@/pages/Layout";
 import Dashboard2 from "./components/Dashboard2";
 import DiseaseSearchPage from "./components/DiseaseSearchPage";
+import SelectedCardsTablePage from "./components/List";
 
 function App() {
   return (
@@ -60,6 +61,7 @@ function App() {
           }
         />
         <Route path="/disease-search" element={<Layout><DiseaseSearchPage/></Layout>}/>
+        <Route path="/list" element={<Layout><SelectedCardsTablePage /></Layout>} />
       </Routes>
     </Router>
   );

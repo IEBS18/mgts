@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import * as d3 from "d3";
 
@@ -13,6 +13,7 @@ import { FileText } from "lucide-react"; // Import the icon from lucide-react
 
 const DiseaseSearchPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { searchResults } = location.state || {}; // Get the search results
 
   const [worldPopulation, setWorldPopulation] = useState(null);
@@ -91,17 +92,31 @@ const DiseaseSearchPage = () => {
 
   const handleExport = () => {
     setIsExporting(true);
-    // Send the selected card data to a backend route
-    fetch("/api/export-selected-cards", {
+    console.log(selectedCards);
+  
+    // Send the selected card data to the backend route
+    fetch("http://localhost:5000/download-excel", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ selectedCards }),
+      body: JSON.stringify(selectedCards), // Send only the selected cards data
     })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Export successful", data);
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to export data");
+        }
+        return response.blob(); // Retrieve the response as a Blob
+      })
+      .then((blob) => {
+        // Create a download link for the Blob
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "selected_cards.xlsx"); // Set the file name
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link); // Clean up
         setIsExporting(false);
       })
       .catch((error) => {
@@ -109,6 +124,11 @@ const DiseaseSearchPage = () => {
         setIsExporting(false);
       });
   };
+
+  const handleAddToList = () => {
+    navigate("/list", { state: { selectedCards } });
+  };
+  
 
   const handleSelectAll = () => {
     if (selectedCards.length === searchResults.length) {
@@ -145,6 +165,12 @@ const DiseaseSearchPage = () => {
               className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? 'cursor-not-allowed opacity-50' : ''}`}
             >
               <Download className="h-4 w-4" /> {isExporting ? 'Exporting...' : 'Export Selected'}
+            </Button>
+            <Button 
+              onClick={handleAddToList} 
+              className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" /> Add to List
             </Button>
           </div>
         </div>

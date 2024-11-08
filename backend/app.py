@@ -1,4 +1,6 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
+import pandas as pd
+from io import BytesIO
 from flask_cors import CORS
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
@@ -186,7 +188,30 @@ def disease_search():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
+@app.route('/download-excel', methods=['POST'])
+def download_excel():
+    # Step 1: Get JSON data from the POST request
+    data = request.get_json()
+    
+    # Step 2: Convert JSON to a Pandas DataFrame
+    df = pd.DataFrame(data)
+    
+    # Step 3: Save the DataFrame as an Excel file in memory
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Sheet1')
+    
+    # Move to the beginning of the stream
+    output.seek(0)
+    
+    # Step 4: Return the Excel file as a downloadable response
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name='search_results.xlsx',
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
 # Define the route for the API
 @app.route('/ask', methods=['POST'])
 def ask():
