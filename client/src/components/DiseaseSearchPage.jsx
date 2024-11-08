@@ -181,7 +181,7 @@ const DiseaseSearchPage = () => {
                     <p><strong>Mortality Rate:</strong> {result.Mortality}%</p>
                   </div>
                   <FileText
-                    className="text-[#a6ce39] cursor-pointer"
+                    className="text-[#a6ce39] cursor-pointer justify-end"
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent triggering card selection
                       handleOpenDialog(result);
