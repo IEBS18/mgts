@@ -103,6 +103,8 @@ def search():
     # Return the combined results as a single list of documents
     return jsonify({"documents": documents, "query": query}), 200
 
+
+
 @app.route('/disease-search', methods=['POST'])
 def disease_search():
     data = request.json
@@ -116,61 +118,78 @@ def disease_search():
         country_names = data.get("country_name", [])
 
         es_query.append({"index": index})
+
+        # Construct the query
+        bool_query = {"must": []}
+
+        # Add disease filter if it's provided
+        if disease_names != "all":
+            bool_query["must"].append({"term": {"Disease.keyword": disease_names}})
+
+        # Add country filter if it's not "all"
+        if "all" not in country_names:
+            bool_query["must"].append({"terms": {"Country.keyword": country_names}})
+
         es_query.append({
-    "query": {
-        "bool": {
-            "must": [
-                # Exact match on the Disease field using the .keyword sub-field
-                {"term": {
-                    "Disease.keyword": disease_names  # Use the .keyword sub-field for exact matching
-                }},
-                # Exact match on the Country field using the .keyword sub-field
-                {"terms": {
-                    "Country.keyword": country_names  # Ensure you are using .keyword for exact match on Country as well
-                }}
-            ]
-        }
-    },
-    "size": 10000  # Control the number of results for performance
-})
+            "query": {
+                "bool": bool_query
+            },
+            "size": 10000  # Control the number of results for performance
+        })
 
     elif search_type == "drug":
         drug_names = data.get("drug_names", [])
         country_names = data.get("country_name", [])
 
         es_query.append({"index": index})
+
+        # Construct the query
+        bool_query = {"must": []}
+
+        # Add drug filter if it's provided
+        if drug_names != "all":
+            bool_query["must"].append({"term": {"Active Ingredient.keyword": drug_names}})
+
+        # Add country filter if it's not "all"
+        if "all" not in country_names:
+            bool_query["must"].append({"terms": {"Country.keyword": country_names}})
+
         es_query.append({
             "query": {
-                "bool": {
-                    "must": [
-                        {"term": {"Active Ingredient.keyword": drug_names}},        # Explicit field search for Drug
-                        {"terms": {"Country.keyword": country_names}}   # Explicit field search for Country
-                    ]
-                }
-            }
+                "bool": bool_query
+            },
+            "size": 10000  # Control the number of results for performance
         })
 
     elif search_type == "symptoms":
         search_keyword = data.get("search_keyword", "")
-        country_name = data.get("country_name", "")
+        country_names = data.get("country_name", [])
 
         es_query.append({"index": index})
+
+        # Construct the query
+        bool_query = {"must": []}
+
+        # Add symptoms filter if it's provided
+        if search_keyword:
+            bool_query["must"].append({
+                "match": {
+                    "Symptoms": {
+                        "query": search_keyword,
+                        "fuzziness": "AUTO"
+                    }
+                }
+            })
+
+        # Add country filter if it's not "all"
+        if "all" not in country_names:
+            bool_query["must"].append({"terms": {"Country.keyword": country_names}})
+
         es_query.append({
             "query": {
-                "bool": {
-                    "must": [
-                        {
-                            "match": {
-                                "Symptoms": {
-                                    "query": search_keyword,
-                                    "fuzziness": "AUTO"
-                                }
-                            }
-                        },
-                        {"terms": {"Country.keyword": country_name}}  # Explicit field search for Country
-                    ]
-                }
-            }
+                "bool": bool_query
+            },
+            "size": 10000  # Control the number of results for performance
         })
 
     try:

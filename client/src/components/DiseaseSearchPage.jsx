@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Check, X, Download } from "lucide-react";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog"; // Import Dialog components
 import { FileText } from "lucide-react"; // Import the icon from lucide-react
+import ChatBot from './ChatBot';
 
 const DiseaseSearchPage = () => {
   const location = useLocation();
@@ -23,6 +24,8 @@ const DiseaseSearchPage = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedResult, setSelectedResult] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [isChatMinimized, setIsChatMinimized] = useState(true);
 
   if (!searchResults) {
     return <div>No search results found.</div>;
@@ -88,6 +91,10 @@ const DiseaseSearchPage = () => {
         return [...prevSelected, result];
       }
     });
+  };
+
+  const handleChatToggle = () => {
+    setIsChatMinimized(!isChatMinimized);
   };
 
   const handleExport = () => {
@@ -249,6 +256,13 @@ const DiseaseSearchPage = () => {
         </Dialog>
       )}
 
+      <ChatBot
+        chatMessages={chatMessages}
+        setChatMessages={setChatMessages}
+        fulldata={searchResults} // Pass the search results as fulldata
+        isMinimized={isChatMinimized}
+        onToggle={handleChatToggle}
+      />
       <style jsx global>{`
         .scrollbar-hide {
           -ms-overflow-style: none;

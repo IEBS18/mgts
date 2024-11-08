@@ -1,13 +1,13 @@
+// Chatbot.jsx
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send, Minimize, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Input } from './ui/input';
 import ReactMarkdown from 'react-markdown'; // Import react-markdown
 
-export default function ChatBot({ chatMessages, setChatMessages, list, fulldata, isMinimized, onToggle, summaryResponse }) {
+export default function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggle }) {
   const [newMessage, setNewMessage] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -23,13 +23,13 @@ export default function ChatBot({ chatMessages, setChatMessages, list, fulldata,
       const response = await fetch('http://localhost:5000/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: newMessage, list, results: fulldata })
+        body: JSON.stringify({ query: newMessage, results: fulldata })
       });
 
       const result = await response.json();
       setChatMessages((prev) => [
         ...prev.slice(0, -1),
-        { type: 'bot', content: <ReactMarkdown>{result.results}</ReactMarkdown>  }
+        { type: 'bot', content: <ReactMarkdown>{result.results}</ReactMarkdown> }
       ]);
     } catch (error) {
       setChatMessages((prev) => [
@@ -66,7 +66,7 @@ export default function ChatBot({ chatMessages, setChatMessages, list, fulldata,
   return (
     <motion.div
       initial={{ height: '100px' }}
-      animate={{ height: '100vh' }}
+      animate={{ height: '80vh' }}
       exit={{ height: 0 }}
       className="fixed bottom-0 right-0 w-1/3 bg-white border-l border-gray-300 flex flex-col shadow-lg z-50"
       style={{ borderRadius: '16px', backdropFilter: 'blur(10px)' }}
@@ -104,25 +104,6 @@ export default function ChatBot({ chatMessages, setChatMessages, list, fulldata,
             </div>
           </motion.div>
         ))}
-
-        {/* Display only markdown rendered content for summary */}
-        {summaryResponse && (
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="flex justify-start"
-          >
-            <div className="flex items-start space-x-2">
-              <Avatar className="w-8 h-8 bg-gray-200">
-                <AvatarFallback>B</AvatarFallback>
-              </Avatar>
-              <div className="p-2 rounded-xl shadow-md bg-[#95D524] text-white">
-                <ReactMarkdown>{summaryResponse}</ReactMarkdown> {/* Only markdown-rendered content */}
-              </div>
-            </div>
-          </motion.div>
-        )}
       </div>
 
       <div className="p-4 border-t border-gray-300">
