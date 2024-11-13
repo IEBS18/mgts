@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { X, Map, ClipboardList, Award, Users } from "lucide-react";
+import DrugCostPredictionModal from './DrugCostPredictionModal';
 
 const countryData = {
   "United States": {
@@ -46,7 +47,7 @@ const reportTypes = [
   },
   {
     icon: <ClipboardList className="w-6 h-6" />,
-    title: "Pipeline Analysis",
+    title: "Price Prediction",
     description: "Analysis of clinical-stage programs. See where new therapies are being developed and key innovators.",
   },
   {
@@ -153,7 +154,7 @@ export default function Dashboard() {
           <div className="flex-grow">
             <div className="bg-white border border-[#a6ce39] rounded-lg p-4 shadow-sm h-full">
               <div className="">
-                <WorldMap width={650} height={350} data={{ worldPopulation, topography }} diseaseData={{}}/>
+                <WorldMap width={650} height={350} data={{ worldPopulation, topography }} diseaseData={{}} />
               </div>
             </div>
           </div>
@@ -173,6 +174,8 @@ export default function Dashboard() {
                   <div className="flex items-center">
                     {report.title === "Disease Overview" ? (
                       <DiseaseOverview />
+                    ) : report.title === "Price Prediction" ? (
+                      <DrugCostPredictionModal />
                     ) : (
                       <Button className="w-full md:w-auto bg-[#a6ce39] text-black rounded-[12px] hover:bg-[#95b833]">
                         Get Started

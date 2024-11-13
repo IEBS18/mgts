@@ -134,108 +134,45 @@ def get_elasticsearch_results(query):
     return [hit['_source'] for res in result['responses'] for hit in res['hits']['hits']]
  
 # Function to create OpenAI prompt
+# Function to create the OpenAI prompt from results
 def create_openai_prompt(results):
     context = ""
     for hit in results:
         context += '\n'.join(f"{key}: {value}" for key, value in hit.items()) + "\n\n"
- 
+    print(context)
     prompt = f"""
-INSTRUCTIONS:
- 
-- You are a research consultant specializing in answering questions based on structured data provided by user.
-- user will provide a query and then the context using which you will answer the query.
-- The data will be provided in dictionaries and will include either of these four types: "pregranted", "drugdisease",  "clinicaltrial", and "pubmed".
-
-- Types of Data:
-
-    1. "pregranted" data: Contains information about pre-grant patents, including attributes like "cpc_classifications", "application_year", "jurisdiction", "ipc_classifications", "abstract", "title", "type", "patent_legal_status", "assignee_applicant", "display_key", "publication_year", "pgpub_id", "publication_date", "application_date", "claim", "earliest_priority_date", and "inventor".
-    
-    The details of the attributes are:
-    ['cpc_classifications': The Cooperative Patent Classification (CPC) system codes that categorize the patent into specific technological areas,
-    'application_year': The year when the patent application was filed.
-    'jurisdiction': The legal territory where the patent is granted or applies, such as the country or region,
-    'ipc_classifications': The International Patent Classification (IPC) codes that classify the patent based on its technical features.
-    'abstract': A summary of the patent that outlines its key features and purpose,
-    'title': The title of the patent, usually reflecting its content or purpose,
-    'type': The classification type is pregranted,
-    'patent_legal_status': The current legal status of the patent (e.g., active, expired, pending),
-    'assignee_applicant': The individual or organization that owns or applied for the patent,
-    'display_key': A unique identifier or key for the patent, often used for display purposes in databases,
-    'publication_year': The year when the patent was published.
-    'pgpub_id': A unique identifier for the published patent.
-    'publication_date': The date when the patent was officially published.
-    'application_date': The date when the patent application was submitted.
-    'claim': Specific legal statements that define the scope of protection sought by the patent.
-    'earliest_priority_date': The earliest date from which the applicant claims priority based on previous filings.
-    'inventor': The individual(s) who invented the subject matter of the patent.]
-    
-    2. "drugdisease" data: Includes drug-related information with attributes like "Organization_Name", "Ingredients", "Routes_of_Administration", "Territory_Code", "Product_Name", "Diseases" and "type".
-    
-    The details of the attributes are as:
-    ['Organization_Name': The name of the organization that developed or produced the drug.
-    'Ingredients': The active and inactive components that make up the drug formulation.
-    'Routes_of_Administration': The method by which the drug is delivered to the body (e.g., oral, intravenous, topical).
-    'Territory_Code': A code representing the geographical area where the drug is approved or marketed.
-    'Product_Name': The commercial name under which the drug is sold.
-    'type': The classification type is drugdisease.
-    'Diseases': The medical conditions or diseases that the drug is intended to treat or manage.]
-    
-    3. "Clinicaltrial" data: Refers to clinical trial information with attributes such as "NCT Number", "Study Status", "Study Title", "Brief Summary", "Study Results", "Conditions", "Interventions", "Sponsor", "Collaborators", "Sex", "Age", "Phases", "Enrollment", "Study Type", "Study Design", "Other IDs", "Start Date", "Primary Completion Date", "Completion Date", "First Posted", "Last Update Posted", "Locations" and "type".
-    
-    The details of the attributes are:
-    ['Primary Completion Date': The date when the last participant's last visit occurred, marking the completion of the primary endpoint data collection.
-    'Study Title': The title of the clinical trial, describing its focus or objective.
-    'Study Status': The current status of the clinical trial (e.g., Recruiting, Completed, Terminated).
-    'Sex': The sex of the participants eligible for the trial (e.g., male, female, both).
-    'Locations': The sites where the clinical trial is conducted.
-    'Sponsor': The organization or entity that initiates, manages, or finances the clinical trial.
-    'Completion Date': The actual date when the trial was completed.
-    'Study Results': Findings or outcomes from the clinical trial.
-    'Conditions': The medical conditions being studied in the trial.
-    'Study Description': A detailed overview of the study's objectives, design, and methodology.
-    'Brief Summary': A concise summary of the study's purpose and design.
-    'Interventions': The treatments, drugs, or procedures being tested in the trial.
-    'Phases': The different stages of the clinical trial (e.g., Phase 1, Phase 2, Phase 3).
-    'Start Date': The date when the trial commenced.
-    'Other IDs': Additional identifiers related to the trial, which may include registry numbers or codes.
-    'First Posted': The date when the trial information was first made publicly available.
-    'Enrollment': The number of participants recruited for the trial.
-    'NCT Number': The unique identifier assigned to the trial in the ClinicalTrials.gov registry.
-    'Study Design': The overall plan or structure of the clinical trial.
-    'Last Update Posted': The date of the most recent update to the trial information.
-    'Collaborators': Other organizations or entities that are involved in the trial.
-    'Age': The age range of participants eligible for the trial.
-    'Study Type': The nature of the study (e.g., observational, interventional).
-    'type': The classification type is clinicaltrial.]
-    
-    4. "Pubmed" data: Involves scientific publications, with attributes like "PMID", "Title", "AbstractText", "Author Name", "Country", "Journal Issue", "PubDate", "ISSN", "ISSN Type" and "type".
-    
-    the details of each attribute is given below:
-    ['PMID':A unique identifier assigned to each article in the PubMed database. It is a numeric code that allows for easy referencing and retrieval of the specific article.
-    'Title':The title of the research article. It provides a brief description of the main topic or findings of the study and is often the first element that researchers and readers will look at.
-    'AbstractText':A summary of the research article that includes the main objectives, methods, results, and conclusions. The abstract is designed to give readers a quick overview of the study's content and significance.
-    'Author Name':The names of the authors who contributed to the research article. This attribute may include multiple names and is essential for crediting those who conducted the research.
-    'Country':The country where the research was conducted or where the authors are based. This information can be important for understanding the geographical context of the study and its implications.
-    'Journal Issue':The specific issue of the journal in which the article was published, typically including the volume and issue number. This attribute helps in locating the article within the journal's archive.
-    'PubDate':The date when the article was published. This information is crucial for referencing and understanding the timeliness of the research.
-    'ISSN':A unique code used to identify the journal in which the article was published. The ISSN helps in distinguishing between different serial publications and is essential for library cataloging.
-    'ISSN Type':Indicates whether the ISSN is for the print version, the electronic version, or both. This information is helpful for understanding how the journal is available to readers.
-    'type':The classification type is pubmed.]
-    
-- Instructions for Answering Questions:
-
-    Be Precise and factual in your answers, using only the context provided in the dictionaries.
-    If the required information is missing, simply state that the "information is not available".
-    Do not fabricate answers.
-    Your responses should always be factually correct, reliable, and based on the context provided.
- 
+- You are a research consultant specializing in answering questions based on structured data provided by the user.
+- The user will provide a query followed by context data in dictionary format.
+- The data will include attributes such as "Active Ingredient," "Adverse_Events," "Age_Group," "Annual_Therapy_Costs," "Country," "Disease," "Efficacy," "Gender," "Manufacturer," "Morbidity," "Mortality," "Prevalence," "Price," "Quality_of_Life," "Safety," "Size," "Symptoms," "TradeName," and "Type_of_Drug."
+- Data Attributes:
+    "Active Ingredient": The primary active component responsible for the drug's therapeutic effect.
+    "Adverse_Events": Description of common and serious adverse events reported with the drug.
+    "Age_Group": Specifies the approved age range for the drug's use.
+    "Annual_Therapy_Costs": The estimated yearly cost of therapy with the drug, factoring in insurance and patient-specific factors.
+    "Country": The country where the drug is approved or marketed.
+    "Disease": The medical condition or disease the drug is intended to treat.
+    "Efficacy": Effectiveness of the drug in achieving the desired therapeutic outcome, often provided as a percentage or qualitative description.
+    "Gender": Information on the disease’s prevalence across different genders or specific impacts related to gender.
+    "Manufacturer": The company responsible for producing or distributing the drug.
+    "Morbidity": A numerical representation (often between 0 and 1) of the disease’s impact on quality of life or health status.
+    "Mortality": A numerical value (often between 0 and 1) indicating the risk of death associated with the disease or condition.
+    "Prevalence": Data on the frequency of the disease within the population, given as a percentage or approximate count.
+    "Price": The cost of the drug per unit, typically in a specific dosage or packaging form.
+    "Quality_of_Life": Information on how the drug impacts the quality of life of patients.
+    "Safety": Summary of the drug's safety profile, including necessary precautions.
+    "Size": The dosage or packaging size of the drug.
+    "Symptoms": Symptoms associated with the disease the drug is intended to treat.
+    "TradeName": The brand or commercial name under which the drug is marketed.
+    "Type_of_Drug": The category or mechanism of action of the drug (e.g., "fusion inhibitor" for antiretroviral drugs).
+    Instructions for Answering Questions:
+    Provide precise and factual answers using only the context provided in the data.
+    Avoid speculating or creating answers beyond the given data.
+    Ensure responses are clear, reliable, and directly aligned with the provided context.
   """
     return prompt
- 
-# Function to generate OpenAI completion
-def generate_openai_completion(question):
-   
 
+# Function to generate OpenAI completion
+def generate_openai_completion(question, conversation_history):
     # Add the user question to the conversation history
     conversation_history.append({"role": "user", "content": question})
 
@@ -252,30 +189,23 @@ def generate_openai_completion(question):
 
     return assistant_response
 
+# Main function to process the question using the provided results
 def process_question(results, question, conversation_history):
-    
-    search_query = preprocess(question)
-    if isinstance(search_query, set):
-        search_query = ' '.join(search_query)
-    print(search_query)
-    
-    # Get Elasticsearch results for the user query
-    # results = get_elasticsearch_results(search_query)
+    print(results)
+    # Filter and preprocess the results if necessary
     # updated_results = remove_english_description(results)
-    # context_prompt = create_openai_prompt(results[:5])
+    # _, filtered_results = search_with_tfidf_and_fuzziness(updated_results, question)
     
-    updated_results = remove_english_description(results)
-    _, filtered_results = search_with_tfidf_and_fuzziness(updated_results, search_query)
+    # Generate context from filtered results for the OpenAI prompt
+    context_prompt = create_openai_prompt(results)
     
-    # # Create an OpenAI prompt using the search results
-    context_prompt = create_openai_prompt(filtered_results[:TOP_N])
-    # print(context_prompt)
+    # Add context as a system message in the conversation history
     conversation_history.append({"role": "system", "content": context_prompt})
-    # print("added system context.")
-    question = question + "\n\n " + str(filtered_results[:TOP_N])
+    
     # Generate an OpenAI completion for the user question
-    answer = generate_openai_completion(question)
+    answer = generate_openai_completion(question, conversation_history)
     return answer
+
 
 if __name__ == "__main__":
 

@@ -135,7 +135,7 @@ export default function DiseaseOverviewModal() {
             </TabsContent>
           </div>
           <div className="space-y-4 mt-4">
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="country" className="text-gray-700">Country</Label>
               <Select
                 id="country"
@@ -155,7 +155,7 @@ export default function DiseaseOverviewModal() {
                 styles={selectStyles}
                 placeholder="Select countries..."
               />
-            </div>
+            </div> */}
             <Button onClick={handleSearchSubmit} className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px]">
               Submit
             </Button>

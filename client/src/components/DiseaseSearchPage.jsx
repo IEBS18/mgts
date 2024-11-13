@@ -1,201 +1,413 @@
-"use client";
-
+import React, { useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import * as d3 from "d3";
-
-import WorldMap from "./WorldMap"; // Import your WorldMap component
-import { Card } from "./ui/card"; // Import Card from ShadCN UI
+import ChatBot from "./ChatBot";
+import { X, FileText, Download, ArrowUpDown, ChevronDown, Plus } from "lucide-react";
+import { Card } from "./ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, X, Download } from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog"; // Import Dialog components
-import { FileText } from "lucide-react"; // Import the icon from lucide-react
-import ChatBot from './ChatBot';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 
 const DiseaseSearchPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { searchResults } = location.state || {}; // Get the search results
+  const { searchResults } = location.state || {};
 
-  const [worldPopulation, setWorldPopulation] = useState(null);
-  const [topography, setTopography] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedCards, setSelectedCards] = useState([]);
-  const [isExporting, setIsExporting] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedResult, setSelectedResult] = useState(null);
+  const diseaseInfo = Array.isArray(searchResults) ? searchResults[0] : searchResults || {};
+
   const [chatMessages, setChatMessages] = useState([]);
   const [isChatMinimized, setIsChatMinimized] = useState(true);
+  const [drugInfo, setDrugInfo] = useState([]);
+  const [selectedCards, setSelectedCards] = useState([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedResult, setSelectedResult] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDiseaseExporting, setDiseaseIsExporting] = useState(false);
 
-  if (!searchResults) {
-    return <div>No search results found.</div>;
-  }
+  // Table state
+  const [sorting, setSorting] = useState([]);
+  const [columnFilters, setColumnFilters] = useState([]);
+  const [columnVisibility, setColumnVisibility] = useState({});
+  const [rowSelection, setRowSelection] = useState({});
 
-  // Fetch world map and population data
-  useEffect(() => {
-    const getData = async () => {
-      setLoading(true);
-      let populationData = {};
-
-      await Promise.all([
-        d3.json("https://res.cloudinary.com/tropicolx/raw/upload/v1/Building%20Interactive%20Data%20Visualizations%20with%20D3.js%20and%20React/world.geojson"),
-        d3.csv("https://res.cloudinary.com/tropicolx/raw/upload/v1/Building%20Interactive%20Data%20Visualizations%20with%20D3.js%20and%20React/world_population.csv", (d) => {
-          populationData = { ...populationData, [d.code]: +d.population };
-        }),
-      ]).then((fetchedData) => {
-        setTopography(fetchedData[0]);
-        setWorldPopulation(populationData);
-      });
-
-      setLoading(false);
-    };
-
-    getData();
+  const handleChatToggle = useCallback(() => {
+    setIsChatMinimized((prev) => !prev);
   }, []);
 
-  // Aggregate disease data for each country
-  const diseaseData = searchResults.reduce((acc, item) => {
-    const country = item.Country;
-    const mortality = item.Mortality;
-    const price = item.Price;
-    const drugName = item.TradeName;
-    const drugSize = item.Size;
 
-    if (!acc[country]) {
-      acc[country] = {
-        diseaseCount: 0,
-        avgMortality: 0,
-        lowestPricedDrug: { price: Infinity, name: "", size: "" },
-      };
-    }
-
-    acc[country].diseaseCount += 1;
-    acc[country].avgMortality = (acc[country].avgMortality + mortality) / 2;
-
-    if (price < acc[country].lowestPricedDrug.price) {
-      acc[country].lowestPricedDrug = { price, name: drugName, size: drugSize };
-    }
-
-    return acc;
-  }, {});
-
-  // Get the disease name and countries
-  const diseaseName = searchResults.length > 0 ? searchResults[0].Disease : "Unknown Disease";
-  const countriesWithDisease = [...new Set(searchResults.map((item) => item.Country))].join(", ");
-
-  const handleCardSelection = (result) => {
-    setSelectedCards((prevSelected) => {
-      if (prevSelected.includes(result)) {
-        return prevSelected.filter((item) => item !== result);
-      } else {
-        return [...prevSelected, result];
-      }
-    });
-  };
-
-  const handleChatToggle = () => {
-    setIsChatMinimized(!isChatMinimized);
-  };
-
-  const handleExport = () => {
-    setIsExporting(true);
-    console.log(selectedCards);
-  
-    // Send the selected card data to the backend route
+  const handleDiseaseExport = useCallback((dataToExport) => {
+    setDiseaseIsExporting(true);
+    console.log(dataToExport)
     fetch("http://localhost:5000/download-excel", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(selectedCards), // Send only the selected cards data
+      body: JSON.stringify(dataToExport),
     })
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to export data");
         }
-        return response.blob(); // Retrieve the response as a Blob
+        return response.blob();
       })
       .then((blob) => {
-        // Create a download link for the Blob
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", "selected_cards.xlsx"); // Set the file name
+        link.setAttribute("download", "selected_data.xlsx");
         document.body.appendChild(link);
         link.click();
-        link.parentNode.removeChild(link); // Clean up
+        link.parentNode.removeChild(link);
+        setDiseaseIsExporting(false);
+      })
+      .catch((error) => {
+        console.error("Error exporting data:", error);
+        setDiseaseIsExporting(false);
+      });
+  }, []);
+
+  const handleExport = useCallback(() => {
+    setIsExporting(true);
+    fetch("http://localhost:5000/download-excel", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(selectedCards),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to export data");
+        }
+        return response.blob();
+      })
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "selected_cards.xlsx");
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
         setIsExporting(false);
       })
       .catch((error) => {
         console.error("Error exporting selected cards:", error);
         setIsExporting(false);
       });
-  };
+  }, [selectedCards]);
 
-  const handleAddToList = () => {
-    navigate("/list", { state: { selectedCards } });
-  };
-  
+  const handleRelevantDrugsSearch = useCallback(() => {
+    fetch("http://localhost:5000/drug-search-by-disease", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ disease: diseaseInfo.Disease }),
+    })
+      .then(response => response.json())
+      .then((data) => {
+        setDrugInfo(data);
+      })
+      .catch(error => console.error("Error fetching relevant drugs:", error));
+  }, [diseaseInfo.Disease]);
 
-  const handleSelectAll = () => {
-    if (selectedCards.length === searchResults.length) {
-      setSelectedCards([]);
-    } else {
-      setSelectedCards(searchResults);
-    }
-  };
+  const handleCardSelection = useCallback((result) => {
+    setSelectedCards((prevSelected) =>
+      prevSelected.includes(result)
+        ? prevSelected.filter((item) => item !== result)
+        : [...prevSelected, result]
+    );
+  }, []);
 
-  const handleOpenDialog = (result) => {
+  const handleOpenDialog = useCallback((result) => {
     setSelectedResult(result);
     setDialogOpen(true);
-  };
+  }, []);
 
-  if (loading) return <div>Loading...</div>;
+  const handleSelectAll = useCallback(() => {
+    setSelectedCards((prev) =>
+      prev.length === drugInfo.length ? [] : [...drugInfo]
+    );
+  }, [drugInfo]);
+
+  // Memoize table data
+  const allowedKeys = ["Disease Biology", "Signs & Symptoms", "Pathophysiology", "Risk Factors", "Diagnosis", "Patient Demographics", "Stages progression", "Sub-types", "Treatment options", "Treatment & Management", "Unmet Needs", "Prevalence"];
+  const [selectedTopics, setSelectedTopics] = useState([]);
+
+  const handleTopicSelection = useCallback((topic) => {
+    setSelectedTopics((prevSelected) =>
+      prevSelected.includes(topic)
+        ? prevSelected.filter((t) => t !== topic)
+        : [...prevSelected, topic]
+    );
+  }, []);
+
+  const data = useMemo(() => {
+    return Object.entries(diseaseInfo)
+      .filter(([key]) => allowedKeys.includes(key))
+      .sort(([keyA], [keyB]) => allowedKeys.indexOf(keyA) - allowedKeys.indexOf(keyB))
+      .map(([key, value]) => ({
+        topic: key,
+        overview: value,
+      }))
+      .filter(({ topic }) =>
+        selectedTopics.length === 0 || selectedTopics.includes(topic) // Correct filter for multiple topics
+      );
+  }, [diseaseInfo, selectedTopics]);
+
+  const columns = useMemo(() => [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "topic",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Topic
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="font-medium">{row.getValue("topic")}</div>,
+    },
+    {
+      accessorKey: "overview",
+      header: "Overview",
+      cell: ({ row }) => {
+        const value = row.getValue("overview");
+        return (
+          <div className="max-w-[500px]">
+            {typeof value === 'object' ? (
+              Array.isArray(value) ? (
+                <ul className="list-disc pl-6">
+                  {value.map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              ) : (
+                <div>
+                  {Object.entries(value).map(([subKey, subValue]) => (
+                    <p key={subKey}>
+                      <strong>{subKey}:</strong> {subValue}
+                    </p>
+                  ))}
+                </div>
+              )
+            ) : (
+              <p>{value}</p>
+            )}
+          </div>
+        );
+      },
+    },
+  ], []);
+
+  const table = useReactTable({
+    data,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel({ pageSize: data.length }), // Show all rows
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
+    manualPagination: true, // Disable automatic pagination
+    pageCount: 1,
+  });
+
+  const selectedDiseaseData = useMemo(() => {
+    return Object.entries(rowSelection)
+      .filter(([key, isSelected]) => isSelected) // Only include selected rows
+      .map(([key]) => data[parseInt(key)]); // Map to data entries by index
+  }, [rowSelection, data]);
 
   return (
     <div className="disease-search-page h-screen bg-gray-50 flex flex-col">
-      <div className="flex-grow overflow-hidden p-6">
-        <div className="flex items-center mb-4 gap-4 justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">
-            Showing results for <span className="text-[#a6ce39]">{diseaseName}</span> in countries: <span className="text-[#a6ce39]">{countriesWithDisease}</span>
-          </h1>
-          <div className="flex items-center gap-4">
-            <Button 
-              onClick={handleSelectAll}
-              className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
+      <div className="flex-grow overflow-hidden p-6 flex">
+        <div className={`w-${drugInfo.length > 0 ? "2/3" : "full"} pr-6`}>
+          <div className="flex items-center mb-4 gap-4 justify-between">
+            <h1 className="text-2xl font-bold text-gray-800">
+              Disease Overview: <span className="text-[#a6ce39]">{diseaseInfo.Disease || "Unknown Disease"}</span>
+            </h1>
+          </div>
+
+          <div className="disease-card space-y-4 bg-white border border-[#a6ce39] rounded-[12px] p-6 shadow-lg overflow-y-auto scrollbar-hide max-h-[80vh] pb-6">
+            <h2>{diseaseInfo['Disease Overview']}</h2>
+            <div className="flex items-center py-4 gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="rounded-lg bg-green hover:bg-darkBlue text-white hover:text-white">
+                    Filter Topics <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-white pt-3" side="left" align="end">
+                  {allowedKeys.map((topic) => (
+                    <DropdownMenuCheckboxItem
+                      key={topic}
+                      checked={selectedTopics.includes(topic)}
+                      onCheckedChange={() => handleTopicSelection(topic)}
+                    >
+                      {topic}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="ml-auto rounded-lg bg-green text-white hover:bg-darkBlue hover:text-white">
+                    Columns <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-white pt-3">
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => {
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={column.id}
+                          className="capitalize"
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                        >
+                          {column.id}
+                        </DropdownMenuCheckboxItem>
+                      )
+                    })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {/* <Button className='bg-green rounded-lg hover:bg-darkBlue text-white' onClick={() => console.log("Add AI Column clicked")}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add AI Column
+              </Button> */}
+              <Button className='bg-green rounded-lg hover:bg-darkBlue text-white'disabled={isDiseaseExporting} onClick={() => handleDiseaseExport(selectedDiseaseData)}>
+                <Download className="mr-2 h-4 w-4" />
+                {isDiseaseExporting? 'Exporting...' : 'Export Selected Rows'}
+              </Button>
+            </div>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} className="h-24 text-center">
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <Button
+              onClick={handleRelevantDrugsSearch}
+              className="mt-4 bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
             >
-              {selectedCards.length === searchResults.length ? 'Unselect All' : 'Select All'}
-            </Button>
-            <Button 
-              onClick={handleExport} 
-              disabled={isExporting} 
-              className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? 'cursor-not-allowed opacity-50' : ''}`}
-            >
-              <Download className="h-4 w-4" /> {isExporting ? 'Exporting...' : 'Export Selected'}
-            </Button>
-            <Button 
-              onClick={handleAddToList} 
-              className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" /> Add to List
+              Relevant Drugs
             </Button>
           </div>
         </div>
-        <div className="flex h-[calc(100%-2rem)] gap-4">
-          {/* Left Panel: Map */}
-          <div className="w-2/3 bg-white border border-[#a6ce39] rounded-[12px] p-4 shadow-lg">
-            <WorldMap
-              width={650}
-              height={350}
-              data={{ worldPopulation, topography }}
-              diseaseData={diseaseData} // Pass diseaseData to WorldMap
-            />
-          </div>
 
-          {/* Right Panel: Scrollable Cards */}
-          <div className="w-1/3 overflow-y-auto pr-2 scrollbar-hide">
+        {drugInfo.length > 0 && (
+          <div className="w-1/3 overflow-y-auto pr-2 scrollbar-hide pt-12">
+            <div className="flex sticky items-center gap-4 pb-4">
+              <Button
+                onClick={handleSelectAll}
+                className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
+              >
+                {selectedCards.length === drugInfo.length ? 'Unselect All' : 'Select All'}
+              </Button>
+              <Button
+                onClick={handleExport}
+                disabled={isExporting}
+                className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? 'cursor-not-allowed opacity-50' : ''}`}
+              >
+                <Download className="h-4 w-4" /> {isExporting ? 'Exporting...' : 'Export Selected'}
+              </Button>
+            </div>
             <div className="space-y-4 flex flex-col">
-              {searchResults.map((result, index) => (
+              {drugInfo.map((result, index) => (
                 <Card
                   key={index}
                   className={`bg-white border border-[#a6ce39] rounded-[12px] p-4 shadow-sm cursor-pointer relative ${selectedCards.includes(result) ? 'shadow-lg' : ''}`}
@@ -207,16 +419,15 @@ const DiseaseSearchPage = () => {
                     </div>
                   )}
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-800">{result.TradeName}</h2>
-                    <p className="text-gray-600">{result.Disease}</p>
-                    <p><strong>Price:</strong> ${result.Price}</p>
-                    <p><strong>Size:</strong> {result.Size}</p>
+                    <p className="text-gray-600"> {result.TradeName}, {result['Active Ingredient']}</p>
+                    <p><strong>Morbidity:</strong> {result.Morbidity}</p>
                     <p><strong>Mortality Rate:</strong> {result.Mortality}%</p>
+                    <p><strong>Country:</strong> {result.Country}</p>
                   </div>
                   <FileText
                     className="text-[#a6ce39] cursor-pointer justify-end"
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevent triggering card selection
+                      e.stopPropagation();
                       handleOpenDialog(result);
                     }}
                   />
@@ -224,33 +435,17 @@ const DiseaseSearchPage = () => {
               ))}
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Dialog Component */}
       {dialogOpen && selectedResult && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className='max-w-4xl max-h-[80vh] overflow-y-auto bg-white'>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white">
             <DialogTitle>{selectedResult.TradeName}</DialogTitle>
             <DialogDescription>
-              <p><strong>Active Ingredient:</strong> {selectedResult["Active Ingredient"]}</p>
-              <p><strong>Adverse Events:</strong> {selectedResult.Adverse_Events}</p>
-              <p><strong>Age Group:</strong> {selectedResult.Age_Group}</p>
-              <p><strong>Annual Therapy Costs:</strong> {selectedResult.Annual_Therapy_Costs}</p>
-              <p><strong>Country:</strong> {selectedResult.Country}</p>
-              <p><strong>Disease:</strong> {selectedResult.Disease}</p>
-              <p><strong>Efficacy:</strong> {selectedResult.Efficacy}</p>
-              <p><strong>Gender:</strong> {selectedResult.Gender}</p>
-              <p><strong>Manufacturer:</strong> {selectedResult.Manufacturer}</p>
-              <p><strong>Morbidity:</strong> {selectedResult.Morbidity}%</p>
-              <p><strong>Mortality:</strong> {selectedResult.Mortality}%</p>
-              <p><strong>Prevalence:</strong> {selectedResult.Prevalence}</p>
-              <p><strong>Price:</strong> ${selectedResult.Price}</p>
-              <p><strong>Quality of Life:</strong> {selectedResult.Quality_of_Life}</p>
-              <p><strong>Safety:</strong> {selectedResult.Safety}</p>
-              <p><strong>Size:</strong> {selectedResult.Size}</p>
-              <p><strong>Symptoms:</strong> {selectedResult.Symptoms}</p>
-              <p><strong>Type of Drug:</strong> {selectedResult.Type_of_Drug}</p>
+              {Object.entries(selectedResult).map(([key, value]) => (
+                <p key={key}><strong>{key}:</strong> {value}</p>
+              ))}
             </DialogDescription>
           </DialogContent>
         </Dialog>
@@ -259,10 +454,11 @@ const DiseaseSearchPage = () => {
       <ChatBot
         chatMessages={chatMessages}
         setChatMessages={setChatMessages}
-        fulldata={searchResults} // Pass the search results as fulldata
+        fulldata={searchResults}
         isMinimized={isChatMinimized}
         onToggle={handleChatToggle}
       />
+
       <style jsx global>{`
         .scrollbar-hide {
           -ms-overflow-style: none;

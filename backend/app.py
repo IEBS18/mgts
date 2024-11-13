@@ -109,7 +109,7 @@ def search():
 def disease_search():
     data = request.json
     search_type = data.get("search_type")
-    index = "combined_country_drug"
+    index = "sample_disease"
 
     es_query = []
 
@@ -127,8 +127,8 @@ def disease_search():
             bool_query["must"].append({"term": {"Disease.keyword": disease_names}})
 
         # Add country filter if it's not "all"
-        if "all" not in country_names:
-            bool_query["must"].append({"terms": {"Country.keyword": country_names}})
+        # if "all" not in country_names:
+        #     bool_query["must"].append({"terms": {"Country.keyword": country_names}})
 
         es_query.append({
             "query": {
@@ -207,6 +207,41 @@ def disease_search():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/drug-search-by-disease', methods=['POST'])
+def drug_search_by_disease():
+    # Get the disease name from the request
+    data = request.get_json()
+    disease_name = data.get('disease')
+
+    if not disease_name:
+        return jsonify({"error": "Disease name is required"}), 400
+
+    # Search query to Elasticsearch: searching across all fields
+    query = {
+        "query": {
+            "multi_match": {
+                "query": disease_name,  # Query the disease name
+                "fields": ["Disease"],  # Search across all fields in the index
+                # "fuzziness": "AUTO",  # Optional: Fuzzy matching for minor spelling errors
+            }
+        }
+    }
+
+    try:
+        # Search the 'combined-drug-data' index
+        response = es.search(index='combined_country_drug', body=query)
+
+        # Extract relevant data from the Elasticsearch response
+        drugs = []
+        for hit in response['hits']['hits']:
+            drug_info = hit['_source']  # Assuming the relevant drug info is in the "_source" field
+            drugs.append(drug_info)
+
+        return jsonify(drugs), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500    
     
 @app.route('/download-excel', methods=['POST'])
 def download_excel():
