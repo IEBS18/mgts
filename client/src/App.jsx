@@ -39,6 +39,8 @@ import Layout from "@/pages/Layout";
 import Dashboard2 from "./components/Dashboard2";
 import DiseaseSearchPage from "./components/DiseaseSearchPage";
 import SelectedCardsTablePage from "./components/List";
+import DrugResultsPage from "./components/DrugResultPage";
+import SymptomResultsPage from "./components/SymptomsResultPage";
 
 function App() {
   return (
@@ -61,6 +63,8 @@ function App() {
           }
         />
         <Route path="/disease-search" element={<Layout><DiseaseSearchPage/></Layout>}/>
+        <Route path="/drug-search" element={<Layout><DrugResultsPage/></Layout>}/>
+        <Route path="//symptom-search" element={<Layout><SymptomResultsPage/></Layout>}/>
         <Route path="/list" element={<Layout><SelectedCardsTablePage /></Layout>} />
       </Routes>
     </Router>

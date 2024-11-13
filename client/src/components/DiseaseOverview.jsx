@@ -38,7 +38,7 @@ export default function DiseaseOverviewModal() {
       const data = await response.json();
       console.log("Search Results:", data.data);
       navigate("/disease-search", {
-        state: { searchResults: data.data },
+        state: { searchResults: data.data , drugs: data.drugs },
       });
     } catch (error) {
       console.error("Error submitting search:", error);
@@ -63,8 +63,8 @@ export default function DiseaseOverviewModal() {
       });
       const data = await response.json();
       console.log("Search Results:", data.data);
-      navigate("/search-by-drug", {
-        state: { searchResults: data.data },
+      navigate("/drug-search", {
+        state: { searchResults: data.data},
       });
     } catch (error) {
       console.error("Error submitting search:", error);
@@ -87,7 +87,7 @@ export default function DiseaseOverviewModal() {
       });
       const data = await response.json();
       console.log("Search Results:", data.data);
-      navigate("/search-by-symptoms", {
+      navigate("/symptom-search", {
         state: { searchResults: data.data },
       });
     } catch (error) {

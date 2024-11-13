@@ -113,78 +113,134 @@ def disease_search():
 
     es_query = []
 
-    if search_type == "disease":
-        disease_names = data.get("disease_name", [])
-        country_names = data.get("country_name", [])
+    disease_names = data.get("disease_name", [])
+    # country_names = data.get("country_name", [])
 
-        es_query.append({"index": index})
+    es_query.append({"index": index})
 
-        # Construct the query
-        bool_query = {"must": []}
+    # Construct the query
+    bool_query = {"must": []}
 
-        # Add disease filter if it's provided
-        if disease_names != "all":
-            bool_query["must"].append({"term": {"Disease.keyword": disease_names}})
+    # Add disease filter if it's provided
+    if disease_names != "all":
+        bool_query["must"].append({"term": {"Disease.keyword": disease_names}})
 
-        # Add country filter if it's not "all"
-        # if "all" not in country_names:
-        #     bool_query["must"].append({"terms": {"Country.keyword": country_names}})
+    es_query.append({
+        "query": {
+            "bool": bool_query
+        },
+        "size": 10000  # Control the number of results for performance
+    })
+    
+        # Search query to Elasticsearch: searching across all fields
+    query = {
+        "query": {
+            "multi_match": {
+                "query": disease_names,  # Query the disease name
+                "fields": ["Disease"],  # Search across all fields in the index
+                # "fuzziness": "AUTO",  # Optional: Fuzzy matching for minor spelling errors
+            }
+        }
+    }
 
-        es_query.append({
-            "query": {
-                "bool": bool_query
-            },
-            "size": 10000  # Control the number of results for performance
-        })
+    try:
+        # Search the 'combined-drug-data' index
+        # drug_response = es.search(index='combined_country_drug', body=query)
 
-    elif search_type == "drug":
-        drug_names = data.get("drug_names", [])
-        country_names = data.get("country_name", [])
+        # # Extract relevant data from the Elasticsearch response
+        # drugs = []
+        # for hit in response['hits']['hits']:
+        #     drug_info = hit['_source']  # Assuming the relevant drug info is in the "_source" field
+        #     drugs.append(drug_info)
+        # Perform the multi-search query
+        response = es.msearch(body=es_query)
+        documents = [
+            hit['_source']
+            for res in response['responses']
+            for hit in res['hits']['hits']
+        ]
+        drug_response = es.search(index='combined_country_drug', body=query)
+        # Extract relevant data from the Elasticsearch response
+        drugs = []
+        for hit in drug_response['hits']['hits']:
+            drug_info = hit['_source']  # Assuming the relevant drug info is in the "_source" field
+            drugs.append(drug_info)
 
-        es_query.append({"index": index})
+        return jsonify({"status": "success", "data": documents, "drugs": drugs})
 
-        # Construct the query
-        bool_query = {"must": []}
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+@app.route('/search-by-drug', methods=['POST'])
+def drug_search():
+    data = request.json
+    search_type = data.get("search_type")
+    index = "combined_country_drug"
 
-        # Add drug filter if it's provided
-        if drug_names != "all":
-            bool_query["must"].append({"term": {"Active Ingredient.keyword": drug_names}})
+    es_query = []
+    drug_names = data.get("drug_names", [])
+    country_names = data.get("country_name", [])
 
-        # Add country filter if it's not "all"
-        if "all" not in country_names:
-            bool_query["must"].append({"terms": {"Country.keyword": country_names}})
+    es_query.append({"index": index})
 
-        es_query.append({
-            "query": {
-                "bool": bool_query
-            },
-            "size": 10000  # Control the number of results for performance
-        })
+    # Construct the query
+    bool_query = {"must": []}
 
-    elif search_type == "symptoms":
-        search_keyword = data.get("search_keyword", "")
-        country_names = data.get("country_name", [])
+    # Add drug filter if it's provided
+    if drug_names != "all":
+        bool_query["must"].append({"term": {"Active Ingredient.keyword": drug_names}})
 
-        es_query.append({"index": index})
+    # Add country filter if it's not "all"
+    if "all" not in country_names:
+        bool_query["must"].append({"terms": {"Country.keyword": country_names}})
 
-        # Construct the query
-        bool_query = {"must": []}
+    es_query.append({
+        "query": {
+            "bool": bool_query
+        },
+        "size": 10000  # Control the number of results for performance
+    })
 
-        # Add symptoms filter if it's provided
-        if search_keyword:
-            bool_query["must"].append({
-                "match": {
-                    "Symptoms": {
-                        "query": search_keyword,
-                        "fuzziness": "AUTO"
-                    }
+    try:
+        # Perform the multi-search query
+        response = es.msearch(body=es_query)
+
+        # Extract documents from responses
+        documents = [
+            hit['_source']
+            for res in response['responses']
+            for hit in res['hits']['hits']
+        ]
+
+        return jsonify({"status": "success", "data": documents})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+@app.route('/search-by-symptoms', methods=['POST'])
+def symptom_search():
+    data = request.json
+    search_type = data.get("search_type")
+    index = "sample_disease"
+
+    es_query = []
+    search_keyword = data.get("search_keyword", "")
+    # country_names = data.get("country_name", [])
+
+    es_query.append({"index": index})
+
+    # Construct the query
+    bool_query = {"must": []}
+
+    # Add symptoms filter if it's provided
+    if search_keyword:
+        bool_query["must"].append({
+            "match": {
+                "Signs & Symptoms": {
+                    "query": search_keyword,
+                    "fuzziness": "AUTO"
                 }
-            })
-
-        # Add country filter if it's not "all"
-        if "all" not in country_names:
-            bool_query["must"].append({"terms": {"Country.keyword": country_names}})
-
+            }
+        })
+        
         es_query.append({
             "query": {
                 "bool": bool_query
@@ -207,7 +263,7 @@ def disease_search():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
 @app.route('/drug-search-by-disease', methods=['POST'])
 def drug_search_by_disease():
     # Get the disease name from the request
@@ -272,6 +328,7 @@ def ask():
     data = request.json
     query = data.get('query')
     results = data.get('results')
+    print(results)
     response = process_question(results, query, conversation_history)
     print(conversation_history)
     # Create OpenAI prompt

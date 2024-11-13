@@ -34,6 +34,12 @@ const DiseaseSearchPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { searchResults } = location.state || {};
+  const { drugs } = location.state || {};
+  
+  const fulldata = {
+    diseaseData: searchResults,
+    drugData: drugs,
+  };
 
   const diseaseInfo = Array.isArray(searchResults) ? searchResults[0] : searchResults || {};
 
@@ -276,7 +282,9 @@ const DiseaseSearchPage = () => {
   return (
     <div className="disease-search-page h-screen bg-gray-50 flex flex-col">
       <div className="flex-grow overflow-hidden p-6 flex">
-        <div className={`w-${drugInfo.length > 0 ? "2/3" : "full"} pr-6`}>
+        <div className={`
+          w-${!isChatMinimized ? "2/3" : "full"} 
+          pr-6`}>
           <div className="flex items-center mb-4 gap-4 justify-between">
             <h1 className="text-2xl font-bold text-gray-800">
               Disease Overview: <span className="text-[#a6ce39]">{diseaseInfo.Disease || "Unknown Disease"}</span>
@@ -332,9 +340,9 @@ const DiseaseSearchPage = () => {
                 <Plus className="mr-2 h-4 w-4" />
                 Add AI Column
               </Button> */}
-              <Button className='bg-green rounded-lg hover:bg-darkBlue text-white'disabled={isDiseaseExporting} onClick={() => handleDiseaseExport(selectedDiseaseData)}>
+              <Button className='bg-green rounded-lg hover:bg-darkBlue text-white' disabled={isDiseaseExporting} onClick={() => handleDiseaseExport(selectedDiseaseData)}>
                 <Download className="mr-2 h-4 w-4" />
-                {isDiseaseExporting? 'Exporting...' : 'Export Selected Rows'}
+                {isDiseaseExporting ? 'Exporting...' : 'Export Selected Rows'}
               </Button>
             </div>
             <div className="rounded-md border">
@@ -379,63 +387,74 @@ const DiseaseSearchPage = () => {
                 </TableBody>
               </Table>
             </div>
-
+            <div className="flex justify-center">
             <Button
               onClick={handleRelevantDrugsSearch}
               className="mt-4 bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
             >
-              Relevant Drugs
+              Show Relevant Drugs
             </Button>
-          </div>
-        </div>
-
-        {drugInfo.length > 0 && (
-          <div className="w-1/3 overflow-y-auto pr-2 scrollbar-hide pt-12">
-            <div className="flex sticky items-center gap-4 pb-4">
-              <Button
-                onClick={handleSelectAll}
-                className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
-              >
-                {selectedCards.length === drugInfo.length ? 'Unselect All' : 'Select All'}
-              </Button>
-              <Button
-                onClick={handleExport}
-                disabled={isExporting}
-                className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? 'cursor-not-allowed opacity-50' : ''}`}
-              >
-                <Download className="h-4 w-4" /> {isExporting ? 'Exporting...' : 'Export Selected'}
-              </Button>
             </div>
-            <div className="space-y-4 flex flex-col">
-              {drugInfo.map((result, index) => (
-                <Card
-                  key={index}
-                  className={`bg-white border border-[#a6ce39] rounded-[12px] p-4 shadow-sm cursor-pointer relative ${selectedCards.includes(result) ? 'shadow-lg' : ''}`}
-                  onClick={() => handleCardSelection(result)}
-                >
-                  {selectedCards.includes(result) && (
-                    <div className="absolute top-2 right-2">
-                      <X className="h-5 w-5 text-[#a6ce39]" />
+            {drugInfo.length > 0 && (
+              <div className="w-full overflow-y-auto pr-2 scrollbar-hide pt-12">
+                <div className="flex flex-wrap justify-start space-x-4">
+                  {drugInfo.length > 0 && (
+                    <div className="w-full overflow-y-auto pr-2 scrollbar-hide">
+                      <div className="flex sticky items-center justify-between gap-x-4 pb-4">
+                        <h1 className="text-2xl font-bold text-gray-800">
+                          Showing Relevant Drugs for <span className="text-[#a6ce39]">{diseaseInfo.Disease || "Unknown Disease"}</span>
+                        </h1>
+                        <div className="flex sticky items-center justify-end gap-4 pb-4" >
+                          <Button
+                            onClick={handleSelectAll}
+                            className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
+                          >
+                            {selectedCards.length === drugInfo.length ? 'Unselect All' : 'Select All'}
+                          </Button>
+                          <Button
+                            onClick={handleExport}
+                            disabled={isExporting}
+                            className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? 'cursor-not-allowed opacity-50' : ''}`}
+                          >
+                            <Download className="h-4 w-4" /> {isExporting ? 'Exporting...' : 'Export Selected'}
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        {drugInfo.map((result, index) => (
+                          <Card
+                            key={index}
+                            className={`bg-white border border-[#a6ce39] rounded-[12px] p-4 shadow-sm cursor-pointer relative ${selectedCards.includes(result) ? 'shadow-lg' : ''}`}
+                            onClick={() => handleCardSelection(result)}
+                          >
+                            {selectedCards.includes(result) && (
+                              <div className="absolute top-2 right-2">
+                                <X className="h-5 w-5 text-[#a6ce39]" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-gray-600"> {result.TradeName}, {result['Active Ingredient']}</p>
+                              <p><strong>Morbidity:</strong> {result.Morbidity}</p>
+                              <p><strong>Mortality Rate:</strong> {result.Mortality}%</p>
+                              <p><strong>Country:</strong> {result.Country}</p>
+                            </div>
+                            <FileText
+                              className="text-[#a6ce39] cursor-pointer justify-end"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenDialog(result);
+                              }}
+                            />
+                          </Card>
+                        ))}
+                      </div>
                     </div>
                   )}
-                  <div>
-                    <p className="text-gray-600"> {result.TradeName}, {result['Active Ingredient']}</p>
-                    <p><strong>Morbidity:</strong> {result.Morbidity}</p>
-                    <p><strong>Mortality Rate:</strong> {result.Mortality}%</p>
-                    <p><strong>Country:</strong> {result.Country}</p>
-                  </div>
-                  <FileText
-                    className="text-[#a6ce39] cursor-pointer justify-end"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenDialog(result);
-                    }}
-                  />
-                </Card>
-              ))}
-            </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {dialogOpen && selectedResult && (
@@ -454,7 +473,7 @@ const DiseaseSearchPage = () => {
       <ChatBot
         chatMessages={chatMessages}
         setChatMessages={setChatMessages}
-        fulldata={searchResults}
+        fulldata={fulldata}
         isMinimized={isChatMinimized}
         onToggle={handleChatToggle}
       />
