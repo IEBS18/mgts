@@ -11,9 +11,13 @@ load_dotenv()
 from Utilities.search import preprocess
 from Utilities.summarize import summarize_by_title_or_org
 from Utilities.chatbot import (
-    process_question,
+    # process_question,
     es,
     conversation_history,
+)
+from Utilities.diseasechatbot import (
+    process_question,
+    disease_conversation_history,
 )
 
 app = Flask(__name__)
@@ -328,9 +332,9 @@ def ask():
     data = request.json
     query = data.get('query')
     results = data.get('results')
-    print(results)
+    # print(results)
     response = process_question(results, query, conversation_history)
-    print(conversation_history)
+    # print(conversation_history)
     # Create OpenAI prompt
     # context_prompt = create_openai_prompt(filtered_results[:5])
     # # Add context to conversation history
