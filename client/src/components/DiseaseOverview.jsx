@@ -1,54 +1,99 @@
-"use client"
-
-import { useState } from "react"
-import { Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import Select from "react-select"
-import outputData from '../assets/data/output.json'
-import {  useNavigate } from "react-router-dom";
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Select from "react-select";
+import outputData from '../assets/data/output.json';
+import { useNavigate } from "react-router-dom";
 
 export default function DiseaseOverviewModal() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [selectedCountries, setSelectedCountries] = useState([])
-  const [searchType, setSearchType] = useState("disease")
-  const [searchValue, setSearchValue] = useState("")
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedCountries, setSelectedCountries] = useState([]);
+  const [searchType, setSearchType] = useState("disease");
+  const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
 
-  const handleSearchSubmit = async () => {
-
-    const countryType = selectedCountries.length > 0 ? selectedCountries : ["all"]
+  const handleSearchSubmitDisease = async () => {
     const searchParams = {
-      search_type: searchType,
-      [searchType === "disease" ? "disease_name" : searchType === "drug" ? "drug_names" : "search_keyword"]: searchValue,
-      country_name: countryType,
-    }
+      search_type: "disease",
+      disease_name: searchValue,
+    };
 
     try {
-      const response = await fetch("http://localhost:5000/disease-search", {
+      const response = await fetch("http://localhost:5000/search-by-disease", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(searchParams),
-      })
-      const data = await response.json()
-      console.log("Search Results:", data.data)
-      navigate("/disease-search", {
+      });
+      const data = await response.json();
+      console.log("Search Results:", data.data);
+      navigate("/search-by-disease", {
         state: { searchResults: data.data },
       });
     } catch (error) {
-      console.error("Error submitting search:", error)
+      console.error("Error submitting search:", error);
     }
-  }
+  };
+
+  const handleSearchSubmitDrug = async () => {
+    const countryType = selectedCountries.length > 0 ? selectedCountries : ["all"];
+    const searchParams = {
+      search_type: "drug",
+      drug_names: searchValue,
+      country_name: countryType,
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/search-by-drug", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(searchParams),
+      });
+      const data = await response.json();
+      console.log("Search Results:", data.data);
+      navigate("/search-by-drug", {
+        state: { searchResults: data.data },
+      });
+    } catch (error) {
+      console.error("Error submitting search:", error);
+    }
+  };
+
+  const handleSearchSubmitSymptoms = async () => {
+    const searchParams = {
+      search_type: "symptoms",
+      search_keyword: searchValue,
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/search-by-symptoms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(searchParams),
+      });
+      const data = await response.json();
+      console.log("Search Results:", data.data);
+      navigate("/search-by-symptoms", {
+        state: { searchResults: data.data },
+      });
+    } catch (error) {
+      console.error("Error submitting search:", error);
+    }
+  };
 
   const selectStyles = {
     control: (base) => ({
@@ -63,7 +108,7 @@ export default function DiseaseOverviewModal() {
       backgroundColor: state.isFocused ? "#e0f3c4" : "white",
       color: "#333",
     }),
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -108,6 +153,9 @@ export default function DiseaseOverviewModal() {
                   placeholder="Select disease..."
                 />
               </div>
+              <Button onClick={handleSearchSubmitDisease} className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4">
+                Submit
+              </Button>
             </TabsContent>
             <TabsContent value="drug">
               <div className="space-y-2">
@@ -120,6 +168,30 @@ export default function DiseaseOverviewModal() {
                   placeholder="Select drug..."
                 />
               </div>
+              <div className="space-y-2 mt-4">
+                <Label htmlFor="country" className="text-gray-700">Country</Label>
+                <Select
+                  id="country"
+                  isMulti
+                  defaultValue={{ value: 'all', label: 'All Countries' }}
+                  options={[
+                    { value: 'All Countries', label: 'All Countries' },
+                    { value: 'Ireland', label: 'Ireland' },
+                    { value: 'Italy', label: 'Italy' },
+                    { value: 'Switzerland', label: 'Switzerland' },
+                    { value: 'Netherlands', label: 'Netherlands' },
+                    { value: 'UK', label: 'UK' },
+                    { value: 'USA', label: 'USA' },
+                  ]}
+                  classNamePrefix="react-select"
+                  onChange={(selectedOptions) => setSelectedCountries(selectedOptions.map(option => option.value))}
+                  styles={selectStyles}
+                  placeholder="Select countries..."
+                />
+              </div>
+              <Button onClick={handleSearchSubmitDrug} className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4">
+                Submit
+              </Button>
             </TabsContent>
             <TabsContent value="symptoms">
               <div className="space-y-2">
@@ -129,39 +201,17 @@ export default function DiseaseOverviewModal() {
                   placeholder="Enter symptoms..."
                   className="w-full p-2 border border-gray-200 rounded-[12px] text-gray-800"
                   value={searchValue}
+                  onFocus={selectStyles}
                   onChange={(e) => setSearchValue(e.target.value)}
                 />
               </div>
+              <Button onClick={handleSearchSubmitSymptoms} className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4">
+                Submit
+              </Button>
             </TabsContent>
-          </div>
-          <div className="space-y-4 mt-4">
-            {/* <div className="space-y-2">
-              <Label htmlFor="country" className="text-gray-700">Country</Label>
-              <Select
-                id="country"
-                isMulti
-                defaultValue={{ value: 'all', label: 'All Countries' }}
-                options={[
-                  { value: 'All Countries', label: 'All Countries' },
-                  { value: 'Ireland', label: 'Ireland' },
-                  { value: 'Italy', label: 'Italy' },
-                  { value: 'Switzerland', label: 'Switzerland' },
-                  { value: 'Netherlands', label: 'Netherlands' },
-                  { value: 'UK', label: 'UK' },
-                  { value: 'USA', label: 'USA' },
-                ]}
-                classNamePrefix="react-select"
-                onChange={(selectedOptions) => setSelectedCountries(selectedOptions.map(option => option.value))}
-                styles={selectStyles}
-                placeholder="Select countries..."
-              />
-            </div> */}
-            <Button onClick={handleSearchSubmit} className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px]">
-              Submit
-            </Button>
           </div>
         </Tabs>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
