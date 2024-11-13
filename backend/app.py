@@ -105,7 +105,7 @@ def search():
 
 
 
-@app.route('/disease-search', methods=['POST'])
+@app.route('/search-by-disease', methods=['POST'])
 def disease_search():
     data = request.json
     search_type = data.get("search_type")

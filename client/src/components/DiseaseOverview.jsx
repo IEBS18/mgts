@@ -37,7 +37,7 @@ export default function DiseaseOverviewModal() {
       });
       const data = await response.json();
       console.log("Search Results:", data.data);
-      navigate("/search-by-disease", {
+      navigate("/disease-search", {
         state: { searchResults: data.data },
       });
     } catch (error) {
