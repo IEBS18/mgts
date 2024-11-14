@@ -140,10 +140,10 @@ const DiseaseSearchPage = () => {
       .then((data) => {
         setDrugInfo(data);
         setIsSearching(false);
-        const element = document.getElementById("drug-cards");
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
-        }
+        // const element = document.getElementById("drug-cards");
+        // if (element) {
+        //   element.scrollIntoView({ behavior: "smooth" });
+        // }
       })
       .catch(error => console.error("Error fetching relevant drugs:", error));
   }, [diseaseInfo.Disease]);
