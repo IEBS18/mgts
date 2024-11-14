@@ -113,7 +113,7 @@ def search():
 def disease_search():
     data = request.json
     search_type = data.get("search_type")
-    index = "sample_disease"
+    index = "disease_data_final"
 
     es_query = []
 
@@ -223,7 +223,7 @@ def drug_search():
 def symptom_search():
     data = request.json
     search_type = data.get("search_type")
-    index = "sample_disease"
+    index = "disease_data_final"
 
     es_query = []
     search_keyword = data.get("search_keyword", "")
@@ -332,8 +332,8 @@ def ask():
     data = request.json
     query = data.get('query')
     results = data.get('results')
-    # print(results)
-    response = process_question(results, query, conversation_history)
+    print(results)
+    response = process_question(results, query, disease_conversation_history)
     # print(conversation_history)
     # Create OpenAI prompt
     # context_prompt = create_openai_prompt(filtered_results[:5])

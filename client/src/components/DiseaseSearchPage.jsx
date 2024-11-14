@@ -35,7 +35,7 @@ const DiseaseSearchPage = () => {
   const navigate = useNavigate();
   const { searchResults } = location.state || {};
   const { drugs } = location.state || {};
-  
+
   const fulldata = {
     diseaseData: searchResults,
     drugData: drugs,
@@ -51,6 +51,7 @@ const DiseaseSearchPage = () => {
   const [selectedResult, setSelectedResult] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isDiseaseExporting, setDiseaseIsExporting] = useState(false);
+  const [isSearching, setIsSearching]= useState(false);
 
   // Table state
   const [sorting, setSorting] = useState([]);
@@ -127,6 +128,7 @@ const DiseaseSearchPage = () => {
   }, [selectedCards]);
 
   const handleRelevantDrugsSearch = useCallback(() => {
+    setIsSearching(true);
     fetch("http://localhost:5000/drug-search-by-disease", {
       method: "POST",
       headers: {
@@ -137,6 +139,11 @@ const DiseaseSearchPage = () => {
       .then(response => response.json())
       .then((data) => {
         setDrugInfo(data);
+        setIsSearching(false);
+        const element = document.getElementById("drug-cards");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
       })
       .catch(error => console.error("Error fetching relevant drugs:", error));
   }, [diseaseInfo.Disease]);
@@ -388,19 +395,20 @@ const DiseaseSearchPage = () => {
               </Table>
             </div>
             <div className="flex justify-center">
-            <Button
-              onClick={handleRelevantDrugsSearch}
-              className="mt-4 bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
-            >
-              Show Relevant Drugs
-            </Button>
+              <Button
+                onClick={handleRelevantDrugsSearch}
+                disabled={isSearching}
+                className="mt-4 bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
+              >
+                {isSearching ? 'Loading...' : 'Show Relevant Drugs'}
+              </Button>
             </div>
             {drugInfo.length > 0 && (
               <div className="w-full overflow-y-auto pr-2 scrollbar-hide pt-12">
                 <div className="flex flex-wrap justify-start space-x-4">
                   {drugInfo.length > 0 && (
-                    <div className="w-full overflow-y-auto pr-2 scrollbar-hide">
-                      <div className="flex sticky items-center justify-between gap-x-4 pb-4">
+                    <div  className="w-full overflow-y-auto pr-2 scrollbar-hide">
+                      <div id='drug-cards' className="flex sticky items-center justify-between gap-x-4 pb-4">
                         <h1 className="text-2xl font-bold text-gray-800">
                           Showing Relevant Drugs for <span className="text-[#a6ce39]">{diseaseInfo.Disease || "Unknown Disease"}</span>
                         </h1>
@@ -433,10 +441,11 @@ const DiseaseSearchPage = () => {
                               </div>
                             )}
                             <div>
-                              <p className="text-gray-600"> {result.TradeName}, {result['Active Ingredient']}</p>
-                              <p><strong>Morbidity:</strong> {result.Morbidity}</p>
-                              <p><strong>Mortality Rate:</strong> {result.Mortality}%</p>
-                              <p><strong>Country:</strong> {result.Country}</p>
+                              <p className="text-black font-bold"> {result.TradeName}</p>
+                              <p><strong className="font-semibold">Active Ingredient:</strong> {result['Active Ingredient']}</p>
+                              <p><strong className="font-semibold">Price:</strong> ${(result.Price).toFixed(2)}</p>
+                              <p><strong className="font-semibold">Manufacturer:</strong> {result.Manufacturer}</p>
+                              <p><strong className="font-semibold">Country:</strong> {result.Country}</p>
                             </div>
                             <FileText
                               className="text-[#a6ce39] cursor-pointer justify-end"
@@ -462,10 +471,35 @@ const DiseaseSearchPage = () => {
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white">
             <DialogTitle>{selectedResult.TradeName}</DialogTitle>
             <DialogDescription>
-              {Object.entries(selectedResult).map(([key, value]) => (
-                <p key={key}><strong>{key}:</strong> {value}</p>
-              ))}
+              {[
+                "Active Ingredient",
+                "Manufacturer",
+                "Size",
+                "Price",
+                "Quality_of_Life",
+                "Efficacy",
+                "Safety",
+                "Adverse_Events",
+                "Annual_Therapy_Costs",
+                "Type_of_Drug"
+              ].map((key) => {
+                const customLabels = {
+                  Price: "Price"
+                };
+
+                const label = customLabels[key] || key.replace(/_/g, " ");
+                const value = key === "Price" ? `$${(selectedResult[key]).toFixed(2)}` : selectedResult[key];
+
+                return (
+                  selectedResult[key] && (
+                    <p key={key}>
+                      <strong>{label}:</strong> {value}
+                    </p>
+                  )
+                );
+              })}
             </DialogDescription>
+
           </DialogContent>
         </Dialog>
       )}

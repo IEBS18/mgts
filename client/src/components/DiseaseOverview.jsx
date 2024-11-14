@@ -19,9 +19,11 @@ export default function DiseaseOverviewModal() {
   const [selectedCountries, setSelectedCountries] = useState([]);
   const [searchType, setSearchType] = useState("disease");
   const [searchValue, setSearchValue] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
 
   const handleSearchSubmitDisease = async () => {
+    setIsSearching(true);
     const searchParams = {
       search_type: "disease",
       disease_name: searchValue,
@@ -38,14 +40,16 @@ export default function DiseaseOverviewModal() {
       const data = await response.json();
       console.log("Search Results:", data.data);
       navigate("/disease-search", {
-        state: { searchResults: data.data , drugs: data.drugs },
+        state: { searchResults: data.data, drugs: data.drugs },
       });
+      setIsSearching(false);
     } catch (error) {
       console.error("Error submitting search:", error);
     }
   };
 
   const handleSearchSubmitDrug = async () => {
+    setIsSearching(true);
     const countryType = selectedCountries.length > 0 ? selectedCountries : ["all"];
     const searchParams = {
       search_type: "drug",
@@ -63,8 +67,9 @@ export default function DiseaseOverviewModal() {
       });
       const data = await response.json();
       console.log("Search Results:", data.data);
+      setIsSearching(false);
       navigate("/drug-search", {
-        state: { searchResults: data.data},
+        state: { searchResults: data.data },
       });
     } catch (error) {
       console.error("Error submitting search:", error);
@@ -72,6 +77,7 @@ export default function DiseaseOverviewModal() {
   };
 
   const handleSearchSubmitSymptoms = async () => {
+    setIsSearching(true);
     const searchParams = {
       search_type: "symptoms",
       search_keyword: searchValue,
@@ -87,6 +93,7 @@ export default function DiseaseOverviewModal() {
       });
       const data = await response.json();
       console.log("Search Results:", data.data);
+      setIsSearching(false);
       navigate("/symptom-search", {
         state: { searchResults: data.data },
       });
@@ -153,8 +160,8 @@ export default function DiseaseOverviewModal() {
                   placeholder="Select disease..."
                 />
               </div>
-              <Button onClick={handleSearchSubmitDisease} className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4">
-                Submit
+              <Button onClick={handleSearchSubmitDisease} disabled={isSearching} className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4">
+                {isSearching ? 'Loading...' : 'Submit'}
               </Button>
             </TabsContent>
             <TabsContent value="drug">
@@ -189,8 +196,8 @@ export default function DiseaseOverviewModal() {
                   placeholder="Select countries..."
                 />
               </div>
-              <Button onClick={handleSearchSubmitDrug} className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4">
-                Submit
+              <Button onClick={handleSearchSubmitDrug} disabled={isSearching} className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4">
+                {isSearching ? 'Loading...' : 'Submit'}
               </Button>
             </TabsContent>
             <TabsContent value="symptoms">
@@ -205,8 +212,8 @@ export default function DiseaseOverviewModal() {
                   onChange={(e) => setSearchValue(e.target.value)}
                 />
               </div>
-              <Button onClick={handleSearchSubmitSymptoms} className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4">
-                Submit
+              <Button onClick={handleSearchSubmitSymptoms} disabled={isSearching} className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4">
+                {isSearching ? 'Loading...' : 'Submit'}
               </Button>
             </TabsContent>
           </div>
