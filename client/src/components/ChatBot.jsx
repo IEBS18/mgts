@@ -66,7 +66,7 @@ export default function ChatBot({ chatMessages, setChatMessages, fulldata, isMin
   return (
     <motion.div
       initial={{ height: '100px' }}
-      animate={{ height: '80vh' }}
+      animate={{ height: '88vh' }}
       exit={{ height: 0 }}
       className="fixed bottom-0 right-0 w-1/3 bg-white border-l border-gray-300 flex flex-col shadow-lg z-50"
       style={{ borderRadius: '16px', backdropFilter: 'blur(10px)' }}
