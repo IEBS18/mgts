@@ -9,6 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Select from "react-select";
 import outputData from '../assets/data/output.json';
@@ -203,12 +204,11 @@ export default function DiseaseOverviewModal() {
             <TabsContent value="symptoms">
               <div className="space-y-2">
                 <Label htmlFor="symptoms-text" className="text-gray-700">Symptoms</Label>
-                <input
+                <Input
                   id="symptoms-text"
                   placeholder="Enter symptoms..."
-                  className="w-full p-2 border border-gray-200 rounded-[12px] text-gray-800"
+                  className="w-full p-2 border border-gray-200 rounded-[12px] text-gray-800 focus:border-[#a6ce39] focus:ring-[#a6ce39] hover:border-[#a6ce39] transition duration-200 ease-in-out"
                   value={searchValue}
-                  onFocus={selectStyles}
                   onChange={(e) => setSearchValue(e.target.value)}
                 />
               </div>
