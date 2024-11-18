@@ -77,7 +77,7 @@ const DiseaseSearchPage = () => {
   const handleDiseaseExport = useCallback((dataToExport) => {
     setDiseaseIsExporting(true);
     console.log(dataToExport)
-    fetch("http://localhost:5000/download-excel", {
+    fetch(`${import.meta.env.VITE_API_URL}/download-excel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -138,7 +138,7 @@ const DiseaseSearchPage = () => {
       };
     });
 
-    fetch("http://localhost:5000/download-excel", {
+    fetch(`${import.meta.env.VITE_API_URL}/download-excel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -169,7 +169,7 @@ const DiseaseSearchPage = () => {
 
   const handleRelevantDrugsSearch = useCallback(() => {
     setIsSearching(true);
-    fetch("http://localhost:5000/drug-search-by-disease", {
+    fetch(`${import.meta.env.VITE_API_URL}/drug-search-by-disease`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -193,7 +193,7 @@ const DiseaseSearchPage = () => {
   const handleTherapyCost = useCallback(() => {
     // setIsSearching(true);
     setIsSearchingCT(true);
-    fetch("http://localhost:5000/therapy-cost-estimation", {
+    fetch(`${import.meta.env.VITE_API_URL}/therapy-cost-estimation`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -220,7 +220,7 @@ const DiseaseSearchPage = () => {
 
   const handleMarketEstimation = useCallback(() => {
     setIsSearchingCP(true);
-    fetch("http://localhost:5000/market-estimation", {
+    fetch(`${import.meta.env.VITE_API_URL}/market-estimation`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

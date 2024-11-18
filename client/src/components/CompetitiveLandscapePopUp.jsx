@@ -48,10 +48,10 @@ export default function CompetitiveLandscapeModal() {
       let navigateTo = "";
 
       if (searchType === "disease") {
-        endpoint = "http://localhost:5000/search-by-disease";
+        endpoint = `${import.meta.env.VITE_API_URL}/search-by-disease`;
         navigateTo = "/competitive-landscape";
       } else if (searchType === "drug") {
-        endpoint = "http://localhost:5000/search-by-drug";
+        endpoint = `${import.meta.env.VITE_API_URL}/search-by-drug`;
         navigateTo = "/competitive-landscape";
       }
 

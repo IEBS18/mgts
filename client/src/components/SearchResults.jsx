@@ -117,7 +117,7 @@ export default function SearchResults({ data, length, fulldata, query, onSummary
   const handleGenerateSummary = async () => {
     setIsGeneratingSummary(true);
     try {
-      const response = await fetch('http://localhost:5000/generate-summary', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/generate-summary`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ selectedCards }),

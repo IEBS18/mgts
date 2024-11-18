@@ -118,7 +118,7 @@ const CompetitiveLandscapeSearchPage = () => {
 
     setCompetitiveIsExporting(true);
     console.log(dataToExport);
-    fetch("http://localhost:5000/download-excel", {
+    fetch(`${import.meta.env.VITE_API_URL}/download-excel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -192,7 +192,7 @@ const CompetitiveLandscapeSearchPage = () => {
       };
     });
 
-    fetch("http://localhost:5000/download-excel", {
+    fetch(`${import.meta.env.VITE_API_URL}/download-excel`, {
       method: "POST",
       headers: {
           "Content-Type": "application/json",
@@ -233,7 +233,7 @@ const CompetitiveLandscapeSearchPage = () => {
 
     setIsSearching(true);
 
-    fetch("http://localhost:5000/drug-search-by-company", { // Adjust endpoint as needed
+    fetch(`${import.meta.env.VITE_API_URL}/drug-search-by-company`, { // Adjust endpoint as needed
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -31,7 +31,7 @@
 //     };
 
 //     try {
-//       const response = await fetch("http://localhost:5000/search-by-disease", {
+//       const response = await fetch("${import.meta.env.VITE_API_URL}/search-by-disease", {
 //         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json",
@@ -59,7 +59,7 @@
 //     };
 
 //     try {
-//       const response = await fetch("http://localhost:5000/search-by-drug", {
+//       const response = await fetch("${import.meta.env.VITE_API_URL}/search-by-drug", {
 //         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json",
@@ -85,7 +85,7 @@
 //     };
 
 //     try {
-//       const response = await fetch("http://localhost:5000/search-by-symptoms", {
+//       const response = await fetch("${import.meta.env.VITE_API_URL}/search-by-symptoms", {
 //         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json",
@@ -257,7 +257,7 @@ export default function DiseaseOverviewModal() {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/search-by-disease", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/search-by-disease`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -285,7 +285,7 @@ export default function DiseaseOverviewModal() {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/search-by-drug", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/search-by-drug`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -311,7 +311,7 @@ export default function DiseaseOverviewModal() {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/search-by-symptoms", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/search-by-symptoms`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -34,7 +34,7 @@
 //     // Handle export
 //     const handleExport = useCallback(() => {
 //         setIsExporting(true);
-//         fetch("http://localhost:5000/download-excel", {
+//         fetch("${import.meta.env.VITE_API_URL}/download-excel", {
 //           method: "POST",
 //           headers: {
 //             "Content-Type": "application/json",
@@ -204,7 +204,7 @@ const DrugResultsPage = () => {
             };
         });
     
-        fetch("http://localhost:5000/download-excel", {
+        fetch(`${import.meta.env.VITE_API_URL}/download-excel`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
