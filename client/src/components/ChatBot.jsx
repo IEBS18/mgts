@@ -64,12 +64,13 @@ export default function ChatBot({ chatMessages, setChatMessages, fulldata, isMin
   }
 
   return (
+    
     <motion.div
       initial={{ height: '100px' }}
-      animate={{ height: '81vh' }}
+      animate={{ height: '75vh' }}
       exit={{ height: 0 }}
-      className="fixed bottom-0 right-0 w-1/3 bg-white border-l border-gray-300 flex flex-col shadow-lg z-50"
-      style={{ borderRadius: '16px', backdropFilter: 'blur(10px)' }}
+      className="fixed right-0 w-1/3 bg-white border-l border-gray-300 flex flex-col shadow-lg z-50"
+      style={{ borderRadius: '16px', backdropFilter: 'blur(10px)', top: 'calc(25vh)' }}
     >
       <div className="p-4 flex justify-between items-center border-b border-gray-300">
         <h2 className="text-lg font-semibold">Chat with Copilot</h2>

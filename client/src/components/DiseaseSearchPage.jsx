@@ -1,6 +1,6 @@
 // src/components/DiseaseSearchPage.jsx
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import ChatBot from "./ChatBot";
 import { Plus } from "lucide-react";
@@ -23,11 +23,14 @@ import { cn } from "@/utils/cn"; // Ensure this path is correct
 
 const DiseaseSearchPage = () => {
   const location = useLocation();
-  const { searchResults, drugs } = location.state || {};
+  const { searchResults } = location.state || {};
+
+  const [drugData, setDrugData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const fulldata = {
-    diseaseData: searchResults,
-    drugData: drugs,
+    diseaseData: Array.isArray(searchResults) ? searchResults : [searchResults],
+    drugData: drugData, // Set the fetched drug data here
   };
 
   // Initialize tabs based on searchResults
@@ -514,7 +517,7 @@ const DiseaseSearchPage = () => {
 
   // Function to render tabs navigation
   const renderTabs = () => (
-    <div className="flex items-center border-b px-2 bg-white overflow-x-auto">
+    <div className="flex items-center border-b px-2 bg-white overflow-x-auto overflow-y-hidden">
       {tabs.map((tab) => (
         <TabHeader
           key={tab.id}
@@ -557,155 +560,194 @@ const DiseaseSearchPage = () => {
     );
   }, [activeTab, tabs]);
 
+
+  useEffect(() => {
+    const fetchDrugData = async (diseaseName) => {
+      if (!diseaseName) return; // No need to make the request if no disease name is provided
+
+      setLoading(true); // Set loading state while fetching data
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/drug-search-by-disease`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ disease: diseaseName }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setDrugData(data); // Update state with the fetched drug data
+        } else {
+          console.error("Error fetching drug data:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      } finally {
+        setLoading(false); // Reset loading state after request completes
+      }
+    };
+
+    const diseaseName = searchResults?.Disease; // Get the disease name from searchResults
+    if (diseaseName) {
+      fetchDrugData(diseaseName); // Fetch drug data when disease name is available
+    }
+  }, [searchResults]);
+
   return (
-    <div className="disease-search-page h-screen bg-gray-50 flex flex-col">
-      {/* Toast Notifications */}
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
 
-      {/* Tabs Navigation */}
-      {renderTabs()}
+    <div>
+      {loading ? (
+        <p>Loading...</p> // Show loading state while fetching data
+      ) :
+        (<div className="disease-search-page h-screen bg-gray-50 flex flex-col">
+          {/* Toast Notifications */}
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
 
-      {/* Main Content */}
-      <div
-        className={cn(
-          "flex-grow overflow-hidden p-6 flex"
-          // !isChatMinimized ? "w-2/3" : "w-full"
-        )}
-      >
-        <div className="w-full pr-6">
-          {/* Content Container */}
-          <div className="flex flex-col flex-1 pr-6 overflow-hidden">
-            {/* Conditional Rendering Based on Tab Type */}
-            {activeTabContent.type === "disease" && (
-              <DiseaseTab
-                diseaseInfo={activeTabContent.diseaseInfo}
-                allowedKeys={allowedKeys}
-                selectedTopics={selectedTopics}
-                handleTopicSelection={handleTopicSelectionLocal}
-                isDiseaseExporting={isDiseaseExporting}
-                handleDiseaseExport={() =>
-                  handleDiseaseExport(activeTabContent.selectedDiseaseData)
-                }
-                selectedDiseaseData={activeTabContent.selectedDiseaseData || []}
-                handleRelevantDrugsSearch={() =>
-                  handleRelevantDrugsSearch(activeTab)
-                }
-                handleMarketEstimation={handleMarketEstimation}
-                handleTherapyCost={handleTherapyCost}
-                isSearching={isSearching}
-                isSearchingCP={isSearchingCP}
-                isSearchingCT={isSearchingCT}
-                onSelectedRowsChange={(selectedData) =>
-                  updateSelectedDiseaseData(activeTab, selectedData)
-                }
-                isChatMinimized={isChatMinimized}
-              />
+          {/* Tabs Navigation */}
+          {renderTabs()}
+
+          {/* Main Content */}
+          <div
+            className={cn(
+              "flex-grow overflow-hidden p-6 flex"
+              // !isChatMinimized ? "w-2/3" : "w-full"
             )}
+          >
+            <div className="w-full pr-6">
+              {/* Content Container */}
+              <div className="flex flex-col flex-1 pr-6 overflow-hidden">
+                {/* Conditional Rendering Based on Tab Type */}
+                {activeTabContent.type === "disease" && (
+                  <DiseaseTab
+                    diseaseInfo={activeTabContent.diseaseInfo}
+                    allowedKeys={allowedKeys}
+                    selectedTopics={selectedTopics}
+                    handleTopicSelection={handleTopicSelectionLocal}
+                    isDiseaseExporting={isDiseaseExporting}
+                    handleDiseaseExport={() =>
+                      handleDiseaseExport(activeTabContent.selectedDiseaseData)
+                    }
+                    selectedDiseaseData={activeTabContent.selectedDiseaseData || []}
+                    handleRelevantDrugsSearch={() =>
+                      handleRelevantDrugsSearch(activeTab)
+                    }
+                    handleMarketEstimation={handleMarketEstimation}
+                    handleTherapyCost={handleTherapyCost}
+                    isSearching={isSearching}
+                    isSearchingCP={isSearchingCP}
+                    isSearchingCT={isSearchingCT}
+                    onSelectedRowsChange={(selectedData) =>
+                      updateSelectedDiseaseData(activeTab, selectedData)
+                    }
+                    isChatMinimized={isChatMinimized}
+                  />
+                )}
 
-            {activeTabContent.type === "relevantDrugs" && (
-              <RelevantDrugsTab
-                diseaseInfo={activeTabContent.diseaseInfo}
-                drugInfo={activeTabContent.drugInfo}
-                selectedCards={activeTabContent.selectedCards}
-                handleSelectAll={handleSelectAll}
-                handleExportSelectedCards={handleExportSelectedCards}
-                handleCardSelection={handleCardSelection}
-                handleOpenDialog={handleOpenDialog}
-                isExporting={isExporting}
-                isChatMinimized={isChatMinimized}
-              />
-            )}
+                {activeTabContent.type === "relevantDrugs" && (
+                  <RelevantDrugsTab
+                    diseaseInfo={activeTabContent.diseaseInfo}
+                    drugInfo={activeTabContent.drugInfo}
+                    selectedCards={activeTabContent.selectedCards}
+                    handleSelectAll={handleSelectAll}
+                    handleExportSelectedCards={handleExportSelectedCards}
+                    handleCardSelection={handleCardSelection}
+                    handleOpenDialog={handleOpenDialog}
+                    isExporting={isExporting}
+                    isChatMinimized={isChatMinimized}
+                  />
+                )}
 
-            {activeTabContent.type === "marketEstimation" && (
-              <MarketAndPrevalenceForecast
-                isChatMinimized={isChatMinimized}
-                diseaseName={activeTabContent.diseaseName}
-                years={activeTabContent.years}
-                forecast_years={activeTabContent.forecast_years}
-                combinedPrevalence={activeTabContent.combinedPrevalence}
-                marketPredictions={activeTabContent.marketPredictions}
-                marketSize={activeTabContent.marketSize}
-              />
-            )}
+                {activeTabContent.type === "marketEstimation" && (
+                  <MarketAndPrevalenceForecast
+                    isChatMinimized={isChatMinimized}
+                    diseaseName={activeTabContent.diseaseName}
+                    years={activeTabContent.years}
+                    forecast_years={activeTabContent.forecast_years}
+                    combinedPrevalence={activeTabContent.combinedPrevalence}
+                    marketPredictions={activeTabContent.marketPredictions}
+                    marketSize={activeTabContent.marketSize}
+                  />
+                )}
 
-            {activeTabContent.type === "therapyCostEstimation" && (
-              <TherapyCostForecast
-                isChatMinimized={isChatMinimized}
-                diseaseName={activeTabContent.diseaseName}
-                allYears={activeTabContent.allYears}
-                combinedTherapyCost={activeTabContent.combinedTherapyCost}
-              />
-            )}
+                {activeTabContent.type === "therapyCostEstimation" && (
+                  <TherapyCostForecast
+                    isChatMinimized={isChatMinimized}
+                    diseaseName={activeTabContent.diseaseName}
+                    allYears={activeTabContent.allYears}
+                    combinedTherapyCost={activeTabContent.combinedTherapyCost}
+                  />
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Dialog for Detailed Information */}
-      {dialogOpen && selectedResult && (
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white">
-            <DialogTitle className="font-bold text-2xl">
-              Drug Overview:{" "}
-              <strong className="text-[#a6ce39]">
-                {selectedResult.TradeName}
-              </strong>
-            </DialogTitle>
-            <DialogDescription>
-              {[
-                "Active Ingredient",
-                "Manufacturer",
-                "Size",
-                "Price",
-                "Quality_of_Life",
-                "Efficacy",
-                "Safety",
-                "Adverse_Events",
-                "Annual_Therapy_Costs",
-                "Type_of_Drug",
-              ].map((key) => {
-                const customLabels = {
-                  Price: "Price",
-                };
+          {/* Dialog for Detailed Information */}
+          {dialogOpen && selectedResult && (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white">
+                <DialogTitle className="font-bold text-2xl">
+                  Drug Overview:{" "}
+                  <strong className="text-[#a6ce39]">
+                    {selectedResult.TradeName}
+                  </strong>
+                </DialogTitle>
+                <DialogDescription>
+                  {[
+                    "Active Ingredient",
+                    "Manufacturer",
+                    "Size",
+                    "Price",
+                    "Quality_of_Life",
+                    "Efficacy",
+                    "Safety",
+                    "Adverse_Events",
+                    "Annual_Therapy_Costs",
+                    "Type_of_Drug",
+                  ].map((key) => {
+                    const customLabels = {
+                      Price: "Price",
+                    };
 
-                const label = customLabels[key] || key.replace(/_/g, " ");
-                const value =
-                  key === "Price"
-                    ? `$${selectedResult[key].toFixed(2)}`
-                    : selectedResult[key];
+                    const label = customLabels[key] || key.replace(/_/g, " ");
+                    const value =
+                      key === "Price"
+                        ? `$${selectedResult[key].toFixed(2)}`
+                        : selectedResult[key];
 
-                return (
-                  selectedResult[key] && (
-                    <p key={key}>
-                      <strong>{label}:</strong> {value}
-                    </p>
-                  )
-                );
-              })}
-            </DialogDescription>
-          </DialogContent>
-        </Dialog>
-      )}
+                    return (
+                      selectedResult[key] && (
+                        <p key={key}>
+                          <strong>{label}:</strong> {value}
+                        </p>
+                      )
+                    );
+                  })}
+                </DialogDescription>
+              </DialogContent>
+            </Dialog>
+          )}
 
-      {/* ChatBot Component */}
-      <ChatBot
-        chatMessages={chatMessages}
-        setChatMessages={setChatMessages}
-        fulldata={fulldata}
-        isMinimized={isChatMinimized}
-        onToggle={handleChatToggle}
-      />
+          {/* ChatBot Component */}
+          <ChatBot
+            chatMessages={chatMessages}
+            setChatMessages={setChatMessages}
+            fulldata={fulldata}
+            isMinimized={isChatMinimized}
+            onToggle={handleChatToggle}
+          />
 
-      {/* Global Styles */}
-      <style jsx global>{`
+          {/* Global Styles */}
+          <style jsx global>{`
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
@@ -714,6 +756,7 @@ const DiseaseSearchPage = () => {
           display: none;
         }
       `}</style>
+        </div>)}
     </div>
   );
 };
