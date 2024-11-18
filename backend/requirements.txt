@@ -12,3 +12,5 @@ numpy
 openai
 rapidfuzz
 xlsxwriter
+matplotlib
+chardet

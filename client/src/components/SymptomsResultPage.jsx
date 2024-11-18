@@ -1,26 +1,88 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Card } from "./ui/card";
-import { Button } from "@/components/ui/button"; 
-import { Download, X } from 'lucide-react'; 
+import { Button } from "@/components/ui/button";
+import { X } from 'lucide-react';
+import { Input } from './ui/input';
 
 const SymptomResultsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { searchResults } = location.state || {}; // Get data passed through location.state
+  const { searchResults } = location.state || {};
+  const { symptoms } = location.state; // Get data passed through location.state
   const [selectedCards, setSelectedCards] = useState([]);
-  const [isExporting, setIsExporting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const resultsPerPage = 25;
 
-  // Handle select all / unselect all functionality
-  const handleSelectAll = () => {
-    if (selectedCards.length === searchResults.length) {
-      setSelectedCards([]); // Unselect all
-    } else {
-      setSelectedCards(searchResults); // Select all
+  // Filter results based on search term
+  const filteredResults = searchResults.filter(result =>
+    result.Disease.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    result['Signs & Symptoms'].toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const highlightText = (text = '', highlight = '', wordLimit) => {
+    if (!text || !highlight.trim()) {
+      return text;
     }
+
+    const highlightWords = highlight.split(' ').filter(Boolean);
+    const regexPattern = highlightWords.map(word => `(${word})`).join('|');
+    const regex = new RegExp(regexPattern, 'gi');
+
+    // Find matches in the text
+    const matches = text.match(regex);
+
+    if (matches) {
+      const index = text.search(regex);
+
+      // If wordLimit is provided, trim the text
+      if (wordLimit && wordLimit > 0) {
+        const start = Math.max(0, index - wordLimit);
+        const end = Math.min(text.length, index + wordLimit);
+        const snippet = text.substring(start, end);
+
+        // Highlight matching parts within the snippet
+        return (
+          <>
+            <i>{snippet.split(regex).map((part, i) =>
+              regex.test(part) ? (
+                <mark key={i} className="bg-yellow-200">{part}</mark>
+              ) : (
+                part
+              )
+            )}</i>
+            {end < text.length && '...'} {/* Add ellipsis if text is trimmed */}
+          </>
+        );
+      }
+
+      // If no wordLimit is provided, highlight throughout the entire text
+      return (
+        <>
+          <i>{text.split(regex).map((part, i) =>
+            regex.test(part) ? (
+              <mark key={i} className="bg-yellow-200">{part}</mark>
+            ) : (
+              part
+            )
+          )}</i>
+        </>
+      );
+    }
+
+    // If no match is found, return the text as is (or trimmed if wordLimit is provided)
+    return <i>{wordLimit ? text.substring(0, wordLimit) + '...' : text}</i>;
   };
 
-  // Handle card selection and unselection
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredResults.length / resultsPerPage);
+
+  // Get the current page's data
+  const indexOfLastResult = currentPage * resultsPerPage;
+  const indexOfFirstResult = indexOfLastResult - resultsPerPage;
+  const currentResults = filteredResults.slice(indexOfFirstResult, indexOfLastResult);
+
+  // Handle card selection
   const handleCardSelection = (result) => {
     setSelectedCards((prevSelected) =>
       prevSelected.includes(result)
@@ -29,16 +91,6 @@ const SymptomResultsPage = () => {
     );
   };
 
-  // Handle export
-//   const handleExport = () => {
-//     setIsExporting(true);
-//     // Logic to export selected cards data goes here
-//     setTimeout(() => {
-//       setIsExporting(false);
-//       // Your export logic (e.g., create and download file)
-//     }, 2000); // Simulating export time
-//   };
-
   // Handle navigation to the disease search page with detailed data
   const handleViewDetail = (result) => {
     navigate('/disease-search', {
@@ -46,52 +98,84 @@ const SymptomResultsPage = () => {
     });
   };
 
+  // Handle page change
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   return (
     <div className="w-full p-6 flex justify-center">
-      <div className="w-full overflow-y-auto pr-2 scrollbar-hide pt-12">
-        <div className="flex sticky items-center gap-4 pb-4">
-          {/* <Button
-            onClick={handleSelectAll}
+      <div className="w-full overflow-y-auto pr-2 scrollbar-hide">
+        <div className='flex flex-row w-full gap-x-4 justify-end'>
+          <div className='w-2/3 '>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Showing Relevant Diseases for Symptoms: <span className="text-[#a6ce39]">{symptoms || "Symptoms"}</span>
+            </h1>
+          </div>
+          <div className='w-1/2'>
+            <div className="w-full flex justify-end ">
+              <Input
+                type="text"
+                placeholder="Filter diseases or symptoms..."
+                className="border border-green focus:border-[#a6ce39] focus:ring-[#a6ce39] hover:border-green rounded-lg p-2 w-[100px] md:w-1/2"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+        </div>
+
+
+        {/* Search Box */}
+
+
+        {/* Disease Table */}
+        <div className="mt-6 mb-4">
+          <table className="w-full table-auto border-separate border-spacing-2">
+            <thead>
+              <tr>
+                <th className="text-left px-4 py-2 bg-lightBlue text-white rounded-tl-lg">Disease</th>
+                <th className="text-left px-4 py-2 bg-lightBlue text-white">Symptoms</th>
+                <th className="text-left px-4 py-2 bg-lightBlue text-white rounded-tr-lg">More Info</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentResults?.map((result, index) => (
+                <tr key={index} className="bg-white border-b hover:bg-[#f1f5f8]">
+                  <td className="px-4 py-2">{highlightText(result.Disease, searchTerm)}</td>
+                  <td className="px-4 py-2">{highlightText(result['Signs & Symptoms'], searchTerm)}</td>
+                  <td className="px-4 py-2">
+                    <Button
+                      className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
+                      onClick={() => handleViewDetail(result)}
+                    >
+                      View Detail
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="flex justify-center mt-4 gap-4">
+          <Button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
             className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
           >
-            {selectedCards.length === searchResults.length ? 'Unselect All' : 'Select All'}
-          </Button> */}
-          {/* <Button
-            onClick={handleExport}
-            disabled={isExporting}
-            className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? 'cursor-not-allowed opacity-50' : ''}`}
+            Previous
+          </Button>
+          <span className="self-center text-lg">{`Page ${currentPage} of ${totalPages}`}</span>
+          <Button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
           >
-            <Download className="h-4 w-4" /> {isExporting ? 'Exporting...' : 'Export Selected'}
-          </Button> */}
-        </div>
-        <div className="space-y-4 flex flex-col">
-          {searchResults?.map((result, index) => (
-            <Card
-              key={index}
-              className={`bg-white border border-[#a6ce39] rounded-[12px] p-4 shadow-sm cursor-pointer relative ${selectedCards.includes(result) ? 'shadow-lg' : ''}`}
-              onClick={() => handleCardSelection(result)}
-            >
-              {selectedCards.includes(result) && (
-                <div className="absolute top-2 right-2">
-                  <X className="h-5 w-full text-[#a6ce39]" />
-                </div>
-              )}
-              <div>
-                <p className="text-gray-600"> {result.Disease}</p>
-                <p><strong>Symptoms:</strong> {result['Signs & Symptoms']}</p>
-                <p><strong>Sub-Types:</strong> {result['Sub-types']}</p>
-              </div>
-              <Button
-                className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] w-full mt-4"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewDetail(result);
-                }}
-              >
-                View Detail
-              </Button>
-            </Card>
-          ))}
+            Next
+          </Button>
         </div>
       </div>
     </div>

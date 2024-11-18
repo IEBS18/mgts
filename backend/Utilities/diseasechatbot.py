@@ -10,6 +10,27 @@ MODEL = "gpt-4o-mini"
 
 context = []
 disease_conversation_history = []
+keys = [
+    'TradeName',
+    'Active Ingredient',
+    'Manufacturer',
+    'Size',
+    'Price',
+    'Quality_of_Life',
+    'Efficacy',
+    'Safety',
+    'Adverse_Events',
+    'Annual_Therapy_Costs',
+    'Type_of_Drug'
+]
+
+
+def filter_keys(input_list, keys_to_keep):
+    filtered_list = []
+    for item in input_list:
+        filtered_dict = {key: item[key] for key in keys_to_keep if key in item}
+        filtered_list.append(filtered_dict)
+    return filtered_list
 
 # Function to generate OpenAI completion
 def generate_openai_completion(question):
@@ -44,10 +65,51 @@ def create_prompt(search_results):
     prompt = "Here are the top search results for your query:\n\n"
     disease_data = search_results['diseaseData'][0]
     drug_data = search_results['drugData']
+    filtered_drug_data = filter_keys(drug_data, keys)
     disease_name = disease_data['Disease']
-    context_prompt = f'''You are a highly knowledgeable medical assistant specializing in rare diseases and novel drug treatments. Below is context data regarding '{disease_name}' disease and it's respective treatments(Avaiable drugs) , using this data answer any user queries. \n\n
-    Disease Information: \n\n {disease_data} \n\n'''
-    context_prompt += f'''Drug Information: \n\n {drug_data} \n\n'''
+    context_prompt = f'''You are a highly knowledgeable medical assistant specializing in rare diseases and novel drug treatments. Below is context data regarding '{disease_name}' disease and its respective treatments (available drugs). Use this data to answer any user queries effectively. 
+    
+    Disease Information: \n\n {disease_data} \n\n
+    Explanation of Disease Data Keys:
+    - **Disease**: Name of the disease being described.
+    - **Disease Overview**: Provides a general description of the disease, including its definition and basic details.
+    - **Disease Biology**: In-depth biological background of the disease, including the molecular basis and pathology.
+    - **Pathophysiology**: Explains how the disease develops, detailing the physiological changes it causes.
+    - **Signs & Symptoms**: Lists symptoms that patients typically experience.
+    - **Risk Factors**: Factors that increase a person's chance of getting the disease.
+    - **Prevalence**: Information about how common the disease is in the population.
+    - **Patient Demographics**: Characteristics of people most likely to develop the disease.
+    - **Diagnosis**: How the disease is identified, including tests and evaluations.
+    - **Stages progression**: Details any progression phases that the disease might have.
+    - **Sub-types**: Possible subtypes or variations of the disease.
+    - **Treatment & Management**: General approaches for treating and managing the disease.
+    - **Treatment options**: Specific therapies used for treating the disease.
+    - **Unmet Needs**: Unaddressed medical requirements for the disease.
+    - **Document**: Name of the source document for this context.
+    \n\n
+    Drug Information: \n\n {filtered_drug_data} \n\n
+    Explanation of Drug Data Keys:
+    - **TradeName**: Commercial or brand name of the drug.
+    - **Active Ingredient**: The main active pharmaceutical compound in the drug.
+    - **Type_of_Drug**: Classification of the drug (e.g., small molecule, monoclonal antibody).
+    - **Disease**: The condition(s) the drug is intended to treat.
+    - **Country**: Country where the drug information is most applicable or where the drug is available.
+    - **Symptoms**: Symptoms targeted or alleviated by this drug.
+    - **Efficacy**: Effectiveness metrics, such as response rate or clinical outcomes.
+    - **Safety**: Safety considerations and overall safety profile.
+    - **Adverse_Events**: Possible side effects and adverse reactions from taking the drug.
+    - **Manufacturer**: The company that produces the drug.
+    - **Age_Group**: Age group for which the drug is most suitable.
+    - **Gender**: Demographic information on which gender is more affected or targeted.
+    - **Morbidity**: Morbidity rates associated with the disease treated by the drug.
+    - **Mortality**: Mortality rate associated with the disease or drug.
+    - **Annual_Therapy_Costs**: Estimated yearly cost of the therapy (Convert the currency mentioned in USD, and return in USD only).
+    - **Price**: Price per unit of the medication strictly in USD.
+    - **Quality_of_Life**: Impact of the drug on the patient's quality of life.
+    - **Size**: Packaging information, such as dosage and form (e.g., capsules, vials).
+    '''
+
+
     
     return context_prompt
 

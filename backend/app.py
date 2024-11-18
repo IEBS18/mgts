@@ -8,6 +8,8 @@ sys.stdout.reconfigure(encoding='utf-8')
 from dotenv import load_dotenv
 load_dotenv()
 
+from MarketEstimation.market import plot_market_and_prevalence_forecast
+from MarketEstimation.market import plot_therapy_cost_forecast
 from Utilities.search import preprocess
 from Utilities.summarize import summarize_by_title_or_org
 from Utilities.chatbot import (
@@ -347,7 +349,31 @@ def ask():
  
     return jsonify({"results": response})
 
-
+@app.route('/therapy-cost-estimation', methods=['POST'])
+def therapy_cost_estimation():
+    data= request.json
+    # type_of_plot = data.get('number')
+    disease = data.get('disease')
+    # if type_of_plot and disease:
+        # if type_of_plot == '1':
+        #     plot_market_and_prevalence_forecast(disease)
+        # elif type_of_plot == '2':
+    all_years, combined_therapy_cost= plot_therapy_cost_forecast(disease)
+    return jsonify({'all_years': all_years, 'combined_therapy_cost': combined_therapy_cost})
+ 
+@app.route('/market-estimation', methods=['POST'])
+def market_estimation():
+    data= request.json
+    disease = data.get('disease')
+    years, forecast_years, combined_prevalence, market_predictions, market_size= plot_market_and_prevalence_forecast(disease)
+    return jsonify({
+        'years': years,
+        'forecast_years': forecast_years,
+        'combined_prevalence': combined_prevalence,
+        'market_predictions': market_predictions.tolist(),
+        'market_size': market_size
+    })
+    
 @app.route('/generate-summary', methods=['POST'])
 def generate_summary():
     data = request.json

@@ -1,72 +1,158 @@
+// src/components/DiseaseSearchPage.jsx
+
 import React, { useState, useMemo, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import ChatBot from "./ChatBot";
-import { X, FileText, Download, ArrowUpDown, ChevronDown, Plus } from "lucide-react";
-import { Card } from "./ui/card";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+import TherapyCostForecast from "./TherapyCostForecast";
+import MarketAndPrevalenceForecast from "./MarketAndPrevalenceForecast";
+import DiseaseTab from "./DiseaseTab";
+import RelevantDrugsTab from "./RelevantDrugsTab";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import TabHeader from "./TabHeader";
+import { cn } from "@/utils/cn"; // Ensure this path is correct
 
 const DiseaseSearchPage = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { searchResults } = location.state || {};
-  const { drugs } = location.state || {};
+  const { searchResults, drugs } = location.state || {};
 
   const fulldata = {
     diseaseData: searchResults,
     drugData: drugs,
   };
 
-  const diseaseInfo = Array.isArray(searchResults) ? searchResults[0] : searchResults || {};
+  // Initialize tabs based on searchResults
+  const initializeTabs = (searchResults) => {
+    // Extract diseaseInfo as per your logic
+    const diseaseInfo = Array.isArray(searchResults)
+      ? searchResults[0]
+      : searchResults || {};
 
+    // Create a single tab with the extracted diseaseInfo
+    return [
+      {
+        id: "tab-1",
+        label: diseaseInfo.Disease || "Disease Overview",
+        content: {
+          type: "disease",
+          diseaseInfo,
+          drugInfo: [],
+          selectedCards: [],
+          selectedDiseaseData: [],
+        },
+      },
+    ];
+  };
+
+  const [tabs, setTabs] = useState(() => initializeTabs(searchResults));
+  const [activeTab, setActiveTab] = useState(tabs[0]?.id || "tab-1");
+
+  // States for chat and dialogs
   const [chatMessages, setChatMessages] = useState([]);
   const [isChatMinimized, setIsChatMinimized] = useState(true);
-  const [drugInfo, setDrugInfo] = useState([]);
-  const [selectedCards, setSelectedCards] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedResult, setSelectedResult] = useState(null);
+  const [selectedCards, setSelectedCards] = useState([]);
+  const [drugInfo, setDrugInfo] = useState([]);
+  // Export states
   const [isExporting, setIsExporting] = useState(false);
   const [isDiseaseExporting, setDiseaseIsExporting] = useState(false);
-  const [isSearching, setIsSearching]= useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSearchingCP, setIsSearchingCP] = useState(false);
+  const [isSearchingCT, setIsSearchingCT] = useState(false);
 
-  // Table state
-  const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
-  const [columnVisibility, setColumnVisibility] = useState({});
-  const [rowSelection, setRowSelection] = useState({});
 
+  // Topics filtering
+  const [selectedTopics, setSelectedTopics] = useState([]);
+  const allowedKeys = [
+    "Disease Biology",
+    "Signs & Symptoms",
+    "Pathophysiology",
+    "Risk Factors",
+    "Diagnosis",
+    "Patient Demographics",
+    "Stages progression",
+    "Sub-types",
+    "Treatment options",
+    "Treatment & Management",
+    "Unmet Needs",
+    "Prevalence",
+  ];
+
+  // Handler to toggle chat window
   const handleChatToggle = useCallback(() => {
     setIsChatMinimized((prev) => !prev);
   }, []);
 
+  // Handler to add a new tab
+  const addNewTab = useCallback(
+    (label, content) => {
+      setTabs((prevTabs) => {
+        const newTab = {
+          id: `tab-${prevTabs.length + 1}`,
+          label,
+          content,
+        };
+        return [...prevTabs, newTab];
+      });
+      setActiveTab(`tab-${tabs.length + 1}`);
+    },
+    [tabs.length]
+  );
 
+  // Handler to close a tab
+  const closeTab = useCallback(
+    (tabId) => {
+      if (tabs.length > 1) {
+        setTabs((prevTabs) => prevTabs.filter((tab) => tab.id !== tabId));
+        if (activeTab === tabId) {
+          const tabIndex = tabs.findIndex((tab) => tab.id === tabId);
+          const newActiveIndex = tabIndex > 0 ? tabIndex - 1 : 0;
+          setActiveTab(tabs[newActiveIndex]?.id || "tab-1");
+        }
+      } else {
+        toast.warn("At least one tab must remain open.");
+      }
+    },
+    [tabs, activeTab]
+  );
+
+  // Handler to update selectedDiseaseData in a tab
+  const updateSelectedDiseaseData = useCallback((tabId, selectedData) => {
+    setTabs((prevTabs) =>
+      prevTabs.map((tab) => {
+        if (tab.id === tabId) {
+          return {
+            ...tab,
+            content: {
+              ...tab.content,
+              selectedDiseaseData: selectedData,
+            },
+          };
+        }
+        return tab;
+      })
+    );
+  }, []);
+
+  // Handler to export disease data
   const handleDiseaseExport = useCallback((dataToExport) => {
+    if (!dataToExport || dataToExport.length === 0) {
+      toast.warn("No rows selected for export.");
+      return;
+    }
+
     setDiseaseIsExporting(true);
-    console.log(dataToExport)
+    console.log(dataToExport);
     fetch("http://localhost:5000/download-excel", {
       method: "POST",
       headers: {
@@ -89,21 +175,64 @@ const DiseaseSearchPage = () => {
         link.click();
         link.parentNode.removeChild(link);
         setDiseaseIsExporting(false);
+        toast.success("Data exported successfully!");
       })
       .catch((error) => {
         console.error("Error exporting data:", error);
+        toast.error("Failed to export data.");
         setDiseaseIsExporting(false);
       });
   }, []);
 
-  const handleExport = useCallback(() => {
+  // Handler to export selected drug cards
+  const handleExportSelectedCards = useCallback(() => {
+    const currentTab = tabs.find((tab) => tab.id === activeTab);
+    if (!currentTab) {
+      toast.error("No active tab found.");
+      return;
+    }
+
+    if (currentTab.content.selectedCards.length === 0) {
+      toast.warn("No selected cards to export.");
+      return;
+    }
+
     setIsExporting(true);
+    const exportData = currentTab.content.selectedCards.map((card) => {
+      const {
+        TradeName,
+        "Active Ingredient": activeIngredient,
+        Manufacturer,
+        Size,
+        Quality_of_Life,
+        Efficacy,
+        Safety,
+        Adverse_Events,
+        Annual_Therapy_Costs,
+        Type_of_Drug,
+      } = card;
+
+      return {
+        TradeName,
+        "Active Ingredient": activeIngredient,
+        Manufacturer,
+        Size,
+        "Price($)": card.Price,
+        Quality_of_Life,
+        Efficacy,
+        Safety,
+        Adverse_Events,
+        Annual_Therapy_Costs,
+        Type_of_Drug,
+      };
+    });
+
     fetch("http://localhost:5000/download-excel", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(selectedCards),
+      body: JSON.stringify(exportData),
     })
       .then((response) => {
         if (!response.ok) {
@@ -120,58 +249,262 @@ const DiseaseSearchPage = () => {
         link.click();
         link.parentNode.removeChild(link);
         setIsExporting(false);
+        toast.success("Selected drugs exported successfully!");
       })
       .catch((error) => {
         console.error("Error exporting selected cards:", error);
+        toast.error("Failed to export selected drugs.");
         setIsExporting(false);
       });
-  }, [selectedCards]);
+  }, [tabs, activeTab]);
 
-  const handleRelevantDrugsSearch = useCallback(() => {
-    setIsSearching(true);
-    fetch("http://localhost:5000/drug-search-by-disease", {
+  // Handler to fetch relevant drugs based on disease
+  const handleRelevantDrugsSearch = useCallback(
+    (tabId) => {
+      const currentTab = tabs.find((tab) => tab.id === tabId);
+      if (!currentTab || !currentTab.content.diseaseInfo.Disease) {
+        toast.warn(
+          "Please select a disease before searching for relevant drugs."
+        );
+        return;
+      }
+
+      setIsSearching(true);
+
+      fetch("http://localhost:5000/drug-search-by-disease", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          disease: currentTab.content.diseaseInfo.Disease,
+        }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to fetch relevant drugs.");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          // Check if a Relevant Drugs tab for this disease already exists
+          const existingRelevantDrugsTab = tabs.find(
+            (tab) =>
+              tab.label ===
+              `Relevant Drugs - ${currentTab.content.diseaseInfo.Disease}`
+          );
+          if (!existingRelevantDrugsTab) {
+            // Create a new "Relevant Drugs" tab with a unique label
+            addNewTab(
+              `Relevant Drugs - ${currentTab.content.diseaseInfo.Disease}`,
+              {
+                type: "relevantDrugs",
+                diseaseInfo: currentTab.content.diseaseInfo, // Pass disease info if needed
+                drugInfo: data,
+                selectedCards: [],
+              }
+            );
+            toast.success("Relevant drugs tab created.");
+          } else {
+            // If already exists, make it active
+            setActiveTab(existingRelevantDrugsTab.id);
+            toast.info(
+              "Relevant drugs tab already exists. Activated the existing tab."
+            );
+          }
+          setIsSearching(false);
+        })
+        .catch((error) => {
+          console.error("Error fetching relevant drugs:", error);
+          toast.error("Failed to fetch relevant drugs.");
+          setIsSearching(false);
+        });
+    },
+    [tabs, addNewTab]
+  );
+
+  // Handler to fetch market estimation data and add tab
+  const handleMarketEstimation = useCallback(() => {
+    const currentTab = tabs.find((tab) => tab.id === activeTab);
+    if (!currentTab || !currentTab.content.diseaseInfo.Disease) {
+      toast.warn(
+        "Please select a disease before performing market estimation."
+      );
+      return;
+    }
+
+    setIsSearchingCP(true);
+
+    fetch("http://localhost:5000/market-estimation", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ disease: diseaseInfo.Disease }),
+      body: JSON.stringify({
+        disease: currentTab.content.diseaseInfo.Disease,
+        number: "1",
+      }),
     })
-      .then(response => response.json())
-      .then((data) => {
-        setDrugInfo(data);
-        setIsSearching(false);
-        // const element = document.getElementById("drug-cards");
-        // if (element) {
-        //   element.scrollIntoView({ behavior: "smooth" });
-        // }
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch market estimation.");
+        }
+        return response.json();
       })
-      .catch(error => console.error("Error fetching relevant drugs:", error));
-  }, [diseaseInfo.Disease]);
+      .then((data) => {
+        // Check if a Market Estimation tab already exists
+        const existingMarketEstimationTab = tabs.find(
+          (tab) =>
+            tab.label ===
+            `Market Estimation - ${currentTab.content.diseaseInfo.Disease}`
+        );
+        if (!existingMarketEstimationTab) {
+          // Create a new "Market Estimation" tab with a unique label
+          addNewTab(
+            `Market Estimation - ${currentTab.content.diseaseInfo.Disease}`,
+            {
+              type: "marketEstimation",
+              diseaseName: currentTab.content.diseaseInfo.Disease,
+              years: data.years || [],
+              forecast_years: data.forecast_years || [],
+              combinedPrevalence: data.combined_prevalence || [],
+              marketPredictions: data.market_predictions || [],
+              marketSize: data.market_size || [],
+            }
+          );
+          toast.success("Market Estimation tab created.");
+        } else {
+          // If already exists, make it active
+          setActiveTab(existingMarketEstimationTab.id);
+          toast.info(
+            "Market Estimation tab already exists. Activated the existing tab."
+          );
+        }
+        setIsSearchingCP(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching market estimation:", error);
+        toast.error("Failed to fetch market estimation.");
+        setIsSearchingCP(false);
+      });
+  }, [tabs, activeTab, addNewTab]);
 
-  const handleCardSelection = useCallback((result) => {
-    setSelectedCards((prevSelected) =>
-      prevSelected.includes(result)
-        ? prevSelected.filter((item) => item !== result)
-        : [...prevSelected, result]
-    );
-  }, []);
+  // Handler to fetch therapy cost estimation data and add tab
+  const handleTherapyCost = useCallback(() => {
+    const currentTab = tabs.find((tab) => tab.id === activeTab);
+    if (!currentTab || !currentTab.content.diseaseInfo.Disease) {
+      toast.warn(
+        "Please select a disease before performing therapy cost estimation."
+      );
+      return;
+    }
 
+    setIsSearchingCT(true);
+
+    fetch("http://localhost:5000/therapy-cost-estimation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        disease: currentTab.content.diseaseInfo.Disease,
+        number: "2",
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch therapy cost estimation.");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        // Check if a Therapy Cost Estimation tab already exists
+        const existingTherapyCostTab = tabs.find(
+          (tab) =>
+            tab.label ===
+            `Therapy Cost Estimation - ${currentTab.content.diseaseInfo.Disease}`
+        );
+        if (!existingTherapyCostTab) {
+          // Create a new "Therapy Cost Estimation" tab with a unique label
+          addNewTab(
+            `Therapy Cost Estimation - ${currentTab.content.diseaseInfo.Disease}`,
+            {
+              type: "therapyCostEstimation",
+              diseaseName: currentTab.content.diseaseInfo.Disease,
+              allYears: data.all_years || [],
+              combinedTherapyCost: data.combined_therapy_cost || [],
+            }
+          );
+          toast.success("Therapy Cost Estimation tab created.");
+        } else {
+          // If already exists, make it active
+          setActiveTab(existingTherapyCostTab.id);
+          toast.info(
+            "Therapy Cost Estimation tab already exists. Activated the existing tab."
+          );
+        }
+        setIsSearchingCT(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching therapy cost estimation:", error);
+        toast.error("Failed to fetch therapy cost estimation.");
+        setIsSearchingCT(false);
+      });
+  }, [tabs, activeTab, addNewTab]);
+
+  // Handler for selecting/unselecting a drug card
+  const handleCardSelection = useCallback(
+    (result) => {
+      setTabs((prevTabs) =>
+        prevTabs.map((tab) => {
+          if (tab.id === activeTab && tab.content.type === "relevantDrugs") {
+            const isSelected = tab.content.selectedCards.includes(result);
+            const newSelectedCards = isSelected
+              ? tab.content.selectedCards.filter((item) => item !== result)
+              : [...tab.content.selectedCards, result];
+            return {
+              ...tab,
+              content: {
+                ...tab.content,
+                selectedCards: newSelectedCards,
+              },
+            };
+          }
+          return tab;
+        })
+      );
+    },
+    [activeTab]
+  );
+
+  // Handler to open dialog with detailed info
   const handleOpenDialog = useCallback((result) => {
     setSelectedResult(result);
     setDialogOpen(true);
   }, []);
 
+  // Handler to select/unselect all drug cards in the active tab
   const handleSelectAll = useCallback(() => {
-    setSelectedCards((prev) =>
-      prev.length === drugInfo.length ? [] : [...drugInfo]
+    setTabs((prevTabs) =>
+      prevTabs.map((tab) => {
+        if (tab.id === activeTab && tab.content.type === "relevantDrugs") {
+          const allSelected =
+            tab.content.selectedCards.length === tab.content.drugInfo.length;
+          return {
+            ...tab,
+            content: {
+              ...tab.content,
+              selectedCards: allSelected ? [] : [...tab.content.drugInfo],
+            },
+          };
+        }
+        return tab;
+      })
     );
-  }, [drugInfo]);
+  }, [activeTab]);
 
-  // Memoize table data
-  const allowedKeys = ["Disease Biology", "Signs & Symptoms", "Pathophysiology", "Risk Factors", "Diagnosis", "Patient Demographics", "Stages progression", "Sub-types", "Treatment options", "Treatment & Management", "Unmet Needs", "Prevalence"];
-  const [selectedTopics, setSelectedTopics] = useState([]);
-
-  const handleTopicSelection = useCallback((topic) => {
+  // Handler for topic selection
+  const handleTopicSelectionLocal = useCallback((topic) => {
     setSelectedTopics((prevSelected) =>
       prevSelected.includes(topic)
         ? prevSelected.filter((t) => t !== topic)
@@ -179,297 +512,153 @@ const DiseaseSearchPage = () => {
     );
   }, []);
 
-  const data = useMemo(() => {
-    return Object.entries(diseaseInfo)
-      .filter(([key]) => allowedKeys.includes(key))
-      .sort(([keyA], [keyB]) => allowedKeys.indexOf(keyA) - allowedKeys.indexOf(keyB))
-      .map(([key, value]) => ({
-        topic: key,
-        overview: value,
-      }))
-      .filter(({ topic }) =>
-        selectedTopics.length === 0 || selectedTopics.includes(topic) // Correct filter for multiple topics
-      );
-  }, [diseaseInfo, selectedTopics]);
-
-  const columns = useMemo(() => [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+  // Function to render tabs navigation
+  const renderTabs = () => (
+    <div className="flex items-center border-b px-2 bg-white overflow-x-auto">
+      {tabs.map((tab) => (
+        <TabHeader
+          key={tab.id}
+          label={tab.label}
+          onClose={() => closeTab(tab.id)}
+          onActivate={() => setActiveTab(tab.id)}
+          isActive={activeTab === tab.id}
         />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "topic",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Topic
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div className="font-medium">{row.getValue("topic")}</div>,
-    },
-    {
-      accessorKey: "overview",
-      header: "Overview",
-      cell: ({ row }) => {
-        const value = row.getValue("overview");
-        return (
-          <div className="max-w-[500px]">
-            {typeof value === 'object' ? (
-              Array.isArray(value) ? (
-                <ul className="list-disc pl-6">
-                  {value.map((item, idx) => (
-                    <li key={idx}>{item}</li>
-                  ))}
-                </ul>
-              ) : (
-                <div>
-                  {Object.entries(value).map(([subKey, subValue]) => (
-                    <p key={subKey}>
-                      <strong>{subKey}:</strong> {subValue}
-                    </p>
-                  ))}
-                </div>
-              )
-            ) : (
-              <p>{value}</p>
-            )}
-          </div>
-        );
-      },
-    },
-  ], []);
+      ))}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() =>
+          addNewTab("New Tab", {
+            type: "disease",
+            diseaseInfo: {},
+            drugInfo: [],
+            selectedCards: [],
+            selectedDiseaseData: [],
+          })
+        }
+        className="ml-2"
+        aria-label="Add new tab"
+      >
+        <Plus className="h-4 w-4 text-gray-800" />
+      </Button>
+    </div>
+  );
 
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel({ pageSize: data.length }), // Show all rows
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-    manualPagination: true, // Disable automatic pagination
-    pageCount: 1,
-  });
-
-  const selectedDiseaseData = useMemo(() => {
-    return Object.entries(rowSelection)
-      .filter(([key, isSelected]) => isSelected) // Only include selected rows
-      .map(([key]) => data[parseInt(key)]); // Map to data entries by index
-  }, [rowSelection, data]);
+  // Get active tab content
+  const activeTabContent = useMemo(() => {
+    return (
+      tabs.find((tab) => tab.id === activeTab)?.content || {
+        type: "disease",
+        diseaseInfo: {},
+        drugInfo: [],
+        selectedCards: [],
+        selectedDiseaseData: [],
+      }
+    );
+  }, [activeTab, tabs]);
 
   return (
     <div className="disease-search-page h-screen bg-gray-50 flex flex-col">
-      <div className="flex-grow overflow-hidden p-6 flex">
-        <div className={`
-          w-${!isChatMinimized ? "2/3" : "full"} 
-          pr-6`}>
-          <div className="flex items-center mb-4 gap-4 justify-between">
-            <h1 className="text-2xl font-bold text-gray-800">
-              Disease Overview: <span className="text-[#a6ce39]">{diseaseInfo.Disease || "Unknown Disease"}</span>
-            </h1>
-          </div>
+      {/* Toast Notifications */}
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
 
-          <div className="disease-card space-y-4 bg-white border border-[#a6ce39] rounded-[12px] p-6 shadow-lg overflow-y-auto scrollbar-hide max-h-[80vh] pb-6">
-            <h2>{diseaseInfo['Disease Overview']}</h2>
-            <div className="flex items-center py-4 gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="rounded-lg bg-green hover:bg-darkBlue text-white hover:text-white">
-                    Filter Topics <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white pt-3" side="left" align="end">
-                  {allowedKeys.map((topic) => (
-                    <DropdownMenuCheckboxItem
-                      key={topic}
-                      checked={selectedTopics.includes(topic)}
-                      onCheckedChange={() => handleTopicSelection(topic)}
-                    >
-                      {topic}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="ml-auto rounded-lg bg-green text-white hover:bg-darkBlue hover:text-white">
-                    Columns <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-white pt-3">
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => {
-                      return (
-                        <DropdownMenuCheckboxItem
-                          key={column.id}
-                          className="capitalize"
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                        >
-                          {column.id}
-                        </DropdownMenuCheckboxItem>
-                      )
-                    })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {/* <Button className='bg-green rounded-lg hover:bg-darkBlue text-white' onClick={() => console.log("Add AI Column clicked")}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add AI Column
-              </Button> */}
-              <Button className='bg-green rounded-lg hover:bg-darkBlue text-white' disabled={isDiseaseExporting} onClick={() => handleDiseaseExport(selectedDiseaseData)}>
-                <Download className="mr-2 h-4 w-4" />
-                {isDiseaseExporting ? 'Exporting...' : 'Export Selected Rows'}
-              </Button>
-            </div>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                        data-state={row.getIsSelected() && "selected"}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={columns.length} className="h-24 text-center">
-                        No results.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="flex justify-center">
-              <Button
-                onClick={handleRelevantDrugsSearch}
-                disabled={isSearching}
-                className="mt-4 bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
-              >
-                {isSearching ? 'Loading...' : 'Show Relevant Drugs'}
-              </Button>
-            </div>
-            {drugInfo.length > 0 && (
-              <div className="w-full overflow-y-auto pr-2 scrollbar-hide pt-12">
-                <div className="flex flex-wrap justify-start space-x-4">
-                  {drugInfo.length > 0 && (
-                    <div  className="w-full overflow-y-auto pr-2 scrollbar-hide">
-                      <div id='drug-cards' className="flex sticky items-center justify-between gap-x-4 pb-4">
-                        <h1 className="text-2xl font-bold text-gray-800">
-                          Showing Relevant Drugs for <span className="text-[#a6ce39]">{diseaseInfo.Disease || "Unknown Disease"}</span>
-                        </h1>
-                        <div className="flex sticky items-center justify-end gap-4 pb-4" >
-                          <Button
-                            onClick={handleSelectAll}
-                            className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
-                          >
-                            {selectedCards.length === drugInfo.length ? 'Unselect All' : 'Select All'}
-                          </Button>
-                          <Button
-                            onClick={handleExport}
-                            disabled={isExporting}
-                            className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? 'cursor-not-allowed opacity-50' : ''}`}
-                          >
-                            <Download className="h-4 w-4" /> {isExporting ? 'Exporting...' : 'Export Selected'}
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-4">
-                        {drugInfo.map((result, index) => (
-                          <Card
-                            key={index}
-                            className={`bg-white border border-[#a6ce39] rounded-[12px] p-4 shadow-sm cursor-pointer relative ${selectedCards.includes(result) ? 'shadow-lg' : ''}`}
-                            onClick={() => handleCardSelection(result)}
-                          >
-                            {selectedCards.includes(result) && (
-                              <div className="absolute top-2 right-2">
-                                <X className="h-5 w-5 text-[#a6ce39]" />
-                              </div>
-                            )}
-                            <div>
-                              <p className="text-black font-bold"> {result.TradeName}</p>
-                              <p><strong className="font-semibold">Active Ingredient:</strong> {result['Active Ingredient']}</p>
-                              <p><strong className="font-semibold">Price:</strong> ${(result.Price).toFixed(2)}</p>
-                              <p><strong className="font-semibold">Manufacturer:</strong> {result.Manufacturer}</p>
-                              <p><strong className="font-semibold">Country:</strong> {result.Country}</p>
-                            </div>
-                            <FileText
-                              className="text-[#a6ce39] cursor-pointer justify-end"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenDialog(result);
-                              }}
-                            />
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+      {/* Tabs Navigation */}
+      {renderTabs()}
+
+      {/* Main Content */}
+      <div
+        className={cn(
+          "flex-grow overflow-hidden p-6 flex"
+          // !isChatMinimized ? "w-2/3" : "w-full"
+        )}
+      >
+        <div className="w-full pr-6">
+          {/* Content Container */}
+          <div className="flex flex-col flex-1 pr-6 overflow-hidden">
+            {/* Conditional Rendering Based on Tab Type */}
+            {activeTabContent.type === "disease" && (
+              <DiseaseTab
+                diseaseInfo={activeTabContent.diseaseInfo}
+                allowedKeys={allowedKeys}
+                selectedTopics={selectedTopics}
+                handleTopicSelection={handleTopicSelectionLocal}
+                isDiseaseExporting={isDiseaseExporting}
+                handleDiseaseExport={() =>
+                  handleDiseaseExport(activeTabContent.selectedDiseaseData)
+                }
+                selectedDiseaseData={activeTabContent.selectedDiseaseData || []}
+                handleRelevantDrugsSearch={() =>
+                  handleRelevantDrugsSearch(activeTab)
+                }
+                handleMarketEstimation={handleMarketEstimation}
+                handleTherapyCost={handleTherapyCost}
+                isSearching={isSearching}
+                isSearchingCP={isSearchingCP}
+                isSearchingCT={isSearchingCT}
+                onSelectedRowsChange={(selectedData) =>
+                  updateSelectedDiseaseData(activeTab, selectedData)
+                }
+                isChatMinimized={isChatMinimized}
+              />
+            )}
+
+            {activeTabContent.type === "relevantDrugs" && (
+              <RelevantDrugsTab
+                diseaseInfo={activeTabContent.diseaseInfo}
+                drugInfo={activeTabContent.drugInfo}
+                selectedCards={activeTabContent.selectedCards}
+                handleSelectAll={handleSelectAll}
+                handleExportSelectedCards={handleExportSelectedCards}
+                handleCardSelection={handleCardSelection}
+                handleOpenDialog={handleOpenDialog}
+                isExporting={isExporting}
+                isChatMinimized={isChatMinimized}
+              />
+            )}
+
+            {activeTabContent.type === "marketEstimation" && (
+              <MarketAndPrevalenceForecast
+                isChatMinimized={isChatMinimized}
+                diseaseName={activeTabContent.diseaseName}
+                years={activeTabContent.years}
+                forecast_years={activeTabContent.forecast_years}
+                combinedPrevalence={activeTabContent.combinedPrevalence}
+                marketPredictions={activeTabContent.marketPredictions}
+                marketSize={activeTabContent.marketSize}
+              />
+            )}
+
+            {activeTabContent.type === "therapyCostEstimation" && (
+              <TherapyCostForecast
+                isChatMinimized={isChatMinimized}
+                diseaseName={activeTabContent.diseaseName}
+                allYears={activeTabContent.allYears}
+                combinedTherapyCost={activeTabContent.combinedTherapyCost}
+              />
             )}
           </div>
         </div>
       </div>
 
+      {/* Dialog for Detailed Information */}
       {dialogOpen && selectedResult && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white">
-            <DialogTitle>{selectedResult.TradeName}</DialogTitle>
+            <DialogTitle className="font-bold text-2xl">
+              Drug Overview:{" "}
+              <strong className="text-[#a6ce39]">
+                {selectedResult.TradeName}
+              </strong>
+            </DialogTitle>
             <DialogDescription>
               {[
                 "Active Ingredient",
@@ -481,14 +670,17 @@ const DiseaseSearchPage = () => {
                 "Safety",
                 "Adverse_Events",
                 "Annual_Therapy_Costs",
-                "Type_of_Drug"
+                "Type_of_Drug",
               ].map((key) => {
                 const customLabels = {
-                  Price: "Price"
+                  Price: "Price",
                 };
 
                 const label = customLabels[key] || key.replace(/_/g, " ");
-                const value = key === "Price" ? `$${(selectedResult[key]).toFixed(2)}` : selectedResult[key];
+                const value =
+                  key === "Price"
+                    ? `$${selectedResult[key].toFixed(2)}`
+                    : selectedResult[key];
 
                 return (
                   selectedResult[key] && (
@@ -499,11 +691,11 @@ const DiseaseSearchPage = () => {
                 );
               })}
             </DialogDescription>
-
           </DialogContent>
         </Dialog>
       )}
 
+      {/* ChatBot Component */}
       <ChatBot
         chatMessages={chatMessages}
         setChatMessages={setChatMessages}
@@ -512,6 +704,7 @@ const DiseaseSearchPage = () => {
         onToggle={handleChatToggle}
       />
 
+      {/* Global Styles */}
       <style jsx global>{`
         .scrollbar-hide {
           -ms-overflow-style: none;

@@ -41,6 +41,7 @@ import DiseaseSearchPage from "./components/DiseaseSearchPage";
 import SelectedCardsTablePage from "./components/List";
 import DrugResultsPage from "./components/DrugResultPage";
 import SymptomResultsPage from "./components/SymptomsResultPage";
+import CompetitiveLandscapeSearchPage from "./components/CompetitiveLandscapeSearchPage";
 
 function App() {
   return (
@@ -64,8 +65,9 @@ function App() {
         />
         <Route path="/disease-search" element={<Layout><DiseaseSearchPage/></Layout>}/>
         <Route path="/drug-search" element={<Layout><DrugResultsPage/></Layout>}/>
-        <Route path="//symptom-search" element={<Layout><SymptomResultsPage/></Layout>}/>
+        <Route path="/symptom-search" element={<Layout><SymptomResultsPage/></Layout>}/>
         <Route path="/list" element={<Layout><SelectedCardsTablePage /></Layout>} />
+        <Route path="/competitive-landscape" element={<Layout><CompetitiveLandscapeSearchPage /></Layout>} />
       </Routes>
     </Router>
   );
