@@ -10,7 +10,7 @@ load_dotenv()
 
 from MarketEstimation.market import plot_market_and_prevalence_forecast
 from MarketEstimation.market import plot_therapy_cost_forecast
-from Utilities.search import preprocess
+# from Utilities.search import preprocess
 from Utilities.summarize import summarize_by_title_or_org
 from Utilities.chatbot import (
     # process_question,
@@ -26,88 +26,88 @@ app = Flask(__name__)
 CORS(app)
 
 
-@app.route('/search', methods=['POST'])
-def search():
-    # Get the search keyword from the request
-    search_keyword = request.json.get('keyword')
+# @app.route('/search', methods=['POST'])
+# def search():
+#     # Get the search keyword from the request
+#     search_keyword = request.json.get('keyword')
     
-    # Ensure the keyword is provided before further processing
-    if not search_keyword:
-        return jsonify({"error": "No search keyword provided."}), 400
+#     # Ensure the keyword is provided before further processing
+#     if not search_keyword:
+#         return jsonify({"error": "No search keyword provided."}), 400
 
-    # Preprocess the search keyword
-    query = preprocess(search_keyword)
+#     # Preprocess the search keyword
+#     query = preprocess(search_keyword)
     
-    if isinstance(query, set):
-        query = ' '.join(query)
+#     if isinstance(query, set):
+#         query = ' '.join(query)
     
-    print(query)
+#     print(query)
 
-    # Define two separate queries: one for `categorix_v2` and one for `drug-disease-indication`
-    es_query = [
-        # Query for categorix_v2 (specific fields: title, abstract)
-        {"index": "pregranted"},
-        {
-            "query": {
-                "query_string": {
-                    "query": query,
-                    "fields": ["Title", "Abstract"],
-                    "default_operator": "AND",  # Search only in title and abstract fields
-                    "fuzziness": "AUTO"  # Adding fuzziness
-                }
-            },
-            "size": 10000
-        },
-        # Query for drug-disease-indication (search all fields)
-        {"index": "drug-disease-indication"},
-        {
-            "query": {
-                "query_string": {
-                    "query": query, 
-                    "default_operator": "AND",  # Search the same query across all fields
-                    "fuzziness": "AUTO"  # Adding fuzziness
-                }
-            },
-            "size": 10000
-        },
-        {"index": "clinicaltrial"},
-        {
-            "query": {
-                "query_string": {
-                    "query": query, 
-                    "default_operator": "AND",  # Search the same query across all fields
-                    "fuzziness": "AUTO"  # Adding fuzziness
-                }
-            },
-            "size": 10000
-        },
-        {"index": "pubmed"},
-        {
-            "query": {
-                "query_string": {
-                    "query": query, 
-                    "default_operator": "AND",  # Search the same query across all fields
-                    "fuzziness": "AUTO"  # Adding fuzziness
-                }
-            },
-            "size": 10000
-        }
-    ]
+#     # Define two separate queries: one for `categorix_v2` and one for `drug-disease-indication`
+#     es_query = [
+#         # Query for categorix_v2 (specific fields: title, abstract)
+#         {"index": "pregranted"},
+#         {
+#             "query": {
+#                 "query_string": {
+#                     "query": query,
+#                     "fields": ["Title", "Abstract"],
+#                     "default_operator": "AND",  # Search only in title and abstract fields
+#                     "fuzziness": "AUTO"  # Adding fuzziness
+#                 }
+#             },
+#             "size": 10000
+#         },
+#         # Query for drug-disease-indication (search all fields)
+#         {"index": "drug-disease-indication"},
+#         {
+#             "query": {
+#                 "query_string": {
+#                     "query": query, 
+#                     "default_operator": "AND",  # Search the same query across all fields
+#                     "fuzziness": "AUTO"  # Adding fuzziness
+#                 }
+#             },
+#             "size": 10000
+#         },
+#         {"index": "clinicaltrial"},
+#         {
+#             "query": {
+#                 "query_string": {
+#                     "query": query, 
+#                     "default_operator": "AND",  # Search the same query across all fields
+#                     "fuzziness": "AUTO"  # Adding fuzziness
+#                 }
+#             },
+#             "size": 10000
+#         },
+#         {"index": "pubmed"},
+#         {
+#             "query": {
+#                 "query_string": {
+#                     "query": query, 
+#                     "default_operator": "AND",  # Search the same query across all fields
+#                     "fuzziness": "AUTO"  # Adding fuzziness
+#                 }
+#             },
+#             "size": 10000
+#         }
+#     ]
 
-    # Perform the multi-search in Elasticsearch
-    try:
-        response = es.msearch(body=es_query)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+#     # Perform the multi-search in Elasticsearch
+#     try:
+#         response = es.msearch(body=es_query)
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
-    # Extract and combine hits from both queries directly
-    documents = [hit['_source'] for res in response['responses'] for hit in res['hits']['hits']]
+#     # Extract and combine hits from both queries directly
+#     documents = [hit['_source'] for res in response['responses'] for hit in res['hits']['hits']]
 
-    # Reset the conversation history
-    conversation_history.clear()
+#     # Reset the conversation history
+#     conversation_history.clear()
 
-    # Return the combined results as a single list of documents
-    return jsonify({"documents": documents, "query": query}), 200
+#     # Return the combined results as a single list of documents
+#     return jsonify({"documents": documents, "query": query}), 200
 
 
 

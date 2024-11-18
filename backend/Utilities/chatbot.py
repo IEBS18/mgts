@@ -6,7 +6,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from dotenv import load_dotenv
 load_dotenv()
-from Utilities.search import preprocess
+# from Utilities.search import preprocess
 
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
