@@ -1,39 +1,6 @@
-// import React from "react";
-// import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-// import Dashboard from "@/components/Dashboard";
-// import Visualize from "@/components/Visualize";
-
-// function App() {
-//   return (
-//     <Router>
-//       <Routes>
-//         <Route
-//           path="/"
-//           element={
-//             <Layout>
-//               <Dashboard />
-//             </Layout>
-//           }
-//         />
-//         <Route
-//           path="/visualize"
-//           element={
-//             <Layout>
-//               <Visualize />
-//             </Layout>
-//           }
-//         />
-//       </Routes>
-//     </Router>
-//   );
-// }
-
-// export default App;
-
 
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Dashboard from "@/components/Dashboard";
 import Visualize from "@/components/Visualize";
 import Layout from "@/pages/Layout";
 import Dashboard2 from "./components/Dashboard2";
