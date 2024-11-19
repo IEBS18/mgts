@@ -365,11 +365,11 @@ def therapy_cost_estimation():
 def market_estimation():
     data= request.json
     disease = data.get('disease')
-    years, forecast_years, combined_prevalence, market_predictions, market_size= plot_market_and_prevalence_forecast(disease)
+    years, forecast_years, market_predictions, market_size= plot_market_and_prevalence_forecast(disease)
     return jsonify({
         'years': years,
         'forecast_years': forecast_years,
-        'combined_prevalence': combined_prevalence,
+        'combined_prevalence': [],
         'market_predictions': market_predictions.tolist(),
         'market_size': market_size
     })

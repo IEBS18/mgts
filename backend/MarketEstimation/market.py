@@ -4,10 +4,12 @@ from sklearn.linear_model import LinearRegression
 import numpy as np
 import re
 import chardet
+import openpyxl
 
 # with open('USA_Market_Estimation.csv', 'rb') as f:
 #     result = chardet.detect(f.read())
-df = pd.read_csv('MarketEstimation/kumar_final.csv')
+df = pd.read_excel('MarketEstimation/USA_Final_output.xlsx', engine='openpyxl')
+
 
 years = ['2019', '2020', '2021', '2022']
 forecast_years = ['2023','2024', '2025', '2026', '2027', '2028']
@@ -51,24 +53,24 @@ def plot_market_and_prevalence_forecast(disease_name):
         return
 
     market_size = preprocess_data([disease_data[f'Market_Size_{year}'].values[0] for year in years])
-    prevalence_rate = preprocess_data([disease_data[f'Prevalence Rate_{year}'].values[0] for year in years])
+    # prevalence_rate = preprocess_data([disease_data[f'Prevalence Rate_{year}'].values[0] for year in years])
 
-    if any(np.isnan(market_size)) or any(np.isnan(prevalence_rate)):
+    if any(np.isnan(market_size)):
         print("Data contains missing or invalid values.")
         return
 
     X = np.array(range(len(years))).reshape(-1, 1)
     market_predictions = forecast_with_noise(X, np.array(market_size), future_periods=len(forecast_years))
-    prevalence_predictions = forecast_with_noise(X, np.array(prevalence_rate), future_periods=len(forecast_years))
+    # prevalence_predictions = forecast_with_noise(X, np.array(prevalence_rate), future_periods=len(forecast_years))
 
     all_years = years + forecast_years
-    combined_prevalence = prevalence_rate + list(prevalence_predictions)
+    # combined_prevalence = prevalence_rate + list(prevalence_predictions)
     print("all Years:",all_years)
-    print("Combined Prevalence:",combined_prevalence)
+    # print("Combined Prevalence:",combined_prevalence)
     print("Market Predictions: ", market_predictions)
     print("Market Size: ", market_size)
     
-    return years, forecast_years, combined_prevalence, market_predictions, market_size
+    return years, forecast_years, market_predictions, market_size
 
     # fig, ax1 = plt.subplots(figsize=(12, 7))
 

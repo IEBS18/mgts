@@ -206,6 +206,7 @@ const DiseaseSearchPage = () => {
         TradeName,
         "Active Ingredient": activeIngredient,
         Manufacturer,
+        Country,
         Size,
         Quality_of_Life,
         Efficacy,
@@ -219,6 +220,7 @@ const DiseaseSearchPage = () => {
         TradeName,
         "Active Ingredient": activeIngredient,
         Manufacturer,
+        Country,
         Size,
         "Price($)": card.Price,
         Quality_of_Life,
@@ -705,6 +707,7 @@ const DiseaseSearchPage = () => {
                   {[
                     "Active Ingredient",
                     "Manufacturer",
+                    "Country",
                     "Size",
                     "Price",
                     "Quality_of_Life",

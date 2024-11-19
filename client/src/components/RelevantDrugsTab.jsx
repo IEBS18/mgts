@@ -60,31 +60,39 @@ const RelevantDrugsTab = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
         {drugInfo.map((result, index) => (
           <Card
-                            key={index}
-                            className={`bg-white border border-[#a6ce39] rounded-[12px] p-4 shadow-sm cursor-pointer relative ${selectedCards.includes(result) ? 'shadow-lg' : ''}`}
-                            onClick={() => handleCardSelection(result)}
-                          >
-                            {selectedCards.includes(result) && (
-                              <div className="absolute top-2 right-2">
-                                <X className="h-5 w-5 text-[#a6ce39]" />
-                              </div>
-                            )}
-                            <div>
-                              <p className="text-black font-bold"> {result.TradeName} ({result.Size})</p>
-                              <p><strong className="font-semibold">Active Ingredient:</strong> {result['Active Ingredient']}</p>
-                              {/* <p><strong className="font-semibold">Size:</strong> {result['Size']}</p> */}
-                              <p><strong className="font-semibold">Price:</strong> ${(result.Price).toFixed(2)}</p>
-                              <p><strong className="font-semibold">Manufacturer:</strong> {result.Manufacturer}</p>
-                              <p><strong className="font-semibold">Country:</strong> {result.Country}</p>
-                            </div>
-                            <FileText
-                              className="text-[#a6ce39] cursor-pointer justify-end"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenDialog(result);
-                              }}
-                            />
-                          </Card>
+          key={index}
+          className="bg-white border border-[#a6ce39] rounded-[12px] p-4 shadow-sm cursor-pointer relative"
+          onClick={() => handleOpenDialog(result)}
+      >
+          <div
+              onClick={(e) => e.stopPropagation()} // Prevent dialog from opening when checkbox is clicked
+              className="absolute top-2 right-2"
+          >
+              <input
+                  type="checkbox"
+                  checked={selectedCards.includes(result)}
+                  onChange={() => handleCardSelection(result)}
+                  className="h-5 w-5 text-[#a6ce39] cursor-pointer "
+                  style={{
+                      accentColor: '#a6ce39', // Sets the accent color to green
+                  }}
+              />
+          </div>
+          <div className="mt-2">
+              <p className="text-black font-bold"> {result.TradeName} ({result.Size})</p>
+              <p><strong className="font-semibold">Active Ingredient:</strong> {result['Active Ingredient']}</p>
+              <p><strong className="font-semibold">Price:</strong> ${(result.Price).toFixed(2)}</p>
+              <p><strong className="font-semibold">Manufacturer:</strong> {result.Manufacturer}</p>
+              <p><strong className="font-semibold">Country:</strong> {result.Country}</p>
+          </div>
+          {/* <FileText
+              className="text-[#a6ce39] cursor-pointer justify-end"
+              onClick={(e) => {
+                  e.stopPropagation(); // Prevent card click from firing
+                  handleOpenDialog(result);
+              }}
+          /> */}
+      </Card>
         ))}
       </div>
     </div>

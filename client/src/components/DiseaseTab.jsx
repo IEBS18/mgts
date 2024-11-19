@@ -820,7 +820,7 @@ const DiseaseTab = ({
         {diseaseInfo['Disease Overview'] && (
           <h2 className="font-semibold text-gray-700">{diseaseInfo['Disease Overview']}</h2>
         )}
-        <div className="flex items-center py-4 gap-2">
+        <div className="flex items-center justify-between py-4 gap-2">
           {/* Filter Topics Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -842,7 +842,7 @@ const DiseaseTab = ({
           </DropdownMenu>
 
           {/* Columns Dropdown */}
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="ml-auto rounded-lg bg-green text-white hover:bg-darkBlue hover:text-white">
                 Columns <ChevronDown className="ml-2 h-4 w-4" />
@@ -862,7 +862,7 @@ const DiseaseTab = ({
                   </DropdownMenuCheckboxItem>
                 ))}
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
           {/* Export Button */}
           <Button
