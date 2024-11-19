@@ -25,3 +25,6 @@ dist-ssr
 */.env
 backend/Utilities/__pycache__/*
 backend/__pycache__/*
+backend/models/__pycache__/*
+backend/MarketEstimation/__pycache__/*
+backend/embeddings/__pycache__/*
