@@ -660,6 +660,16 @@ const DiseaseTab = ({
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
 
+  function paragraphToBulletPoints(paragraph) {
+    // Split the paragraph into sentences based on full stops, then trim each sentence.
+    const sentences = paragraph.split('.').map(sentence => sentence.trim()).filter(sentence => sentence.length > 0);
+    
+    // Add full stop back to each sentence and return as an array.
+    return sentences.map(sentence => `${sentence}.`);
+  }
+  
+  
+
   // Define table data
   const tableData = useMemo(() => {
     return Object.entries(diseaseInfo)
@@ -713,6 +723,10 @@ const DiseaseTab = ({
       header: "Overview",
       cell: ({ row }) => {
         const value = row.getValue("overview");
+        const topic = row.getValue("topic");
+      
+        const bulletPointKeys = ["Signs & Symptoms", "Treatment options", "Risk Factors"];
+      
         return (
           <div className="max-w-[500px]">
             {typeof value === 'object' ? (
@@ -732,13 +746,24 @@ const DiseaseTab = ({
                 </div>
               )
             ) : (
-              <p>{value}</p>
+              // Conditionally render as bullet points for specific keys
+              bulletPointKeys.includes(topic) ? (
+                <ul className="list-disc pl-6">
+                  {paragraphToBulletPoints(value).map((bullet, idx) => (
+                    <li key={idx}>{bullet}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>{value}</p>
+              )
             )}
           </div>
         );
-      },
+      }
+      
     },
   ], []);
+  
 
   // Initialize table with react-table
   const tableInstance = useReactTable({
@@ -874,31 +899,6 @@ const DiseaseTab = ({
             {isDiseaseExporting ? 'Exporting...' : 'Export Selected Rows'}
           </Button>
         </div>
-
-        {/* Three Buttons for Additional Actions */}
-        {/* <div className="flex gap-4 mb-4">
-          <Button
-            onClick={handleRelevantDrugsSearch}
-            disabled={isSearching}
-            className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] w-[200px]"
-          >
-            {isSearching ? 'Loading...' : 'Show Relevant Drugs'}
-          </Button>
-          <Button
-            onClick={handleMarketEstimation}
-            disabled={isSearchingCP}
-            className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] w-[200px]"
-          >
-            {isSearchingCP ? 'Loading...' : 'Market Estimation'}
-          </Button>
-          <Button
-            onClick={handleTherapyCost}
-            disabled={isSearchingCT}
-            className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] w-[200px]"
-          >
-            {isSearchingCT ? 'Loading...' : 'Therapy Cost Estimation'}
-          </Button>
-        </div> */}
 
         {/* Data Table */}
         <div className="rounded-md border">
