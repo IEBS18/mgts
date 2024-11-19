@@ -565,9 +565,10 @@ const DiseaseSearchPage = () => {
 
   useEffect(() => {
     const fetchDrugData = async (diseaseName) => {
-      if (!diseaseName) return; // No need to make the request if no disease name is provided
+      console.log(diseaseName);
+      if (!diseaseName) return;
 
-      setLoading(true); // Set loading state while fetching data
+      setLoading(true);
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/drug-search-by-disease`, {
           method: 'POST',
@@ -579,20 +580,20 @@ const DiseaseSearchPage = () => {
 
         if (response.ok) {
           const data = await response.json();
-          setDrugData(data); // Update state with the fetched drug data
+          setDrugData(data);
         } else {
           console.error("Error fetching drug data:", response.statusText);
         }
       } catch (error) {
         console.error("Error:", error);
       } finally {
-        setLoading(false); // Reset loading state after request completes
+        setLoading(false);
       }
     };
+    console.log(searchResults[0]?.Disease);
+    if (searchResults[0]?.Disease) {
+      fetchDrugData(searchResults[0].Disease);
 
-    const diseaseName = searchResults?.Disease; // Get the disease name from searchResults
-    if (diseaseName) {
-      fetchDrugData(diseaseName); // Fetch drug data when disease name is available
     }
   }, [searchResults]);
 
