@@ -154,7 +154,7 @@ const DrugResultsPage = () => {
                             <div className="mt-2">
                                 <p className="text-black font-bold"> {result.TradeName} ({result.Size})</p>
                                 <p><strong className="font-semibold">Active Ingredient:</strong> {result['Active Ingredient']}</p>
-                                <p><strong className="font-semibold">Price:</strong> ${(result.Price).toFixed(2)}</p>
+                                <p><strong className="font-semibold">Price:</strong> ${parseFloat(result.Price).toFixed(2)}</p>
                                 <p><strong className="font-semibold">Manufacturer:</strong> {result.Manufacturer}</p>
                                 <p><strong className="font-semibold">Country:</strong> {result.Country}</p>
                             </div>
