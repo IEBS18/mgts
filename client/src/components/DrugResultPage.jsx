@@ -15,8 +15,8 @@ const DrugResultsPage = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedResult, setSelectedResult] = useState(null);
 
-    const [countryFilter, setCountryFilter] = useState("");
-    const [drugTypeFilter, setDrugTypeFilter] = useState("");
+    const [countryFilter, setCountryFilter] = useState([]);
+    const [drugTypeFilter, setDrugTypeFilter] = useState([]);
     const [filteredResults, setFilteredResults] = useState(searchResults || []);
 
     // Get unique countries and drug types
@@ -27,11 +27,19 @@ const DrugResultsPage = () => {
     useEffect(() => {
         setFilteredResults(
             searchResults?.filter((result) =>
-                (countryFilter ? result.Country === countryFilter : true) &&
-                (drugTypeFilter ? result.Type_of_Drug === drugTypeFilter : true)
+                (countryFilter.length === 0 || countryFilter.includes(result.Country)) &&
+                (drugTypeFilter.length === 0 || drugTypeFilter.includes(result.Type_of_Drug))
             )
         );
     }, [countryFilter, drugTypeFilter, searchResults]);
+
+    const toggleFilter = (filter, setFilter, value) => {
+        setFilter((prev) =>
+            prev.includes(value)
+                ? prev.filter((item) => item !== value)
+                : [...prev, value]
+        );
+    };
 
     const handleSelectAll = () => {
         setSelectedCards(selectedCards.length === filteredResults.length ? [] : filteredResults);
@@ -136,10 +144,8 @@ const DrugResultsPage = () => {
                                         <div key={country} className="flex items-center space-x-2">
                                             <Checkbox
                                                 id={`country-${country}`}
-                                                checked={countryFilter === country}
-                                                onCheckedChange={(checked) => {
-                                                    setCountryFilter(checked ? country : "")
-                                                }}
+                                                checked={countryFilter.includes(country)}
+                                                onCheckedChange={() => toggleFilter(countryFilter, setCountryFilter, country)}
                                             />
                                             <label htmlFor={`country-${country}`}>{country}</label>
                                         </div>
@@ -149,15 +155,11 @@ const DrugResultsPage = () => {
                                     <h3 className="font-semibold mb-2">Drug Type</h3>
                                     {uniqueDrugTypes.map((type) => (
                                         <div key={type} className="flex items-center space-x-2">
-
                                             <Checkbox
                                                 id={`type-${type}`}
-                                                checked={drugTypeFilter === type}
-                                                onCheckedChange={(checked) => {
-                                                    setDrugTypeFilter(checked ? type : "")
-                                                }}
+                                                checked={drugTypeFilter.includes(type)}
+                                                onCheckedChange={() => toggleFilter(drugTypeFilter, setDrugTypeFilter, type)}
                                             />
-
                                             <label htmlFor={`type-${type}`}>{type}</label>
                                         </div>
                                     ))}

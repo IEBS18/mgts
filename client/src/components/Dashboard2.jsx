@@ -213,7 +213,7 @@ export default function Dashboard() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Featured Insights</h3>
                 <div className="grid grid-cols-1 gap-4">
-                  <Card className="p-4 border-[#a6ce39]">
+                  <Card className="p-3 border-[#a6ce39]">
                     <div className="flex items-center gap-3">
                       <Activity className="w-5 h-5 text-[#a6ce39]" />
                       <div>
@@ -222,7 +222,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </Card>
-                  <Card className="p-4 border-[#a6ce39]">
+                  <Card className="p-3 border-[#a6ce39]">
                     <div className="flex items-center gap-3">
                       <Award className="w-5 h-5 text-[#a6ce39]" />
                       <div>
