@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { X, Map, ClipboardList, Award, Users } from "lucide-react";
 import DrugCostPredictionModal from './DrugCostPredictionModal';
 import CompetitiveLandscapeModal from './CompetitiveLandscapePopUp';
+import { Card } from "./ui/card";
 
 const countryData = {
   "United States": {
@@ -81,63 +82,91 @@ export default function Dashboard() {
   const [topography, setTopography] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const getData = async () => {
-      setLoading(true);
+  // useEffect(() => {
+  //   const getData = async () => {
+  //     setLoading(true);
 
-      let populationData = {};
-      await Promise.all([
-        d3.json(
-          "https://res.cloudinary.com/tropicolx/raw/upload/v1/Building%20Interactive%20Data%20Visualizations%20with%20D3.js%20and%20React/world.geojson"
-        ),
-        d3.csv(
-          "https://res.cloudinary.com/tropicolx/raw/upload/v1/Building%20Interactive%20Data%20Visualizations%20with%20D3.js%20and%20React/world_population.csv",
-          (d) => {
-            populationData = {
-              ...populationData,
-              [d.code]: +d.population,
-            };
+  //     let populationData = {};
+  //     await Promise.all([
+  //       d3.json(
+  //         "https://res.cloudinary.com/tropicolx/raw/upload/v1/Building%20Interactive%20Data%20Visualizations%20with%20D3.js%20and%20React/world.geojson"
+  //       ),
+  //       d3.csv(
+  //         "https://res.cloudinary.com/tropicolx/raw/upload/v1/Building%20Interactive%20Data%20Visualizations%20with%20D3.js%20and%20React/world_population.csv",
+  //         (d) => {
+  //           populationData = {
+  //             ...populationData,
+  //             [d.code]: +d.population,
+  //           };
+  //         }
+  //       ),
+  //     ]).then((fetchedData) => {
+  //       const topographyData = fetchedData[0];
+  //       setWorldPopulation(populationData);
+  //       setTopography(topographyData);
+  //     });
+
+  //     setLoading(false);
+  //   };
+
+  //   getData();
+  // }, []);
+
+  // const handleMouseMove = (event) => {
+  //   const { clientX, clientY } = event;
+  //   setTooltipPosition({ x: clientX + 100, y: clientY });
+  // };
+
+  const useCountUp = (target, duration = 1500) => {
+    const [count, setCount] = useState(0);
+
+    useEffect(() => {
+      const incrementTime = 20; // update every 20 milliseconds
+      const increment = Math.ceil(target / (duration / incrementTime));
+
+      const counter = setInterval(() => {
+        setCount((prevCount) => {
+          if (prevCount + increment >= target) {
+            clearInterval(counter);
+            return target;
           }
-        ),
-      ]).then((fetchedData) => {
-        const topographyData = fetchedData[0];
-        setWorldPopulation(populationData);
-        setTopography(topographyData);
-      });
+          return prevCount + increment;
+        });
+      }, incrementTime);
 
-      setLoading(false);
-    };
+      return () => clearInterval(counter); // Cleanup on unmount
+    }, [target, duration]);
 
-    getData();
-  }, []);
-
-  const handleMouseMove = (event) => {
-    const { clientX, clientY } = event;
-    setTooltipPosition({ x: clientX + 100, y: clientY });
+    return count;
   };
 
-  const renderTooltipContent = (country) => {
-    if (!country || !countryData[country]) return null;
+  const act = useCountUp(2547);
+  const rd = useCountUp(1892);
+  const dm = useCountUp(312);
+  const fda = useCountUp(47);
 
-    const data = countryData[country];
-    return (
-      <div>
-        <h3 className="font-bold text-center mb-2">{country}</h3>
-        <table className="min-w-full text-left text-sm">
-          <tbody>
-            {Object.entries(data).map(([key, value]) => (
-              <tr key={key}>
-                <td className="pr-2 font-semibold">{key}:</td>
-                <td>{value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
+  // const renderTooltipContent = (country) => {
+  //   if (!country || !countryData[country]) return null;
 
-  if (loading) return <div>Loading...</div>;
+  //   const data = countryData[country];
+  //   return (
+  //     <div>
+  //       <h3 className="font-bold text-center mb-2">{country}</h3>
+  //       <table className="min-w-full text-left text-sm">
+  //         <tbody>
+  //           {Object.entries(data).map(([key, value]) => (
+  //             <tr key={key}>
+  //               <td className="pr-2 font-semibold">{key}:</td>
+  //               <td>{value}</td>
+  //             </tr>
+  //           ))}
+  //         </tbody>
+  //       </table>
+  //     </div>
+  //   );
+  // };
+
+  // if (loading) return <div>Loading...</div>;
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
@@ -152,10 +181,57 @@ export default function Dashboard() {
         {/* Main Content */}
         <div className="flex h-[calc(100%-2rem)] gap-4">
           {/* Map Section */}
-          <div className="flex-grow">
+          {/* <div className="flex-grow">
             <div className="bg-white border border-[#a6ce39] rounded-lg p-4 shadow-sm h-full">
               <div className="">
                 <WorldMap width={650} height={350} data={{ worldPopulation, topography }} diseaseData={{}} />
+              </div>
+            </div>
+          </div> */}
+
+          <div className="flex-grow">
+            <div className="bg-white border border-[#a6ce39] rounded-lg p-6 shadow-sm h-full">
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <Card className="p-4 border-[#a6ce39]">
+                  <h3 className="font-semibold text-gray-600 mb-2">Active Clinical Trials</h3>
+                  <p className="text-3xl font-bold text-[#a6ce39]">{act.toLocaleString()}</p>
+                </Card>
+                <Card className="p-4 border-[#a6ce39]">
+                  <h3 className="font-semibold text-gray-600 mb-2">Registered Diseases</h3>
+                  <p className="text-3xl font-bold text-[#a6ce39]">{rd.toLocaleString()}</p>
+                </Card>
+                <Card className="p-4 border-[#a6ce39]">
+                  <h3 className="font-semibold text-gray-600 mb-2">Drug Manufacturers</h3>
+                  <p className="text-3xl font-bold text-[#a6ce39]">{dm.toLocaleString()}</p>
+                </Card>
+                <Card className="p-4 border-[#a6ce39]">
+                  <h3 className="font-semibold text-gray-600 mb-2">FDA Approvals (2024)</h3>
+                  <p className="text-3xl font-bold text-[#a6ce39]">{fda.toLocaleString()}</p>
+                </Card>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Featured Insights</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  <Card className="p-4 border-[#a6ce39]">
+                    <div className="flex items-center gap-3">
+                      <Activity className="w-5 h-5 text-[#a6ce39]" />
+                      <div>
+                        <h4 className="font-medium">Trending Research</h4>
+                        <p className="text-sm text-gray-600">Latest developments in oncology treatments</p>
+                      </div>
+                    </div>
+                  </Card>
+                  <Card className="p-4 border-[#a6ce39]">
+                    <div className="flex items-center gap-3">
+                      <Award className="w-5 h-5 text-[#a6ce39]" />
+                      <div>
+                        <h4 className="font-medium">Market Leaders</h4>
+                        <p className="text-sm text-gray-600">Top performing pharmaceutical companies Q1 2024</p>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
               </div>
             </div>
           </div>
@@ -176,7 +252,7 @@ export default function Dashboard() {
                     {report.title === "Disease Overview" ? (
                       <DiseaseOverview />
                     ) : report.title === "Competitive Landscape" ? (
-                      <CompetitiveLandscapeModal /> 
+                      <CompetitiveLandscapeModal />
                     ) : report.title === "Price Prediction" ? (
                       <DrugCostPredictionModal />
                     ) : (

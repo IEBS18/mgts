@@ -14,6 +14,8 @@ import {
     Label
 } from 'recharts';
 
+import millify from "millify";
+
 const MarketAndPrevalenceForecast = ({
     isChatMinimized,
     diseaseName,
@@ -100,7 +102,7 @@ const MarketAndPrevalenceForecast = ({
                                 return (
                                     <div className="custom-tooltip" style={{ backgroundColor: '#fff', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}>
                                         <p><strong>Year: </strong>{label}</p> {/* Display the year */}
-                                        <p><strong>Market Size: </strong>{marketSize ? '$' + (marketSize.toFixed(3)) : 'N/A'}</p> {/* Display Market Size */}
+                                        <p><strong>Market Size: </strong>{marketSize ? '$' + millify(marketSize) : 'N/A'}</p> {/* Display Market Size */}
                                         {/* <p><strong>Prevalence Rate: </strong>{prevalence ? prevalence.toFixed(6) : 'N/A'}</p> Display Prevalence Rate */}
                                     </div>
                                 );

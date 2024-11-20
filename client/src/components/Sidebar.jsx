@@ -57,13 +57,13 @@ const Sidebar = ({ type }) => {
   const isVisualize = type === "visualize";
 
   return (
-    <aside className="w-16 bg-white shadow-md sticky top-0 h-screen">
+    <aside className="w-16 bg-gray-100 sticky top-0 h-screen">
       <div className="flex flex-col items-center py-4">
-        <div className="w-10 h-10 bg-white-200 rounded-full mb-8">
+        <div className="w-10 h-10 bg-white-200 rounded-full mb-6 mt-2">
           <img src={insimine} alt="insimine logo" />
         </div>
 
-        <Button variant="ghost" size="icon" className="mb-4">
+        {/* <Button variant="ghost" size="icon" className="mb-4">
           <Grid className={`h-6 w-6 ${isDashboard ? "text-[#95D524]" : "text-black"}`} />
         </Button>
 
@@ -85,7 +85,7 @@ const Sidebar = ({ type }) => {
 
         <Button variant="ghost" size="icon" className="mb-4">
           <Briefcase className="h-6 w-6" />
-        </Button>
+        </Button> */}
       </div>
     </aside>
   );

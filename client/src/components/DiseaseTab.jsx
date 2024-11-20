@@ -754,7 +754,11 @@ const DiseaseTab = ({
                   ))}
                 </ul>
               ) : (
-                <p>{value}</p>
+                <ul className="list-disc pl-6">
+                  {paragraphToBulletPoints(value).map((bullet, idx) => (
+                    <li key={idx}>{bullet}</li>
+                  ))}
+                </ul>
               )
             )}
           </div>

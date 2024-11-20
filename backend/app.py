@@ -8,8 +8,8 @@ sys.stdout.reconfigure(encoding='utf-8')
 from dotenv import load_dotenv
 load_dotenv()
 
-from MarketEstimation.market import plot_market_and_prevalence_forecast
-from MarketEstimation.market import plot_therapy_cost_forecast
+from MarketEstimation.market import visualize_market_size
+from MarketEstimation.market import visualize_therapy_cost
 # from Utilities.search import preprocess
 from Utilities.summarize import summarize_by_title_or_org
 from Utilities.chatbot import (
@@ -165,7 +165,7 @@ def disease_search():
             for res in response['responses']
             for hit in res['hits']['hits']
         ]
-        drug_response = es.search(index='combined_country_drug', body=query)
+        drug_response = es.search(index='combined_country_drug1', body=query)
         # Extract relevant data from the Elasticsearch response
         drugs = []
         for hit in drug_response['hits']['hits']:
@@ -180,7 +180,7 @@ def disease_search():
 def drug_search():
     data = request.json
     search_type = data.get("search_type")
-    index = "combined_country_drug"
+    index = "combined_country_drug1"
 
     es_query = []
     drug_names = data.get("drug_names", [])
@@ -292,7 +292,7 @@ def drug_search_by_disease():
 
     try:
         # Search the 'combined-drug-data' index
-        response = es.search(index='combined_country_drug', body=query)
+        response = es.search(index='combined_country_drug1', body=query)
 
         # Extract relevant data from the Elasticsearch response
         drugs = []
@@ -356,16 +356,16 @@ def therapy_cost_estimation():
     disease = data.get('disease')
     # if type_of_plot and disease:
         # if type_of_plot == '1':
-        #     plot_market_and_prevalence_forecast(disease)
+        #     visualize_market_size(disease)
         # elif type_of_plot == '2':
-    all_years, combined_therapy_cost= plot_therapy_cost_forecast(disease)
+    all_years, combined_therapy_cost= visualize_therapy_cost(disease)
     return jsonify({'all_years': all_years, 'combined_therapy_cost': combined_therapy_cost})
  
 @app.route('/market-estimation', methods=['POST'])
 def market_estimation():
     data= request.json
     disease = data.get('disease')
-    years, forecast_years, market_predictions, market_size= plot_market_and_prevalence_forecast(disease)
+    years, forecast_years, market_predictions, market_size= visualize_market_size(disease)
     return jsonify({
         'years': years,
         'forecast_years': forecast_years,

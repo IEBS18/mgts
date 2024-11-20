@@ -725,13 +725,13 @@ const DiseaseSearchPage = () => {
                     const label = customLabels[key] || key.replace(/_/g, " ");
                     const value =
                       key === "Price"
-                        ? `$${selectedResult[key].toFixed(2)}`
+                        ? `${selectedResult[key]}`
                         : selectedResult[key];
 
                     return (
                       selectedResult[key] && (
                         <p key={key}>
-                          <strong>{label}:</strong> {value}
+                          <strong>{key === "Price" ? "Price (in USD)" : label}:</strong> {value}
                         </p>
                       )
                     );
