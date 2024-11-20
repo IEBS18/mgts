@@ -4,7 +4,7 @@ import { Card } from "./ui/card";
 import { Button } from "@/components/ui/button"; // Adjust to your imports
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Download, Filter } from 'lucide-react'; // Adjust imports based on your setup
+import { Download, Filter, X } from 'lucide-react'; // Adjust imports based on your setup
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 
 const DrugResultsPage = () => {
@@ -122,7 +122,7 @@ const DrugResultsPage = () => {
     }, []);
 
     return (
-        <div className="w-full p-6">
+        <div className="w-full p-2">
             {/* Select All and Export Buttons */}
             <div className="flex sticky items-center justify-between gap-x-4 pb-4 pt-2">
                 <h1 className="text-2xl font-bold text-gray-800">
@@ -182,9 +182,47 @@ const DrugResultsPage = () => {
                     </Button>
                 </div>
             </div>
-
+            <div className="flex gap-2 flex-wrap">
+                {countryFilter.length > 0 && (
+                    <div className="flex items-center bg-[#e5f7d9] text-[#4d7c1a] px-3 py-1 rounded-lg">
+                        <span className="text-sm font-semibold">
+                            Country: {countryFilter.join(", ")}
+                        </span>
+                        <button
+                            onClick={() => setCountryFilter([])}
+                            className="ml-2 text-[#4d7c1a] hover:text-red-500 focus:outline-none"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+                {drugTypeFilter.length > 0 && (
+                    <div className="flex items-center bg-[#e5f7d9] text-[#4d7c1a] px-3 py-1 rounded-lg">
+                        <span className="text-sm font-semibold">
+                            Drug Type: {drugTypeFilter.join(", ")}
+                        </span>
+                        <button
+                            onClick={() => setDrugTypeFilter([])}
+                            className="ml-2 text-[#4d7c1a] hover:text-red-500 focus:outline-none"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+                {(countryFilter.length > 0 || drugTypeFilter.length > 0) && (
+                    <button
+                        onClick={() => {
+                            setCountryFilter([]);
+                            setDrugTypeFilter([]);
+                        }}
+                        className="text-[#a6ce39] hover:text-red-500 text-sm font-semibold focus:outline-none"
+                    >
+                        Clear All Filters
+                    </button>
+                )}
+            </div>
             {/* Drug Cards */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4 mt-4">
                 {filteredResults?.map((result, index) => (
                     <Card
                         key={index}

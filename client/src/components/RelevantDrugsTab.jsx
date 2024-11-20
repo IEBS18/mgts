@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Download, Filter } from "lucide-react";
+import { Download, Filter, X } from "lucide-react";
 import { toast } from "react-toastify";
 
 const RelevantDrugsTab = ({
@@ -118,7 +118,47 @@ const RelevantDrugsTab = ({
           </Button>
         </div>
       </div>
+      <div className="flex gap-2 flex-wrap">
+        {countryFilter.length > 0 && (
+          <div className="flex items-center bg-[#e5f7d9] text-[#4d7c1a] px-3 py-1 rounded-lg">
+            <span className="text-sm font-semibold">
+              Country: {countryFilter.join(", ")}
+            </span>
+            <button
+              onClick={() => setCountryFilter([])}
+              className="ml-2 text-[#4d7c1a] hover:text-red-500 focus:outline-none"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+        {drugTypeFilter.length > 0 && (
+          <div className="flex items-center bg-[#e5f7d9] text-[#4d7c1a] px-3 py-1 rounded-lg">
+            <span className="text-sm font-semibold">
+              Drug Type: {drugTypeFilter.join(", ")}
+            </span>
+            <button
+              onClick={() => setDrugTypeFilter([])}
+              className="ml-2 text-[#4d7c1a] hover:text-red-500 focus:outline-none"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+        {(countryFilter.length > 0 || drugTypeFilter.length > 0) && (
+          <button
+            onClick={() => {
+              setCountryFilter([]);
+              setDrugTypeFilter([]);
+            }}
+            className="text-[#a6ce39] hover:text-red-500 text-sm font-semibold focus:outline-none"
+          >
+            Clear All Filters
+          </button>
+        )}
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
+
         {filteredResults?.map((result, index) => (
           <Card
             key={index}
