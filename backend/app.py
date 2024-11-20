@@ -381,7 +381,27 @@ def generate_summary():
     print(selected_cards)
     summary = summarize_by_title_or_org(selected_cards)
     return jsonify({"summary": summary})
-    
+
+@app.route('/add-ai-column', methods=['POST'])
+def add_ai_column():
+    try:
+        data = request.get_json()
+
+        column_name = data.get('columnName')
+        column_description = data.get('columnDescription')
+        search_results = data.get('searchResults')
+
+        if not column_name or not column_description:
+            return jsonify({"error": "Both columnName and columnDescription are required"}), 400
+
+        print(f"Adding AI column: {column_name}, Description: {column_description}")
+        print(f"Search results associated: {search_results}")
+
+        return jsonify({"message": "AI column added successfully!"}), 200
+
+    except Exception as e:
+        print(f"Error while adding AI column: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
     
 if __name__ == '__main__':
     app.run(debug=True)
