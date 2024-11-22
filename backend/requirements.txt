@@ -14,3 +14,4 @@ rapidfuzz
 xlsxwriter
 matplotlib
 chardet
+seaborn

@@ -169,17 +169,11 @@ export default function Dashboard() {
   // if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col">
-      <div className="flex-grow overflow-hidden p-6">
+    <div className="h-full bg-gray-50 flex flex-col overflow-y-auto scrollbar-hide">
+      <div className="flex-grow overflow-hidden p-3">
         {/* Header */}
-        <div className="flex items-center mb-4">
-          <h1 className="text-2xl font-bold text-gray-800">
-            Welcome to <span className="text-[#a6ce39]">PharmaX</span>
-          </h1>
-        </div>
-
         {/* Main Content */}
-        <div className="flex h-[calc(100%-2rem)] gap-4">
+        <div className="flex h-[calc(100%)] gap-4">
           {/* Map Section */}
           {/* <div className="flex-grow">
             <div className="bg-white border border-[#a6ce39] rounded-lg p-4 shadow-sm h-full">
@@ -189,9 +183,9 @@ export default function Dashboard() {
             </div>
           </div> */}
 
-          <div className="flex-grow">
-            <div className="bg-white border border-[#a6ce39] rounded-lg p-6 shadow-sm h-full">
-              <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="flex-grow ">
+            {/* <div className="bg-white border border-[#a6ce39] rounded-lg p-6 shadow-sm h-full">
+              <div className="detail-cards grid grid-cols-2 gap-4 mb-6">
                 <Card className="p-4 border-[#a6ce39]">
                   <h3 className="font-semibold text-gray-600 mb-2">Active Clinical Trials</h3>
                   <p className="text-3xl font-bold text-[#a6ce39]">{act.toLocaleString()}</p>
@@ -210,7 +204,7 @@ export default function Dashboard() {
                 </Card>
               </div>
 
-              <div className="space-y-4">
+              <div className="insights cards space-y-4">
                 <h3 className="font-semibold text-lg">Featured Insights</h3>
                 <div className="grid grid-cols-1 gap-4">
                   <Card className="p-3 border-[#a6ce39]">
@@ -233,11 +227,38 @@ export default function Dashboard() {
                   </Card>
                 </div>
               </div>
-            </div>
+            </div> */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {reportTypes.map((report, index) => (
+                  <div key={index} className="flex flex-col p-4 gap-4 border border-[#a6ce39] rounded-[12px]">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        {report.icon}
+                        <h3 className="text-xl font-bold">{report.title}</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{report.description}</p>
+                    </div>
+                    <div className="flex items-center">
+                      {report.title === "Disease Overview" ? (
+                        <DiseaseOverview />
+                      ) : report.title === "Competitive Landscape" ? (
+                        <CompetitiveLandscapeModal />
+                      ) : report.title === "Price Prediction" ? (
+                        <DrugCostPredictionModal />
+                      ) : (
+                        <Button className="w-full md:w-auto bg-[#a6ce39] text-black rounded-[12px] hover:bg-[#95b833]">
+                          Get Started
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
           </div>
 
           {/* Report Types Cards */}
-          <div className="w-1/3 space-y-4 overflow-y-auto pr-2 scrollbar-hide">
+          {/* <div className="w-1/3 space-y-4 overflow-y-auto pr-2 scrollbar-hide">
             <div className="space-y-4 flex flex-col">
               {reportTypes.map((report, index) => (
                 <div key={index} className="flex flex-col p-4 gap-4 border border-[#a6ce39] rounded-[12px]">
@@ -264,7 +285,7 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
       <style jsx global>{`

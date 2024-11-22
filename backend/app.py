@@ -386,7 +386,6 @@ def generate_summary():
 def add_ai_column():
     try:
         data = request.get_json()
-
         column_name = data.get('columnName')
         column_description = data.get('columnDescription')
         search_results = data.get('searchResults')

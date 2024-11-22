@@ -626,9 +626,9 @@ const DiseaseSearchPage = () => {
               // !isChatMinimized ? "w-2/3" : "w-full"
             )}
           >
-            <div className="w-full pr-6">
+            <div className="w-full">
               {/* Content Container */}
-              <div className="flex flex-col flex-1 pr-6 overflow-hidden">
+              <div className="flex flex-col flex-1 overflow-hidden">
                 {/* Conditional Rendering Based on Tab Type */}
                 {activeTabContent.type === "disease" && (
                   <DiseaseTab

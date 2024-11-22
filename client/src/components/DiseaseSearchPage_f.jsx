@@ -394,7 +394,7 @@ const DiseaseSearchPage = () => {
       <div className="flex-grow overflow-hidden p-6 flex">
         <div className={`
           w-full} 
-          pr-6`}>
+          `}>
           <div className="flex items-center mb-4 gap-4 justify-between">
             <div className="flex justify-between items-center">
               <h1 className="text-2xl w-1/2 font-bold text-gray-800">
