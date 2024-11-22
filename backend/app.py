@@ -21,6 +21,7 @@ from Utilities.diseasechatbot import (
     process_question,
     disease_conversation_history,
 )
+from Utilities.AIColumn import update_drug_data
 
 app = Flask(__name__)
 CORS(app)
@@ -389,6 +390,8 @@ def add_ai_column():
         column_name = data.get('columnName')
         column_description = data.get('columnDescription')
         search_results = data.get('searchResults')
+        
+        updated_results = update_drug_data(search_results, column_name, column_description)
 
         if not column_name or not column_description:
             return jsonify({"error": "Both columnName and columnDescription are required"}), 400
