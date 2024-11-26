@@ -4,7 +4,7 @@ from io import BytesIO
 from flask_cors import CORS
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_sqlalchemy import SQLAlchemy
+# from flask_sqlalchemy import SQLAlchemy
 import os
 import json
 sys.stdout.reconfigure(encoding='utf-8')

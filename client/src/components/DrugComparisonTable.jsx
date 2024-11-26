@@ -150,38 +150,40 @@ export function DrugComparisonTable() {
 
     return (
         <div className="w-full overflow-x-auto">
-            <div className="flex justify-between m-4 space-x-2">
+            <div className="flex justify-between m-4 space-x-2 top-div"
+            style={{ position: "sticky", top:0 }}>
                 <div className='flex w-1/2'>
                     <h1 className="text-2xl w-1/2 font-bold text-gray-800">Drugs Comparison</h1>
                 </div>
                 <div className='flex flex-row gap-x-4 '>
-                    
-                <Button onClick={() => setAiColumnDialogOpen(true)} variant="outline" disabled={isAiColumnLoading} className="bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2">
-                    <PlusCircle className="h-4 w-4" />
-                    {isAiColumnLoading ? "Loading..." : "Add AI Column"}
-                </Button>
-                <Button onClick={handleExport} disabled={isExporting} className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? 'cursor-not-allowed opacity-50' : ''}`}>
-                    {isExporting ? "Exporting..." : "Export"}
-                </Button>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="bg-white text-[#a6ce39] border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2"><Filter className="h-4 w-4" />Filter Columns</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56 bg-white rounded-lg">
-                        {data.map((d) => (
-                            <DropdownMenuCheckboxItem
-                                key={`${d.TradeName} (${d.Size})`}
-                                checked={visibleColumns.includes(`${d.TradeName} (${d.Size})`)}
-                                onCheckedChange={() => toggleColumnVisibility(`${d.TradeName} (${d.Size})`)}
-                            >
-                                {`${d.TradeName} (${d.Size})`}
-                            </DropdownMenuCheckboxItem>
-                        ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+
+                    <Button onClick={() => setAiColumnDialogOpen(true)} variant="outline" disabled={isAiColumnLoading} className="bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2">
+                        <PlusCircle className="h-4 w-4" />
+                        {isAiColumnLoading ? "Loading..." : "Add AI Column"}
+                    </Button>
+                    <Button onClick={handleExport} disabled={isExporting} className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? 'cursor-not-allowed opacity-50' : ''}`}>
+                        {isExporting ? "Exporting..." : "Export"}
+                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="bg-white text-[#a6ce39] border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2"><Filter className="h-4 w-4" />Filter Columns</Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56 bg-white rounded-lg">
+                            {data.map((d) => (
+                                <DropdownMenuCheckboxItem
+                                    key={`${d.TradeName} (${d.Size})`}
+                                    checked={visibleColumns.includes(`${d.TradeName} (${d.Size})`)}
+                                    onCheckedChange={() => toggleColumnVisibility(`${d.TradeName} (${d.Size})`)}
+                                >
+                                    {`${d.TradeName} (${d.Size})`}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
-            <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+            <div className="relative overflow-auto shadow-md sm:rounded-lg"
+            style={{ maxHeight: "calc(90vh - 100px)" }}>
                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
                         <tr>
@@ -222,37 +224,7 @@ export function DrugComparisonTable() {
                 </table>
             </div>
 
-            {/* AI Column Dialog */}
-            {/* <Dialog open={aiColumnDialogOpen} onOpenChange={setAiColumnDialogOpen}>
-                <DialogContent>
-                    <DialogTitle>Add AI Column</DialogTitle>
-                    <DialogDescription>Provide a name and description for the AI-generated column.</DialogDescription>
-                    <div className="grid gap-4">
-                        <Input
-                            label="Column Name"
-                            value={aiColumnName}
-                            onChange={(e) => setAiColumnName(e.target.value)}
-                            disabled={isAiColumnLoading}
-                        />
-                        <Input
-                            label="Column Description"
-                            value={aiColumnDescription}
-                            onChange={(e) => setAiColumnDescription(e.target.value)}
-                            disabled={isAiColumnLoading}
-                        />
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setAiColumnDialogOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleSubmitAiColumn} disabled={isAiColumnLoading}>
-                            {isAiColumnLoading ? "Adding..." : "Add Column"}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog> */}
-
-<Dialog open={aiColumnDialogOpen} onOpenChange={setAiColumnDialogOpen} >
+            <Dialog open={aiColumnDialogOpen} onOpenChange={setAiColumnDialogOpen} >
                 <DialogContent className='bg-white'>
                     <DialogTitle>Add AI Column</DialogTitle>
                     <DialogDescription>
