@@ -9,34 +9,42 @@ import SelectedCardsTablePage from "./components/List";
 import DrugResultsPage from "./components/DrugResultPage";
 import SymptomResultsPage from "./components/SymptomsResultPage";
 import DiseaseAnalysis from "./components/CompetitiveLandscapeSearchPage";
+import PrivateRoute from "./components/PrivateRoute";
+import Authenticate from "./components/Authenticate";
 import { DrugComparisonTable } from "./components/DrugComparisonTable";
 
 function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<Authenticate />} />
         <Route
-          path="/"
+          path="/dashboard"
           element={
-            <Layout type="dashboard"> {/* Pass type as 'dashboard' */}
-              <Dashboard2 />
-            </Layout>
+            <PrivateRoute>
+              <Layout type="dashboard"> {/* Pass type as 'dashboard' */}
+                <Dashboard2 />
+              </Layout>
+            </PrivateRoute>
+            
           }
         />
         <Route
           path="/visualize"
           element={
-            <Layout type="visualize"> {/* Pass type as 'visualize' */}
-              <Visualize />
-            </Layout>
-          }
+            <PrivateRoute>
+              <Layout type="visualize"> 
+                <Visualize />
+              </Layout>
+            </PrivateRoute>
+            }
         />
-        <Route path="/disease-search" element={<Layout><DiseaseSearchPage/></Layout>}/>
-        <Route path="/drug-search" element={<Layout><DrugResultsPage/></Layout>}/>
-        <Route path="/symptom-search" element={<Layout><SymptomResultsPage/></Layout>}/>
-        <Route path="/list" element={<Layout><SelectedCardsTablePage /></Layout>} />
-        <Route path="/competitive-landscape" element={<Layout><DiseaseAnalysis /></Layout>} />
-        <Route path="/drug-comparison" element={<Layout><DrugComparisonTable /></Layout>} />
+        <Route path="/disease-search" element={<PrivateRoute><Layout><DiseaseSearchPage/></Layout></PrivateRoute>}/>
+        <Route path="/drug-search" element={<PrivateRoute><Layout><DrugResultsPage/></Layout></PrivateRoute>}/>
+        <Route path="/symptom-search" element={<PrivateRoute><Layout><SymptomResultsPage/></Layout></PrivateRoute>}/>
+        <Route path="/list" element={<PrivateRoute><Layout><SelectedCardsTablePage /></Layout></PrivateRoute>} />
+        <Route path="/competitive-landscape" element={<PrivateRoute><Layout><DiseaseAnalysis /></Layout></PrivateRoute>} />
+        <Route path="/drug-comparison" element={<PrivateRoute><Layout><DrugComparisonTable /></Layout></PrivateRoute>} />
         
       </Routes>
     </Router>

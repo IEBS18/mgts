@@ -1,8 +1,12 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, make_response
 import pandas as pd
 from io import BytesIO
 from flask_cors import CORS
 import sys
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_sqlalchemy import SQLAlchemy
+import os
+import json
 sys.stdout.reconfigure(encoding='utf-8')
 
 from PlayerLandscape.player import get_disease_data
@@ -26,7 +30,121 @@ from Utilities.diseasechatbot import (
 from Utilities.AIColumn import update_drug_data
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+
+# # Load database URL from environment variables (or you can hardcode it for local development)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@localhost:5432/db_name'
+
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# db = SQLAlchemy(app)
+
+# # Define User model
+# class User(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Text, unique=True, nullable=False)  # UUID for user identification
+#     first_name = db.Column(db.Text, nullable=False)
+#     last_name = db.Column(db.Text, nullable=False)
+#     email = db.Column(db.Text, unique=True, nullable=False)
+#     password = db.Column(db.Text, nullable=False)
+
+# with app.app_context():
+#     db.create_all()
+
+# Path to the user data file
+USER_FILE_PATH = './users.json'
+
+# Helper function to load users from the JSON file
+def load_users():
+    try:
+        with open(USER_FILE_PATH, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []  # If the file doesn't exist, return an empty list
+
+# Helper function to save users to the JSON file
+def save_users(users):
+    try:
+        with open(USER_FILE_PATH, 'w') as f:
+            json.dump(users, f, indent=4)
+    except Exception as e:
+        print(f"Error saving users to file: {e}")
+
+# Signup route
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.get_json()
+
+    # Extract user details
+    first_name = data.get('firstName')
+    last_name = data.get('lastName')
+    email = data.get('email')
+    password = data.get('password')
+
+    # Basic validation for input
+    if not first_name or not last_name or not email or not password:
+        return jsonify({"error": "All fields are required!"}), 400
+
+    # Load existing users from the JSON file
+    users = load_users()
+
+    # Check if the email already exists
+    if any(user['email'] == email for user in users):
+        return jsonify({"error": "Email already exists!"}), 400
+
+    # Hash the password before storing
+    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+
+    # Create a new user and add it to the list
+    new_user = {
+        "id": len(users) + 1,  # Assign a new unique ID based on existing users
+        "first_name": first_name,
+        "last_name": last_name,
+        "email": email,
+        "password_hash": hashed_password
+    }
+    users.append(new_user)
+
+    # Save the updated users list back to the JSON file
+    save_users(users)
+
+    # Respond with success
+    return jsonify({
+        "user_pharmax_id": new_user["id"],
+        "first_name": first_name,
+        "message": "Account created successfully!"
+    }), 201
+
+# Login route
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    users = load_users()
+    user = next((u for u in users if u['email'] == email), None)
+
+    if user and check_password_hash(user['password_hash'], password):
+        response = jsonify({
+            "user_pharmax_id": user["id"],
+            "first_name": user["first_name"],
+            "message": "Login successful!"
+        })
+        # Set the user_id cookie
+        response.set_cookie('user_id', str(user["id"]), httponly=True)
+        return response, 200
+    return jsonify({"error": "Invalid credentials!"}), 401
+
+
+# Check if user is logged in (session or cookie based)
+@app.route('/check_login', methods=['GET'])
+def check_login():
+    user_id = request.cookies.get('user_id')  # Retrieve the 'user_id' cookie
+    if user_id:
+        return jsonify({'logged_in': True}), 200
+    return jsonify({'logged_in': False}), 401
+
 
 
 # @app.route('/search', methods=['POST'])

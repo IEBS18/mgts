@@ -1,7 +1,5 @@
-// src/components/DiseaseSearchPage.jsx
-
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
 import ChatBot from "./ChatBot";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,11 +17,14 @@ import RelevantDrugsTab from "./RelevantDrugsTab";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import TabHeader from "./TabHeader";
-import { cn } from "@/utils/cn"; // Ensure this path is correct
-import { data } from "autoprefixer";
+import { cn } from "@/utils/cn";
+
+// Import the DiseaseOverviewModal at the top
+import DiseaseOverviewModal from "./DiseaseOverview"; // Ensure the correct import path
 
 const DiseaseSearchPage = () => {
   const location = useLocation();
+  const navigate = useNavigate(); // Get the navigate function
   const { searchResults } = location.state || {};
 
   const [drugData, setDrugData] = useState([]);
@@ -31,17 +32,15 @@ const DiseaseSearchPage = () => {
 
   const fulldata = {
     diseaseData: Array.isArray(searchResults) ? searchResults : [searchResults],
-    drugData: drugData, // Set the fetched drug data here
+    drugData: drugData,
   };
 
   // Initialize tabs based on searchResults
   const initializeTabs = (searchResults) => {
-    // Extract diseaseInfo as per your logic
     const diseaseInfo = Array.isArray(searchResults)
       ? searchResults[0]
       : searchResults || {};
 
-    // Create a single tab with the extracted diseaseInfo
     return [
       {
         id: "tab-1",
@@ -73,7 +72,6 @@ const DiseaseSearchPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchingCP, setIsSearchingCP] = useState(false);
   const [isSearchingCT, setIsSearchingCT] = useState(false);
-
 
   // Topics filtering
   const [selectedTopics, setSelectedTopics] = useState([]);
@@ -305,7 +303,7 @@ const DiseaseSearchPage = () => {
               `Relevant Drugs - ${currentTab.content.diseaseInfo.Disease}`,
               {
                 type: "relevantDrugs",
-                diseaseInfo: currentTab.content.diseaseInfo, // Pass disease info if needed
+                diseaseInfo: currentTab.content.diseaseInfo,
                 drugInfo: data,
                 selectedCards: [],
               }
@@ -535,15 +533,7 @@ const DiseaseSearchPage = () => {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() =>
-          addNewTab("New Tab", {
-            type: "disease",
-            diseaseInfo: {},
-            drugInfo: [],
-            selectedCards: [],
-            selectedDiseaseData: [],
-          })
-        }
+        onClick={() => setIsModalOpen(true)}
         className="ml-2"
         aria-label="Add new tab"
       >
@@ -565,6 +555,33 @@ const DiseaseSearchPage = () => {
     );
   }, [activeTab, tabs]);
 
+  // Add state to control the modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Handle new tab search submission
+  const handleNewTabSearchSubmit = ({ type, data, symptoms }) => {
+    setIsModalOpen(false);
+    if (type === 'disease') {
+      const diseaseInfo = Array.isArray(data) ? data[0] : data || {};
+      addNewTab(diseaseInfo.Disease || "Disease Overview", {
+        type: "disease",
+        diseaseInfo,
+        drugInfo: [],
+        selectedCards: [],
+        selectedDiseaseData: [],
+      });
+    } else if (type === 'drug') {
+      // Navigate to /drug-search with the search results
+      navigate("/drug-search", {
+        state: { searchResults: data },
+      });
+    } else if (type === 'symptoms') {
+      // Navigate to /symptom-search with the search results
+      navigate("/symptom-search", {
+        state: { searchResults: data, symptoms },
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchDrugData = async (diseaseName) => {
@@ -596,17 +613,15 @@ const DiseaseSearchPage = () => {
     console.log(searchResults[0]?.Disease);
     if (searchResults[0]?.Disease) {
       fetchDrugData(searchResults[0].Disease);
-
     }
   }, [searchResults]);
 
   return (
-
     <div>
       {loading ? (
-        <p>Loading...</p> // Show loading state while fetching data
-      ) :
-        (<div className="disease-search-page h-screen bg-gray-50 flex flex-col">
+        <p>Loading...</p>
+      ) : (
+        <div className="disease-search-page h-screen bg-gray-50 flex flex-col">
           {/* Toast Notifications */}
           <ToastContainer
             position="top-right"
@@ -626,7 +641,6 @@ const DiseaseSearchPage = () => {
           <div
             className={cn(
               "flex-grow overflow-hidden p-6 flex"
-              // !isChatMinimized ? "w-2/3" : "w-full"
             )}
           >
             <div className="w-full">
@@ -755,17 +769,14 @@ const DiseaseSearchPage = () => {
             onToggle={handleChatToggle}
           />
 
-          {/* Global Styles */}
-          <style jsx global>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-        </div>)}
+          {/* Include the DiseaseOverviewModal */}
+          <DiseaseOverviewModal
+            isOpen={isModalOpen}
+            onOpenChange={setIsModalOpen}
+            onSearchSubmit={handleNewTabSearchSubmit}
+          />
+        </div>
+      )}
     </div>
   );
 };

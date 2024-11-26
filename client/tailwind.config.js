@@ -17,6 +17,14 @@ module.exports = {
   		}
   	},
   	extend: {
+		
+		backgroundImage: {
+			  'custom-gradient': 'linear-gradient(157.85deg, #95D524 8.43%, #2AC4F7 46.59%)',
+			},
+		boxShadow: {
+			  'custom': '0 4px 6px rgba(0, 0, 0, 0.35)', // Adjust the values as needed
+			  'custom-shadow': '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
+			},
   		colors: {
 			green: '#95d524',
 			lightBlue: '#29c4f8',

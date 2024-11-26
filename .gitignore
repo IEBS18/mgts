@@ -28,3 +28,4 @@ backend/__pycache__/*
 backend/models/__pycache__/*
 backend/MarketEstimation/__pycache__/*
 backend/embeddings/__pycache__/*
+backend/users.json

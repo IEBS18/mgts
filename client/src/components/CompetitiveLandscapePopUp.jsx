@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Select from "react-select";
 import outputData from '../assets/data/competitiveLandscape/disease.json';
 import { useNavigate } from "react-router-dom";
-
+ 
 export default function CompetitiveLandscapeModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [diseaseName, setDiseaseName] = useState('');
@@ -23,11 +23,11 @@ export default function CompetitiveLandscapeModal() {
   const [searchValue, setSearchValue] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
-
+ 
   const handleSearchSubmit = async () => {
     setIsSearching(true);
     let searchParams = {};
-
+ 
     if (searchType === "disease") {
       searchParams = {
         search_type: "disease",
@@ -41,11 +41,11 @@ export default function CompetitiveLandscapeModal() {
         country_name: countryType,
       };
     }
-
+ 
     try {
       let endpoint = "";
       let navigateTo = "";
-
+ 
       if (searchType === "disease") {
         endpoint = `${import.meta.env.VITE_API_URL}/generate_disease_analysis`;
         navigateTo = "/competitive-landscape";
@@ -53,7 +53,7 @@ export default function CompetitiveLandscapeModal() {
         endpoint = `${import.meta.env.VITE_API_URL}/search-by-drug`;
         navigateTo = "/competitive-landscape";
       }
-
+ 
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -61,22 +61,22 @@ export default function CompetitiveLandscapeModal() {
         },
         body: JSON.stringify(searchParams),
       });
-
+ 
       const data = await response.json();
       console.log("Search Results:", data);
       console.log(diseaseName);
-      
+     
       navigate(navigateTo, {
         state: { searchResults: data, diseaseName: diseaseName },
       });
-
+ 
       setIsSearching(false);
     } catch (error) {
       console.error("Error submitting search:", error);
       setIsSearching(false);
     }
   };
-
+ 
   const selectStyles = {
     control: (base) => ({
       ...base,
@@ -92,7 +92,7 @@ export default function CompetitiveLandscapeModal() {
     }),
     menuPortal: (base) => ({ ...base, zIndex: 1050, pointerEvents: 'auto', WebkitOverflowScrolling: "touch",  touchAction: 'pan-y' }),
   };
-
+ 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -104,11 +104,11 @@ export default function CompetitiveLandscapeModal() {
         className="max-w-3xl bg-[#f4f4f4] rounded-[12px] overflow-y-auto"
         style={{
           position: 'fixed',
-          top: '10%',           
+          top: '10%',          
           left: '50%',          
-          transform: 'translateX(-50%)', 
+          transform: 'translateX(-50%)',
           maxHeight: '80vh',    
-          width: '100%', 
+          width: '100%',
         }}
       >
         <DialogHeader className="space-y-4">
@@ -220,3 +220,4 @@ export default function CompetitiveLandscapeModal() {
     </Dialog>
   );
 }
+ 
