@@ -3,7 +3,7 @@ import { User } from 'lucide-react'; // Using an icon library for the account ic
 import insimine from "@/assets/Insimine.svg";
 const Header = () => {
     return (
-        <header className="flex items-center justify-between bg-white px-6 py-4 shadow-md">
+        <header className="flex items-center justify-between bg-white px-6 py-4 shadow-md z-50">
             {/* Logo on the left */}
             <div className="flex items-center">
                 <img

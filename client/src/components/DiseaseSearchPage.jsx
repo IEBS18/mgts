@@ -20,6 +20,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import TabHeader from "./TabHeader";
 import { cn } from "@/utils/cn"; // Ensure this path is correct
+import { data } from "autoprefixer";
 
 const DiseaseSearchPage = () => {
   const location = useLocation();
@@ -370,11 +371,12 @@ const DiseaseSearchPage = () => {
             {
               type: "marketEstimation",
               diseaseName: currentTab.content.diseaseInfo.Disease,
-              years: data.years || [],
-              forecast_years: data.forecast_years || [],
-              combinedPrevalence: data.combined_prevalence || [],
-              marketPredictions: data.market_predictions || [],
-              marketSize: data.market_size || [],
+              data: data || {}
+              // years: data.years || [],
+              // forecast_years: data.forecast_years || [],
+              // combinedPrevalence: data.combined_prevalence || [],
+              // marketPredictions: data.market_predictions || [],
+              // marketSize: data.market_size || [],
             }
           );
           toast.success("Market Estimation tab created.");
@@ -436,8 +438,9 @@ const DiseaseSearchPage = () => {
             {
               type: "therapyCostEstimation",
               diseaseName: currentTab.content.diseaseInfo.Disease,
-              allYears: data.all_years || [],
-              combinedTherapyCost: data.combined_therapy_cost || [],
+              data: data || {},
+              // allYears: data.all_years || [],
+              // combinedTherapyCost: data.combined_therapy_cost || [],
             }
           );
           toast.success("Therapy Cost Estimation tab created.");
@@ -674,11 +677,12 @@ const DiseaseSearchPage = () => {
                   <MarketAndPrevalenceForecast
                     isChatMinimized={isChatMinimized}
                     diseaseName={activeTabContent.diseaseName}
-                    years={activeTabContent.years}
-                    forecast_years={activeTabContent.forecast_years}
-                    combinedPrevalence={activeTabContent.combinedPrevalence}
-                    marketPredictions={activeTabContent.marketPredictions}
-                    marketSize={activeTabContent.marketSize}
+                    data={activeTabContent.data}
+                    // years={activeTabContent.years}
+                    // forecast_years={activeTabContent.forecast_years}
+                    // combinedPrevalence={activeTabContent.combinedPrevalence}
+                    // marketPredictions={activeTabContent.marketPredictions}
+                    // marketSize={activeTabContent.marketSize}
                   />
                 )}
 
@@ -686,8 +690,9 @@ const DiseaseSearchPage = () => {
                   <TherapyCostForecast
                     isChatMinimized={isChatMinimized}
                     diseaseName={activeTabContent.diseaseName}
-                    allYears={activeTabContent.allYears}
-                    combinedTherapyCost={activeTabContent.combinedTherapyCost}
+                    allData={activeTabContent.data}
+                    // allYears={activeTabContent.allYears}
+                    // combinedTherapyCost={activeTabContent.combinedTherapyCost}
                   />
                 )}
               </div>

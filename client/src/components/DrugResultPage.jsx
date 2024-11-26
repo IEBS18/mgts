@@ -1,17 +1,19 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from "./ui/card";
 import { Button } from "@/components/ui/button"; // Adjust to your imports
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Download, Filter, PlusCircle, X } from 'lucide-react'; // Adjust imports based on your setup
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter} from "./ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog";
 
 import { Input } from "./ui/input";
 import { toast } from 'react-toastify';
 
 const DrugResultsPage = () => {
     const location = useLocation();
+    const navigate = useNavigate();
+    
     const { searchResults } = location.state || {};
     const [selectedCards, setSelectedCards] = useState([]);
     const [isExporting, setIsExporting] = useState(false);
@@ -149,6 +151,21 @@ const DrugResultsPage = () => {
                 if (!response.ok) {
                     throw new Error("Failed to add AI column");
                 }
+                // toast("AI column added successfully!");
+                // setAiColumnDialogOpen(false);
+                return response.json();
+
+            })
+            .then((data) => {
+                // Assuming `updated_results` is in the response body
+                const updatedResults = data.updated_results.map((result) => ({
+                    ...result,
+                    // aiColumnName: aiColumnName, // Add the AI column name to each result
+                }));
+
+                setFilteredResults(updatedResults);
+
+                console.log(data.updated_results);
                 toast("AI column added successfully!");
                 setAiColumnDialogOpen(false);
             })
@@ -157,12 +174,30 @@ const DrugResultsPage = () => {
                 toast("Error adding AI column");
             });
     };
+    const handleComparison = () => {
+        const comparisonData = selectedCards.map((card) => ({
+            TradeName: card.TradeName,
+            "Active Ingredient": card["Active Ingredient"],
+            Manufacturer: card.Manufacturer,
+            Country: card.Country,
+            Size: card.Size,
+            Price: card.Price,
+            Quality_of_Life: card.Quality_of_Life,
+            Efficacy: card.Efficacy,
+            Safety: card.Safety,
+            Adverse_Events: card.Adverse_Events,
+            Annual_Therapy_Costs: card.Annual_Therapy_Costs,
+            Type_of_Drug: card.Type_of_Drug,
+        }));
 
+        // Navigate to the /drug-comparison route and pass data via state
+        navigate('/drug-comparison', { state: { comparisonData } });
+    };
     const handleOpenDialog = useCallback((result) => {
         setSelectedResult(result);
         setDialogOpen(true);
     }, []);
-
+    console.log(filteredResults)
     return (
         <div className="w-full p-2">
             {/* Select All and Export Buttons */}
@@ -211,11 +246,11 @@ const DrugResultsPage = () => {
                     </Popover>
 
                     <Button
-                        onClick={handleOpenAiColumnDialog}
+                        onClick={handleComparison}
                         className="bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2"
                     >
-                        <PlusCircle className="h-4 w-4" />
-                        Add AI Column
+                        {/* <PlusCircle className="h-4 w-4" /> */}
+                        Compare Drugs
                     </Button>
 
                     <Button
@@ -274,6 +309,7 @@ const DrugResultsPage = () => {
             </div>
             {/* Drug Cards */}
             <div className="grid grid-cols-3 gap-4 mt-4">
+
                 {filteredResults?.map((result, index) => (
                     <Card
                         key={index}
@@ -298,6 +334,11 @@ const DrugResultsPage = () => {
                             <p><strong className="font-semibold">Price(in USD):</strong> {(result.Price)}</p>
                             <p><strong className="font-semibold">Manufacturer:</strong> {result.Manufacturer}</p>
                             <p><strong className="font-semibold">Country:</strong> {result.Country}</p>
+                            {result[aiColumnName] && (
+                                <p>
+                                    <strong className="font-semibold">{aiColumnName.charAt(0).toUpperCase() + aiColumnName.slice(1)}:</strong> {result[aiColumnName]}
+                                </p>
+                            )}
                         </div>
                     </Card>
                 ))}

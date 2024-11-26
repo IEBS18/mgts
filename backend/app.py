@@ -5,11 +5,13 @@ from flask_cors import CORS
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
+from PlayerLandscape.player import get_disease_data
 from dotenv import load_dotenv
 load_dotenv()
 
-from MarketEstimation.market import visualize_market_size
-from MarketEstimation.market import visualize_therapy_cost
+from MarketEstimation.market import get_country_data
+
+# from MarketEstimation.market import visualize_therapy_cost
 # from Utilities.search import preprocess
 from Utilities.summarize import summarize_by_title_or_org
 from Utilities.chatbot import (
@@ -310,6 +312,7 @@ def drug_search_by_disease():
 def download_excel():
     # Step 1: Get JSON data from the POST request
     data = request.get_json()
+    print(data)
     
     # Step 2: Convert JSON to a Pandas DataFrame
     df = pd.DataFrame(data)
@@ -352,29 +355,74 @@ def ask():
 
 @app.route('/therapy-cost-estimation', methods=['POST'])
 def therapy_cost_estimation():
-    data= request.json
-    # type_of_plot = data.get('number')
+    data = request.json
     disease = data.get('disease')
-    # if type_of_plot and disease:
-        # if type_of_plot == '1':
-        #     visualize_market_size(disease)
-        # elif type_of_plot == '2':
-    all_years, combined_therapy_cost= visualize_therapy_cost(disease)
-    return jsonify({'all_years': all_years, 'combined_therapy_cost': combined_therapy_cost})
- 
+    forecast_years = ['2024', '2025', '2026', '2027', '2028']
+    
+    if not disease:
+        return jsonify({'error': 'Disease name is required'}), 400
+    
+    # Retrieve data for multiple countries
+    country_data = get_country_data(disease)
+    if not country_data:
+        return jsonify({'error': f'No data found for disease {disease}'}), 404
+    
+    # Prepare response data for each country
+    response = {}
+    for country, data in country_data.items():
+        all_years = data['years'] + forecast_years
+        combined_therapy_cost = data['therapy_cost'] + list(data['therapy_cost_forecast'])
+        response[country] = {
+            'all_years': all_years,
+            'combined_therapy_cost': combined_therapy_cost
+        }
+    print(response)
+    return jsonify(response)
+
 @app.route('/market-estimation', methods=['POST'])
 def market_estimation():
-    data= request.json
+    data = request.json
     disease = data.get('disease')
-    years, forecast_years, market_predictions, market_size= visualize_market_size(disease)
-    return jsonify({
-        'years': years,
-        'forecast_years': forecast_years,
-        'combined_prevalence': [],
-        'market_predictions': market_predictions.tolist(),
-        'market_size': market_size
-    })
+    forecast_years = ['2024', '2025', '2026', '2027', '2028']
     
+    if not disease:
+        return jsonify({'error': 'Disease name is required'}), 400
+    
+    # Retrieve data for multiple countries
+    country_data = get_country_data(disease)
+    if not country_data:
+        return jsonify({'error': f'No data found for disease {disease}'}), 404
+    
+    # Prepare response data for each country
+    response = {}
+    for country, data in country_data.items():
+        all_years = data['years'] + forecast_years
+        combined_market_size = data['market_size'] + list(data['market_forecast'])
+        response[country] = {
+            'years': data['years'],
+            'forecast_years': forecast_years,
+            'market_size': data['market_size'],
+            'market_forecast': data['market_forecast'].tolist()
+        }
+    print(response)
+    return jsonify(response)  
+
+@app.route('/generate_disease_analysis', methods=['POST'])
+def generate_disease_analysis():
+    data = request.get_json()
+    disease_name = data.get('disease_name', '').strip().lower()
+
+    if not disease_name:
+        return jsonify({'error': 'Disease name is required'}), 400
+
+    disease_data = get_disease_data(disease_name)
+    print(disease_data)
+
+    if not disease_data:
+        return jsonify({'error': f'No data found for disease: {disease_name}'}), 404
+
+    return jsonify(disease_data)
+
 @app.route('/generate-summary', methods=['POST'])
 def generate_summary():
     data = request.json
@@ -392,6 +440,7 @@ def add_ai_column():
         search_results = data.get('searchResults')
         
         updated_results = update_drug_data(search_results, column_name, column_description)
+        print(updated_results)
 
         if not column_name or not column_description:
             return jsonify({"error": "Both columnName and columnDescription are required"}), 400
@@ -399,7 +448,7 @@ def add_ai_column():
         print(f"Adding AI column: {column_name}, Description: {column_description}")
         print(f"Search results associated: {search_results}")
 
-        return jsonify({"message": "AI column added successfully!"}), 200
+        return jsonify({"updated_results": updated_results}), 200
 
     except Exception as e:
         print(f"Error while adding AI column: {e}")

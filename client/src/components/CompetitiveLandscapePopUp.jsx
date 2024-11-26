@@ -1,5 +1,3 @@
-// src/components/CompetitiveLandscape.jsx
-
 import React, { useState } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,11 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Select from "react-select";
-import outputData from '../assets/data/output.json';
+import outputData from '../assets/data/competitiveLandscape/disease.json';
 import { useNavigate } from "react-router-dom";
 
 export default function CompetitiveLandscapeModal() {
   const [isOpen, setIsOpen] = useState(false);
+  const [diseaseName, setDiseaseName] = useState('');
   const [selectedCountries, setSelectedCountries] = useState([]);
   const [searchType, setSearchType] = useState("disease");
   const [searchValue, setSearchValue] = useState("");
@@ -32,7 +31,7 @@ export default function CompetitiveLandscapeModal() {
     if (searchType === "disease") {
       searchParams = {
         search_type: "disease",
-        disease_name: searchValue,
+        disease_name: diseaseName,
       };
     } else if (searchType === "drug") {
       const countryType = selectedCountries.length > 0 ? selectedCountries : ["all"];
@@ -48,7 +47,7 @@ export default function CompetitiveLandscapeModal() {
       let navigateTo = "";
 
       if (searchType === "disease") {
-        endpoint = `${import.meta.env.VITE_API_URL}/search-by-disease`;
+        endpoint = `${import.meta.env.VITE_API_URL}/generate_disease_analysis`;
         navigateTo = "/competitive-landscape";
       } else if (searchType === "drug") {
         endpoint = `${import.meta.env.VITE_API_URL}/search-by-drug`;
@@ -64,10 +63,11 @@ export default function CompetitiveLandscapeModal() {
       });
 
       const data = await response.json();
-      console.log("Search Results:", data.data);
+      console.log("Search Results:", data);
+      console.log(diseaseName);
       
       navigate(navigateTo, {
-        state: { searchResults: data.data, drugs: data.drugs },
+        state: { searchResults: data, diseaseName: diseaseName },
       });
 
       setIsSearching(false);
@@ -129,7 +129,6 @@ export default function CompetitiveLandscapeModal() {
           }}
           className="w-full"
         >
-          {/* Fixed TabsList Container */}
           <div className="sticky top-0 z-10 bg-white rounded-[12px]">
             <TabsList className="grid w-full grid-cols-2 bg-white rounded-[12px]">
               <TabsTrigger
@@ -146,7 +145,6 @@ export default function CompetitiveLandscapeModal() {
               </TabsTrigger>
             </TabsList>
           </div>
-          {/* Scrollable Content Area */}
           <div className="overflow-y-auto max-h-[70vh] bg-white p-4 rounded-[12px] mt-4">
             <TabsContent value="disease">
               <div className="space-y-2">
@@ -154,11 +152,14 @@ export default function CompetitiveLandscapeModal() {
                 <Select
                   id="disease-select"
                   options={outputData.DISEASE.map(disease => ({ value: disease, label: disease }))}
-                  onChange={(option) => setSearchValue(option.value)}
+                  onChange={(option) => {
+                    setSearchValue(option.value);
+                    setDiseaseName(option.value);
+                  }}
                   styles={selectStyles}
                   placeholder="Select disease..."
-                  menuPortalTarget={document.body} // Add this line
-                  menuPosition="fixed" // Add this line
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
                 />
               </div>
               <Button
@@ -178,8 +179,8 @@ export default function CompetitiveLandscapeModal() {
                   onChange={(option) => setSearchValue(option.value)}
                   styles={selectStyles}
                   placeholder="Select drug..."
-                  menuPortalTarget={document.body} // Add this line
-                  menuPosition="fixed" // Add this line
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
                 />
               </div>
               <div className="space-y-2 mt-4">
@@ -201,8 +202,8 @@ export default function CompetitiveLandscapeModal() {
                   onChange={(selectedOptions) => setSelectedCountries(selectedOptions.map(option => option.value))}
                   styles={selectStyles}
                   placeholder="Select countries..."
-                  menuPortalTarget={document.body} // Add this line
-                  menuPosition="fixed" // Add this line
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
                 />
               </div>
               <Button

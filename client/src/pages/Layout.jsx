@@ -5,7 +5,7 @@ const Layout = ({ children }) => {
   return (
     <div className="flex flex-col h-full">
       {/* Use Header at the top */}
-      <div className='sticky top-0 w-full'>
+      <div className='sticky top-0 w-full z-50'>
         <Header />
       </div>
       {/* Content area */}
