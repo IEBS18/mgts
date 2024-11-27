@@ -13,7 +13,7 @@ import { toast } from 'react-toastify';
 const DrugResultsPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    
+
     const { searchResults } = location.state || {};
     const [selectedCards, setSelectedCards] = useState([]);
     const [isExporting, setIsExporting] = useState(false);
@@ -198,6 +198,23 @@ const DrugResultsPage = () => {
         setDialogOpen(true);
     }, []);
     console.log(filteredResults)
+
+    function formatPrice(price) {
+        if (typeof price === "string" && price.includes("$")) {
+            // If the price already includes a dollar sign, return it as-is
+            return price;
+        } else if (!isNaN(price)) {
+            // Convert to a number (if not already) and format with a dollar sign
+            return `$${parseFloat(price).toFixed(2)}`;
+        } else {
+            // Handle invalid inputs
+            console.error("Invalid price input:", price);
+            return "$0.00"; // Default fallback
+        }
+    }
+
+    console.log(formatPrice("17.555999999999997"))
+
     return (
         <div className="w-full p-2">
             {/* Select All and Export Buttons */}
@@ -329,11 +346,27 @@ const DrugResultsPage = () => {
                             />
                         </div>
                         <div className="mt-2">
-                            <p className="text-black font-bold"> {result.TradeName} ({result.Size})</p>
-                            <p><strong className="font-semibold">Active Ingredient:</strong> {result['Active Ingredient']}</p>
-                            <p><strong className="font-semibold">Price(in USD):</strong> {(result.Price)}</p>
-                            <p><strong className="font-semibold">Manufacturer:</strong> {result.Manufacturer}</p>
-                            <p><strong className="font-semibold">Country:</strong> {result.Country}</p>
+                            <p className="text-black font-bold"> {result.TradeName} {result.Size && `(${result.Size})`}</p>
+                            {result['Active Ingredient'] && (
+                                <p>
+                                    <strong className="font-semibold">Active Ingredient:</strong> {result['Active Ingredient']}
+                                </p>
+                            )}
+                            {result.Price && (
+                                <p>
+                                    <strong className="font-semibold">Price (in USD):</strong> {formatPrice(result.Price)}
+                                </p>
+                            )}
+                            {result.Manufacturer && (
+                                <p>
+                                    <strong className="font-semibold">Manufacturer:</strong> {result.Manufacturer}
+                                </p>
+                            )}
+                            {result.Country && (
+                                <p>
+                                    <strong className="font-semibold">Country:</strong> {result.Country}
+                                </p>
+                            )}
                             {result[aiColumnName] && (
                                 <p>
                                     <strong className="font-semibold">{aiColumnName.charAt(0).toUpperCase() + aiColumnName.slice(1)}:</strong> {result[aiColumnName]}
@@ -353,7 +386,7 @@ const DrugResultsPage = () => {
                             {["Active Ingredient", "Manufacturer", "Country", "Size", "Price", "Quality_of_Life", "Efficacy", "Safety", "Adverse_Events", "Annual_Therapy_Costs", "Type_of_Drug"]
                                 .map((key) => {
                                     const label = key.replace(/_/g, " ");
-                                    const value = key === "Price" ? `${(selectedResult[key])}` : selectedResult[key];
+                                    const value = key === "Price" ? `${formatPrice(selectedResult[key])}` : selectedResult[key];
                                     return selectedResult[key] && (
                                         <p key={key}>
                                             <strong>{key === "Price" ? "Price (in USD)" : label}:</strong> {value}

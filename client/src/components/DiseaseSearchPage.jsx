@@ -327,6 +327,20 @@ const DiseaseSearchPage = () => {
     [tabs, addNewTab]
   );
 
+  function formatPrice(price) {
+    if (typeof price === "string" && price.includes("$")) {
+      // If the price already includes a dollar sign, return it as-is
+      return price;
+    } else if (!isNaN(price)) {
+      // Convert to a number (if not already) and format with a dollar sign
+      return `$${parseFloat(price).toFixed(2)}`;
+    } else {
+      // Handle invalid inputs
+      console.error("Invalid price input:", price);
+      return price; // Default fallback
+    }
+  }
+
   // Handler to fetch market estimation data and add tab
   const handleMarketEstimation = useCallback(() => {
     const currentTab = tabs.find((tab) => tab.id === activeTab);
@@ -692,11 +706,11 @@ const DiseaseSearchPage = () => {
                     isChatMinimized={isChatMinimized}
                     diseaseName={activeTabContent.diseaseName}
                     data={activeTabContent.data}
-                    // years={activeTabContent.years}
-                    // forecast_years={activeTabContent.forecast_years}
-                    // combinedPrevalence={activeTabContent.combinedPrevalence}
-                    // marketPredictions={activeTabContent.marketPredictions}
-                    // marketSize={activeTabContent.marketSize}
+                  // years={activeTabContent.years}
+                  // forecast_years={activeTabContent.forecast_years}
+                  // combinedPrevalence={activeTabContent.combinedPrevalence}
+                  // marketPredictions={activeTabContent.marketPredictions}
+                  // marketSize={activeTabContent.marketSize}
                   />
                 )}
 
@@ -705,8 +719,8 @@ const DiseaseSearchPage = () => {
                     isChatMinimized={isChatMinimized}
                     diseaseName={activeTabContent.diseaseName}
                     allData={activeTabContent.data}
-                    // allYears={activeTabContent.allYears}
-                    // combinedTherapyCost={activeTabContent.combinedTherapyCost}
+                  // allYears={activeTabContent.allYears}
+                  // combinedTherapyCost={activeTabContent.combinedTherapyCost}
                   />
                 )}
               </div>
@@ -744,7 +758,7 @@ const DiseaseSearchPage = () => {
                     const label = customLabels[key] || key.replace(/_/g, " ");
                     const value =
                       key === "Price"
-                        ? `${selectedResult[key]}`
+                        ? `${formatPrice(selectedResult[key])}`
                         : selectedResult[key];
 
                     return (

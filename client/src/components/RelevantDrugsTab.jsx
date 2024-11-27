@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Download, Filter, X } from "lucide-react";
 import { toast } from "react-toastify";
 
+
 const RelevantDrugsTab = ({
   diseaseInfo,
   drugInfo,
@@ -32,6 +33,20 @@ const RelevantDrugsTab = ({
 
   const uniqueCountries = [...new Set(drugInfo?.map((result) => result.Country))];
   const uniqueDrugTypes = [...new Set(drugInfo?.map((result) => result.Type_of_Drug))];
+
+  function formatPrice(price) {
+    if (typeof price === "string" && price.includes("$")) {
+      // If the price already includes a dollar sign, return it as-is
+      return price;
+    } else if (!isNaN(price)) {
+      // Convert to a number (if not already) and format with a dollar sign
+      return `$${parseFloat(price).toFixed(2)}`;
+    } else {
+      // Handle invalid inputs
+      console.error("Invalid price input:", price);
+      return price; // Default fallback
+    }
+  }
 
   useEffect(() => {
     setFilteredResults(
@@ -180,11 +195,28 @@ const RelevantDrugsTab = ({
               />
             </div>
             <div className="mt-2">
-              <p className="text-black font-bold"> {result.TradeName} ({result.Size})</p>
-              <p><strong className="font-semibold">Active Ingredient:</strong> {result['Active Ingredient']}</p>
-              <p><strong className="font-semibold">Price(in USD):</strong> {(result.Price)}</p>
-              <p><strong className="font-semibold">Manufacturer:</strong> {result.Manufacturer}</p>
-              <p><strong className="font-semibold">Country:</strong> {result.Country}</p>
+              <p className="text-black font-bold">{result.TradeName} {result.Size && `(${result.Size})`}</p>
+              {result['Active Ingredient'] && (
+                <p>
+                  <strong className="font-semibold">Active Ingredient:</strong> {result['Active Ingredient']}
+                </p>
+              )}
+              {result.Price && (
+                <p>
+                  <strong className="font-semibold">Price (in USD):</strong> {formatPrice(result.Price)}
+                </p>
+              )}
+              {result.Manufacturer && (
+                <p>
+                  <strong className="font-semibold">Manufacturer:</strong> {result.Manufacturer}
+                </p>
+              )}
+              {result.Country && (
+                <p>
+                  <strong className="font-semibold">Country:</strong> {result.Country}
+                </p>
+              )}
+
             </div>
           </Card>
         ))}
