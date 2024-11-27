@@ -15,7 +15,21 @@ const PrivateRoute = ({ children }) => {
   }, []);
 
   if (isAuthenticated === null) {
-    return <div>Loading...</div>; // Show a loading spinner or message
+    // return <div>Loading...</div>; // Show a loading spinner or message
+    return (<div className="spinner-container">
+      <div className="lds-grid">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+    )
   }
 
   return isAuthenticated ? children : <Navigate to="/" />;

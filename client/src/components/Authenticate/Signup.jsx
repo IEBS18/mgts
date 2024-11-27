@@ -58,7 +58,7 @@ function Signup({ onSwitchToLogin }) {
     };
 
     return (
-        <div className='flex flex-col mt-[-50px] rounded-[30px] bg-white w-[400px] h-[480px] shadow-custom z-10 justify-center'>
+        <div className='flex flex-col mt-[-50px] rounded-[30px] bg-white w-[400px] h-[500px] shadow-custom z-10 justify-center'>
             <h1 className="font-poppins text-2xl font-medium leading-12 text-center">Create an account</h1>
             <p className='font-poppins text-base font-normal leading-6 text-center text-[#666666]'>
                 Already have an account?{' '}

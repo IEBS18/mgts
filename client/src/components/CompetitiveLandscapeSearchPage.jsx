@@ -156,7 +156,21 @@ const DiseaseAnalysis = () => {
   console.log(diseaseName);
 
   if (!data) {
-    return <div>Loading...</div>
+    // return <div>Loading...</div>
+    return (<div className="spinner-container">
+      <div className="lds-grid">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+    )
   }
 
   return (

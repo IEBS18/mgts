@@ -633,7 +633,21 @@ const DiseaseSearchPage = () => {
   return (
     <div>
       {loading ? (
-        <p>Loading...</p>
+        // 
+        <div className="spinner-container">
+  <div className="lds-grid">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+</div>
+
       ) : (
         <div className="disease-search-page h-screen bg-gray-50 flex flex-col">
           {/* Toast Notifications */}
