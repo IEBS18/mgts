@@ -30,7 +30,7 @@ from Utilities.diseasechatbot import (
 from Utilities.AIColumn import update_drug_data
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://68.154.56.138:3000"])
 
 # # Load database URL from environment variables (or you can hardcode it for local development)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@localhost:5432/db_name'
