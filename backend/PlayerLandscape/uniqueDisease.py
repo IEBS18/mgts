@@ -2,10 +2,10 @@ import pandas as pd
 import json
 
 # Load the CSV file
-csv_file = 'drug_sales_data.csv'
+csv_file = 'Drug_Sales_Data.xlsx'
 
 # Read the CSV into a DataFrame
-df = pd.read_csv(csv_file)
+df = pd.read_excel(csv_file)
 
 # Get unique disease names from the 'Disease' column
 unique_diseases = df['Disease'].dropna().unique().tolist()
