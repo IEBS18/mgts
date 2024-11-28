@@ -65,7 +65,7 @@ const TherapyCostForecast = ({ isChatMinimized, diseaseName, allData }) => {
             </div>
             <div className="h-[420px]">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={therapyCostData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <AreaChart data={therapyCostData} margin={{ top: 20, right: 30, left: 20, bottom: 20}}>
                         <defs>
                             <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#29c4f8" stopOpacity={0.8} />
@@ -81,7 +81,7 @@ const TherapyCostForecast = ({ isChatMinimized, diseaseName, allData }) => {
                             <Label value="Year" offset={-10} position="insideBottom" />
                         </XAxis>
                         <YAxis domain={[0, roundedMaxCost]} tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}>
-                            <Label value="Annual Therapy Cost (in USD)" angle={-90} position="insideLeft" offset={10} />
+                            <Label value="Annual Therapy Cost (in USD)" angle={-90} position="insideLeft" offset={10} style={{ textAnchor: 'middle' }} />
                         </YAxis>
                         <Tooltip content={<ChartTooltipContent />} />
                         <Legend verticalAlign="top" />
