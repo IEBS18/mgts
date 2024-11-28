@@ -7,6 +7,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # from flask_sqlalchemy import SQLAlchemy
 import os
 import json
+
+from PricePrediction.pp import display_competitor_details, fetch_competitor_data, parse_data, predict_price
 sys.stdout.reconfigure(encoding='utf-8')
 
 from PlayerLandscape.player import get_disease_data
@@ -571,6 +573,47 @@ def add_ai_column():
     except Exception as e:
         print(f"Error while adding AI column: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
+    
+@app.route('/price-prediction', methods=['POST'])
+def price_prediction():
+    try:
+        # Get JSON data from the request
+        data = request.json
+        print(data)
+        disease = data.get("disease_name")
+        country = data.get("country")
+        quality_of_life = data.get("quality_of_life")
+        mortality = float(data.get("mortality", 0))
+        morbidity = float(data.get("morbidity", 0))
+        safety = data.get("safety")
+        efficacy = data.get("efficacy")
+
+        # Fetch competitor data from Elasticsearch
+        competitor_data_raw = fetch_competitor_data(disease, country, quality_of_life, mortality, morbidity, safety, efficacy)
+        competitor_df = parse_data(competitor_data_raw)
+
+        # Predict price based on the input and competitor data
+        prediction = predict_price(
+            competitor_df, quality_of_life_weight=0.2, mortality_weight=0.2, morbidity_weight=0.2, safety_weight=0.2, efficacy_weight=0.2
+        )
+        
+        print("prediction: ", prediction)
+        
+        chart_data = (prediction['competitor_data']).to_dict(orient='records')
+        
+        print("chart_data: ", chart_data)
+        
+        competitor_details = display_competitor_details(prediction['competitor_data'])
+        # details= competitor_details.to_dict(orient='records')
+        # print("x:", competitor_details)
+        
+        
+
+        # Return the prediction as a JSON response
+        return jsonify({'predicted_price': prediction['average_price'], 'chart_data': chart_data, 'competitor_details': competitor_details})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 if __name__ == '__main__':
     app.run(debug=True)

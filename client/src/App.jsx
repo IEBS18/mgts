@@ -12,6 +12,7 @@ import DiseaseAnalysis from "./components/CompetitiveLandscapeSearchPage";
 import PrivateRoute from "./components/PrivateRoute";
 import Authenticate from "./components/Authenticate";
 import { DrugComparisonTable } from "./components/DrugComparisonTable";
+import CompetitorAnalysis from "./components/PricePrediction";
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
         <Route path="/list" element={<PrivateRoute><Layout><SelectedCardsTablePage /></Layout></PrivateRoute>} />
         <Route path="/competitive-landscape" element={<PrivateRoute><Layout><DiseaseAnalysis /></Layout></PrivateRoute>} />
         <Route path="/drug-comparison" element={<PrivateRoute><Layout><DrugComparisonTable /></Layout></PrivateRoute>} />
+        <Route path="/price-prediction" element={<PrivateRoute><Layout><CompetitorAnalysis /></Layout></PrivateRoute>} />
         
       </Routes>
     </Router>
