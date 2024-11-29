@@ -558,9 +558,10 @@ def add_ai_column():
         column_name = data.get('columnName')
         column_description = data.get('columnDescription')
         search_results = data.get('searchResults')
+        print(search_results)
         
         updated_results = update_drug_data(search_results, column_name, column_description)
-        print(updated_results)
+        # print(updated_results)
 
         if not column_name or not column_description:
             return jsonify({"error": "Both columnName and columnDescription are required"}), 400
@@ -594,7 +595,7 @@ def price_prediction():
 
         # Predict price based on the input and competitor data
         prediction = predict_price(
-            competitor_df, quality_of_life_weight=0.2, mortality_weight=0.2, morbidity_weight=0.2, safety_weight=0.2, efficacy_weight=0.2
+            competitor_df, disease, quality_of_life, mortality, morbidity, safety, efficacy
         )
         
         print("prediction: ", prediction)

@@ -175,6 +175,7 @@ const DrugResultsPage = () => {
             });
     };
     const handleComparison = () => {
+        console.log("Compared: ", selectedCards);
         const comparisonData = selectedCards.map((card) => ({
             TradeName: card.TradeName,
             "Active Ingredient": card["Active Ingredient"],
@@ -188,7 +189,15 @@ const DrugResultsPage = () => {
             Adverse_Events: card.Adverse_Events,
             Annual_Therapy_Costs: card.Annual_Therapy_Costs,
             Type_of_Drug: card.Type_of_Drug,
+            Disease: card.Disease,
+            Symptoms: card.Symptoms,
+            Morbidity: card.Morbidity,
+            Mortality: card.Mortality,
+            Prevalence: card.Prevalence,
+            Age_Group: card.Age_Group,
+            Gender: card.Gender,
         }));
+        
 
         // Navigate to the /drug-comparison route and pass data via state
         navigate('/drug-comparison', { state: { comparisonData } });

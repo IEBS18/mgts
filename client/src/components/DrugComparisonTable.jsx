@@ -31,6 +31,7 @@ export function DrugComparisonTable() {
     const location = useLocation();
     const navigate = useNavigate();
     const data = location.state?.comparisonData || [];
+    console.log(data)
     const [visibleColumns, setVisibleColumns] = useState(data.map((d) => `${d.TradeName} (${d.Size})`));
     const [aiColumnDialogOpen, setAiColumnDialogOpen] = useState(false);
     const [aiColumnName, setAiColumnName] = useState("");
@@ -151,7 +152,7 @@ export function DrugComparisonTable() {
     return (
         <div className="w-full overflow-x-auto">
             <div className="flex justify-between m-4 space-x-2 top-div"
-            style={{ position: "sticky", top:0 }}>
+                style={{ position: "sticky", top: 0 }}>
                 <div className='flex w-1/2'>
                     <h1 className="text-2xl w-1/2 font-bold text-gray-800">Drugs Comparison</h1>
                 </div>
@@ -183,10 +184,10 @@ export function DrugComparisonTable() {
                 </div>
             </div>
             <div className="relative overflow-auto shadow-md sm:rounded-lg"
-            style={{ maxHeight: "calc(90vh - 100px)" }}>
+                style={{ maxHeight: "calc(90vh - 100px)" }}>
                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
-                        <tr>
+                        <tr >
                             <th scope="col" className="px-6 py-3 sticky left-0 bg-gray-50 dark:bg-gray-700">
                                 Topic
                             </th>
@@ -200,11 +201,24 @@ export function DrugComparisonTable() {
                     <tbody>
                         {/* Iterate over topics (including AI column names) */}
                         {[...topics, ...aiColumns].map((topic) => (
-                            <tr key={topic} className="border-b bg-white dark:bg-gray-800 dark:border-gray-700">
-                                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white sticky left-0 bg-white dark:bg-gray-800">
+                            <tr
+                            key={topic}
+                            className={`border-b ${
+                                aiColumns.includes(topic)
+                                    ? "bg-[#a6ce39]/60 text-black backdrop-blur-md shadow-lg dark:bg-[#a6ce39]/80" // Distinct color with opacity and blur
+                                    : "bg-white dark:bg-gray-800"
+                            } dark:border-gray-700`}
+                        >
+                            <th
+                                scope="row"
+                                className={`px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white sticky left-0 ${
+                                    aiColumns.includes(topic)
+                                        ? "bg-[#a6ce39]/60 backdrop-blur-md shadow-lg dark:bg-[#a6ce39]/80" // Matches the row with glassmorphism effect
+                                        : "bg-white dark:bg-gray-800"
+                                }`}>
                                     <div className="flex items-center">
                                         {aiColumns.includes(topic)}
-                                        <label htmlFor={`select-${topic}`} className="capitalize">
+                                        <label htmlFor={`select-${topic}`} className="capitalize font-bold">
                                             {topic}
                                         </label>
                                     </div>
