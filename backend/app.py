@@ -27,9 +27,13 @@ from Utilities.chatbot import (
 )
 from Utilities.diseasechatbot import (
     process_question,
-    disease_conversation_history,
+    # disease_conversation_history,
 )
 from Utilities.AIColumn import update_drug_data
+from Utilities.query_classifier import (
+    route_to_chatbot,
+    disease_conversation_history
+)
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://68.154.56.138:3000"])
@@ -459,7 +463,7 @@ def ask():
     query = data.get('query')
     results = data.get('results')
     print(results)
-    response = process_question(results, query, disease_conversation_history)
+    response = route_to_chatbot(results, query, disease_conversation_history)
     # print(conversation_history)
     # Create OpenAI prompt
     # context_prompt = create_openai_prompt(filtered_results[:5])
@@ -558,7 +562,7 @@ def add_ai_column():
         column_name = data.get('columnName')
         column_description = data.get('columnDescription')
         search_results = data.get('searchResults')
-        print(search_results)
+        # print(search_results)
         
         updated_results = update_drug_data(search_results, column_name, column_description)
         # print(updated_results)

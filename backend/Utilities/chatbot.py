@@ -83,36 +83,36 @@ def search_with_tfidf_and_fuzziness(results, query, fuzz_threshold=70):
 def get_elasticsearch_results(query):
     es_query = [
         # Query for categorix_v2 (specific fields: title, abstract)
-        {"index": "categorix_v2"},
-        {
-            "query": {
-                "query_string": {
-                    "query": query,
-                    "fields": ["title", "abstract"],
-                    "default_operator": "AND",  # Search only in title and abstract fields
-                    "fuzziness": "AUTO"  # Adding fuzziness
-                }
-            },
-            "size": 10000
-        },
+        # {"index": "categorix_v2"},
+        # {
+        #     "query": {
+        #         "query_string": {
+        #             "query": query,
+        #             "fields": ["title", "abstract"],
+        #             "default_operator": "AND",  # Search only in title and abstract fields
+        #             "fuzziness": "AUTO"  # Adding fuzziness
+        #         }
+        #     },
+        #     "size": 10000
+        # },
         # Query for drug-disease-indication (search all fields)
-        {"index": "drug-disease-indication"},
+        # {"index": "drug-disease-indication"},
+        # {
+        #     "query": {
+        #         "query_string": {
+        #             "query": query, 
+        #             "default_operator": "OR",  # Search the same query across all fields
+        #             "fuzziness": "AUTO"  # Adding fuzziness
+        #         }
+        #     },
+        #     "size": 10000
+        # },
+        {"index": "clinicaltrial"},
         {
             "query": {
                 "query_string": {
                     "query": query, 
-                    "default_operator": "OR",  # Search the same query across all fields
-                    "fuzziness": "AUTO"  # Adding fuzziness
-                }
-            },
-            "size": 10000
-        },
-        {"index": "clinical-trial-outcomes"},
-        {
-            "query": {
-                "query_string": {
-                    "query": query, 
-                    "default_operator": "OR",  # Search the same query across all fields
+                    "default_operator": "AND",  # Search the same query across all fields
                     "fuzziness": "AUTO"  # Adding fuzziness
                 }
             },
@@ -123,7 +123,7 @@ def get_elasticsearch_results(query):
             "query": {
                 "query_string": {
                     "query": query, 
-                    "default_operator": "OR",  # Search the same query across all fields
+                    "default_operator": "AND",  # Search the same query across all fields
                     "fuzziness": "AUTO"  # Adding fuzziness
                 }
             },

@@ -1,6 +1,8 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+from Utilities.chatbot import get_elasticsearch_results
+
 load_dotenv()
 
 # Set up OpenAI API key
@@ -13,6 +15,12 @@ def update_drug_data(drug_list, header_name, header_description):
     updated_list = []
     
     for drug in drug_list:
+        
+        drug_name = drug['TradeName']
+        print(drug_name)
+        elasticresults = get_elasticsearch_results(drug_name)
+        # print(elasticresults)
+        print(len(elasticresults))
         # Create the prompt to send to OpenAI API
         drug_context = "\n".join([f"{key}: {value}" for key, value in drug.items()])
         prompt = (
