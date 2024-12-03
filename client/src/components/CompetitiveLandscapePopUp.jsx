@@ -37,8 +37,8 @@ export default function CompetitiveLandscapeModal() {
       const countryType = selectedCountries.length > 0 ? selectedCountries : ["all"];
       searchParams = {
         search_type: "drug",
-        drug_names: searchValue,
-        country_name: countryType,
+        active_ingredient: searchValue,
+        // country_name: countryType,
       };
     }
  
@@ -48,10 +48,10 @@ export default function CompetitiveLandscapeModal() {
  
       if (searchType === "disease") {
         endpoint = `${import.meta.env.VITE_API_URL}/generate_disease_analysis`;
-        navigateTo = "/competitive-landscape";
+        navigateTo = "/competitive-landscape-by-disease";
       } else if (searchType === "drug") {
-        endpoint = `${import.meta.env.VITE_API_URL}/search-by-drug`;
-        navigateTo = "/competitive-landscape";
+        endpoint = `${import.meta.env.VITE_API_URL}/get-drug-data`;
+        navigateTo = "/competitive-landscape-by-drug";
       }
  
       const response = await fetch(endpoint, {
@@ -67,7 +67,7 @@ export default function CompetitiveLandscapeModal() {
       console.log(diseaseName);
      
       navigate(navigateTo, {
-        state: { searchResults: data, diseaseName: diseaseName },
+        state: { searchResults: data, diseaseName: searchValue },
       });
  
       setIsSearching(false);
@@ -183,29 +183,7 @@ export default function CompetitiveLandscapeModal() {
                   menuPosition="fixed"
                 />
               </div>
-              <div className="space-y-2 mt-4">
-                <Label htmlFor="country" className="text-gray-700">Country</Label>
-                <Select
-                  id="country"
-                  isMulti
-                  defaultValue={[{ value: 'All Countries', label: 'All Countries' }]}
-                  options={[
-                    { value: 'All Countries', label: 'All Countries' },
-                    { value: 'Ireland', label: 'Ireland' },
-                    { value: 'Italy', label: 'Italy' },
-                    { value: 'Switzerland', label: 'Switzerland' },
-                    { value: 'Netherlands', label: 'Netherlands' },
-                    { value: 'UK', label: 'UK' },
-                    { value: 'USA', label: 'USA' },
-                  ]}
-                  classNamePrefix="react-select"
-                  onChange={(selectedOptions) => setSelectedCountries(selectedOptions.map(option => option.value))}
-                  styles={selectStyles}
-                  placeholder="Select countries..."
-                  menuPortalTarget={document.body}
-                  menuPosition="fixed"
-                />
-              </div>
+              
               <Button
                 onClick={handleSearchSubmit}
                 disabled={isSearching}

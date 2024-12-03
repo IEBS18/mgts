@@ -9,6 +9,7 @@ import os
 import json
 
 from PricePrediction.pp import display_competitor_details, fetch_competitor_data, parse_data, predict_price
+from PlayerLandscape.dm import get_bubble_chart_data, get_donut_chart_data, get_heatmap_data
 sys.stdout.reconfigure(encoding='utf-8')
 
 from PlayerLandscape.player import get_disease_data
@@ -612,6 +613,56 @@ def price_prediction():
 
         # Return the prediction as a JSON response
         return jsonify({'predicted_price': prediction['average_price'], 'chart_data': chart_data, 'competitor_details': competitor_details})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+    
+@app.route('/get-drug-data', methods=['POST'])
+def get_drug_data():
+    try:
+        # Get active ingredient from request
+        active_ingredient = request.json.get('active_ingredient')
+        print(active_ingredient)
+        if not active_ingredient:
+            return jsonify({"error": "Active ingredient is required"}), 400
+
+        # Query Elasticsearch
+        query = {
+            "size": 10000,
+            "query": {
+                "bool": {
+                    "must": [
+                        {"match": {"Active Ingredient.keyword": active_ingredient}}
+                    ]
+                }
+            }
+        }
+        response = es.search(index="combined_country_drug1", body=query)
+        hits = response['hits']['hits']
+        if not hits:
+            return jsonify({"error": "No data found for the given active ingredient"}), 404
+
+        # Process data
+        data = pd.DataFrame([hit['_source'] for hit in hits])
+        if data.empty:
+            return jsonify({"error": "No data found for the given active ingredient"}), 404
+
+        # Get chart data
+        top_diseases_data = get_donut_chart_data(data)
+        annual_therapy_data = get_bubble_chart_data(data)
+        # print(annual_therapy_data)
+        adverse_events_data = get_heatmap_data(data)
+
+        # Combine results
+        result = {
+            "top_diseases_data": top_diseases_data,
+            "annual_therapy_data": annual_therapy_data,
+            "adverse_events_data": adverse_events_data
+        }
+        
+        print(result)
+        return jsonify(result)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
