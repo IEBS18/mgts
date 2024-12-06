@@ -54,7 +54,7 @@ def get_elasticsearch_results_clinical(query):
             "query": {
                 "query_string": {
                     "query": query,
-                    "fields": ["Study Title", "Study Description", "NCT Number","Study Status","Conditions","Interventions","Sponsor","Collaborators","Enrollment","Study Design","Phases"],
+                    "fields": ["Study Title", "Study Description", "NCT Number","Study Status","Conditions","Interventions","Sponsor","Collaborators","Study Design","Phases"],
                     "default_operator": "OR",  # Search only in title and abstract fields
                     "fuzziness": "AUTO"  # Adding fuzziness
                 }
@@ -83,7 +83,7 @@ def preprocess(text, dn):
     toremove = [
         'mg', 'ml', 'oral', 'tablet', 'tablets', 'capsule', 'capsules', 'solution', 'suspension',
         'injection', 'injections', 'inhalation', 'inhaler', 'inhalers', 'drug', 'drugs', 'medication',
-        'disease', 'diseases',
+        'disease', 'diseases','{','}'
         'medications', 'medicine', 'medicines', 'treatment', 'treatments', 'therapy', 'therapies',
         'dose', 'doses', 'dosage', 'dosages', 'administration', 'acid', 'acids', 'documents',
         'document', 'information', 'patient', 'patients', 'report', 'reports', 'study', 'studies',
@@ -113,8 +113,7 @@ def preprocess(text, dn):
         'safety', 'safeness', 'risk', 'risks', 'adverse', 'reactions', 'reaction',
         'efficacy', 'efficacious', 'benefit', 'benefits', 'review', 'evaluation',
         'evaluation', 'implication', 'implications', 'impact', 'clinical', 'clinical trials',
-        'clinical data', 'guidance', 'findings', 'treatment', 'treatment options',
-       
+        'clinical data', 'guidance', 'findings', 'treatment', 'treatment options', 'pubmed','data','title',       
         # Miscellaneous terms
         'criteria', 'finding', 'suggestions', 'suggestion', 'analyses', 'analysis',
         'clinical', 'clinical findings', 'support', 'supports', 'considerations',
@@ -215,7 +214,7 @@ def createpubmedcontext(pubmed_data):
     pubmed_context_prompt += (
         "Please use the above data to answer user queries factually and concisely. Do not hallucinate information or provide responses outside the context of the data provided.\n"
     )
-    print(pubmed_context_prompt)
+    # print(pubmed_context_prompt)
     return pubmed_context_prompt
 
 
@@ -320,7 +319,7 @@ def createclinicalcontext(clinical_data):
     clinical_context_prompt += (
         "Please use the above data to answer user queries factually and concisely. Do not hallucinate information or provide responses outside the context of the data provided.\n"
     )
-    print(clinical_context_prompt)
+    # print(clinical_context_prompt)
     return clinical_context_prompt
 
 
@@ -407,10 +406,9 @@ def createdrugcontext(drug_data):
         "Please use the above data to answer user queries factually and concisely. "
         "Do not hallucinate information or provide responses outside the context of the data provided.\n"
     )
-
-    print(createdrugcontext)
-
+    
     return drug_context_prompt
+
 
 
 def creatediseasecontext(disease_data):
@@ -446,46 +444,25 @@ def creatediseasecontext(disease_data):
         "- **Document**: Name of the source document for this context.\n\n"
     )
 
-    disease_context_prompt += "Disease Information:\n\n"
-    disease_name = disease_data.get("Disease", "No disease name provided.")
-    disease_overview = disease_data.get("Disease Overview", "No overview available.")
-    disease_biology = disease_data.get("Disease Biology", "No biological background provided.")
-    pathophysiology = disease_data.get("Pathophysiology", "No pathophysiology data available.")
-    signs_symptoms = disease_data.get("Signs & Symptoms", "No symptoms provided.")
-    risk_factors = disease_data.get("Risk Factors", "No risk factors provided.")
-    prevalence = disease_data.get("Prevalence", "No prevalence data available.")
-    patient_demographics = disease_data.get("Patient Demographics", "No demographic data provided.")
-    diagnosis = disease_data.get("Diagnosis", "No diagnostic methods provided.")
-    stages_progression = disease_data.get("Stages progression", "No progression data provided.")
-    sub_types = disease_data.get("Sub-types", "No sub-types listed.")
-    treatment_management = disease_data.get("Treatment & Management", "No management strategies provided.")
-    treatment_options = disease_data.get("Treatment options", "No treatment options available.")
-    unmet_needs = disease_data.get("Unmet Needs", "No unmet needs specified.")
-    document = disease_data.get("Document", "No source document provided.")
+    # Optional: Define expected keys for easier data extraction
+    expected_keys = [
+        "Disease", "Disease Overview", "Disease Biology", "Pathophysiology", "Signs & Symptoms", "Risk Factors", 
+        "Prevalence", "Patient Demographics", "Diagnosis", "Stages progression", "Sub-types", 
+        "Treatment & Management", "Treatment options", "Unmet Needs", "Document"
+    ]
 
-    disease_context_prompt += (
-        f"- **Disease**: {disease_name}\n"
-        f"- **Disease Overview**: {disease_overview}\n"
-        f"- **Disease Biology**: {disease_biology}\n"
-        f"- **Pathophysiology**: {pathophysiology}\n"
-        f"- **Signs & Symptoms**: {signs_symptoms}\n"
-        f"- **Risk Factors**: {risk_factors}\n"
-        f"- **Prevalence**: {prevalence}\n"
-        f"- **Patient Demographics**: {patient_demographics}\n"
-        f"- **Diagnosis**: {diagnosis}\n"
-        f"- **Stages progression**: {stages_progression}\n"
-        f"- **Sub-types**: {sub_types}\n"
-        f"- **Treatment & Management**: {treatment_management}\n"
-        f"- **Treatment options**: {treatment_options}\n"
-        f"- **Unmet Needs**: {unmet_needs}\n"
-        f"- **Document**: {document}\n\n"
-    )
+    disease_context_prompt += "Disease Information:\n\n"
+    
+    for key in expected_keys:
+        # Fetch the corresponding data or a default message if the data is missing
+        value = disease_data.get(key, "Data unavailable").strip()
+        disease_context_prompt += f"- **{key}**: {value}\n"
 
     disease_context_prompt += (
         "Please use the above data to answer user queries factually and concisely. "
         "Do not hallucinate information or provide responses outside the context of the data provided.\n"
     )
-
-    print(creatediseasecontext)
+    
+    # print(creatediseasecontext)
 
     return disease_context_prompt
