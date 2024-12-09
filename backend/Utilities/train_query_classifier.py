@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
-from transformers import BertTokenizer, BertForSequenceClassification, AdamW
+from transformers import BertTokenizer, BertForSequenceClassification
 import pickle
 from sklearn.preprocessing import MultiLabelBinarizer
 
@@ -35,9 +35,10 @@ class QueryDataset(Dataset):
         }
 
 class QueryClassifierModel(nn.Module):
-    def __init__(self, num_labels):
+    def __init__(self, num_labels=3):
         super(QueryClassifierModel, self).__init__()
-        self.bert = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=num_labels)
+        self.num_labels = num_labels
+        self.bert = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=self.num_labels)
     
     def forward(self, input_ids, attention_mask):
         outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
@@ -182,12 +183,12 @@ data = [
 ("How do adverse events related to MS medications (e.g., risk of infections, liver toxicity) impact treatment choice and the market potential of new drugs?", [2]),
 ("What is the role of pharmacovigilance in tracking the safety of MS drugs post-market, and how does this affect forecasting demand?", [2]),
 ("How do the side effects of MS treatments (e.g., flu-like symptoms, injection site reactions) influence the choice between first-line and second-line therapies?", [0, 1]),
-("How do patients’ perceptions of drug safety (e.g., concerns about long-term effects) impact their willingness to switch from one MS therapy to another?", [1, 2]),
+("How do patient's perceptions of drug safety (e.g., concerns about long-term effects) impact their willingness to switch from one MS therapy to another?", [1, 2]),
 ("How do new MS treatments (e.g., oral therapies, biologics) compare to older options in terms of effectiveness, convenience, and side effects?", [1, 2]),
 ("What role do clinical trial outcomes play in shaping treatment trends and influencing prescriber behavior in MS?", [1]),
 ("How does the rising prevalence of progressive forms of MS affect the market demand for new therapies targeting these patient populations?", [2]),
 ("What external factors (e.g., changes in healthcare reimbursement policies, insurance coverage) are influencing the uptake of novel MS therapies?", [1, 2]),
-("How do media, advocacy organizations, and patient education affect the public’s awareness and preference for specific MS treatments?", [0]),
+("How do media, advocacy organizations, and patient education affect the public's awareness and preference for specific MS treatments?", [0]),
 ("How does disease progression (e.g., from relapsing-remitting to secondary progressive MS) influence treatment decisions and forecasting models?", [1, 0]),
 ("How do new therapies targeting progressive MS impact long-term treatment strategies, and what forecasting challenges do they present?", [1]),
 ("How does the effectiveness of first-line MS therapies influence the switch to second-line treatments, and what is the impact on drug adoption trends?", [1]),
@@ -267,28 +268,33 @@ dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
 
 num_labels = labels_bin.shape[1]
 model = QueryClassifierModel(num_labels)
-optimizer = AdamW(model.parameters(), lr=2e-5)
+optimizer = torch.optim.AdamW(model.parameters(), lr=2e-5)
 loss_fn = nn.BCEWithLogitsLoss()
 
-epochs = 2
-for epoch in range(epochs):
-    model.train()
-    for batch in dataloader:
-        optimizer.zero_grad()
+epochs = 20
 
-        input_ids = batch['input_ids']
-        attention_mask = batch['attention_mask']
-        labels = batch['labels']
+if __name__=="__main__":
 
-        outputs = model(input_ids, attention_mask)
-        loss = loss_fn(outputs, labels)
-        loss.backward()
-        optimizer.step()
+    for epoch in range(epochs):
+        model.train()
+        for batch in dataloader:
+            optimizer.zero_grad()
 
-    print(f"Epoch {epoch + 1}/{epochs} - Loss: {loss.item()}")
+            input_ids = batch['input_ids']
+            attention_mask = batch['attention_mask']
+            labels = batch['labels']
 
-with open('query_router.pkl', 'wb') as f:
-    pickle.dump(model, f)
+            outputs = model(input_ids, attention_mask)
+            loss = loss_fn(outputs, labels)
+            loss.backward()
+            optimizer.step()
 
-with open('tokenizer.pkl', 'wb') as f:
-    pickle.dump(tokenizer, f)
+        print(f"Epoch {epoch + 1}/{epochs} - Loss: {loss.item()}")
+
+    with open(r'Utilities\query_router.pkl', 'wb') as f:
+        state = model.state_dict()
+        pickle.dump(state, f)
+
+    # with open('tokenizer.pkl', 'wb') as f:
+    #     state = tokenizer.
+    #     pickle.dump(tokenizer, f)
