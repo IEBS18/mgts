@@ -23,7 +23,7 @@ from Utilities.utils import(
     createdrugcontext,
     createpubmedcontext
 )  
-MODEL = "gpt-4o-mini"
+MODEL = "gpt-3.5-turbo"
 
 openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
@@ -129,6 +129,8 @@ def generate_openai_completion(question):
     response = openai_client.chat.completions.create(
         model=MODEL,
         messages=conversation_history,
+        temperature=0.7,
+        top_p=1.0
           
     )
     print(model)
