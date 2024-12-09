@@ -61,6 +61,8 @@ def parse_data(raw_data):
             "Gender": source.get("Gender"),
             "Type_of_Drug": source.get("Type_of_Drug")
         })
+        
+    # print(pd.DataFrame(records['Morbidity']))
     return pd.DataFrame(records)
  
 def clean_price(price):
@@ -81,6 +83,7 @@ def clean_price(price):
     return None
  
 def fetch_weights_from_llm(disease, quality_of_life, mortality, morbidity, safety, efficacy, competitor_data):
+    print(morbidity)
     prompt = f"""
     Based on the following details, calculate and return appropriate weights for Quality of Life, Mortality, Morbidity, Safety, and Efficacy.
     Consider user inputs, disease-specific data, and competitor details:
@@ -129,9 +132,13 @@ def predict_price(competitor_data, disease, quality_of_life, mortality, morbidit
     print(clean_price)
     # competitor_data['Annual_Therapy_Costs'] = competitor_data['Annual_Therapy_Costs'].apply(clean_price)
  
-    competitor_data['Mortality'] = pd.to_numeric(competitor_data['Mortality'], errors='coerce')
+# Remove percentage sign from 'Morbidity' and 'Mortality' if present, otherwise leave unchanged
+    competitor_data['Morbidity'] = competitor_data['Morbidity'].str.replace('%', '', regex=True)
+    competitor_data['Mortality'] = competitor_data['Mortality'].str.replace('%', '', regex=True)
+
+    # Convert columns to numeric
     competitor_data['Morbidity'] = pd.to_numeric(competitor_data['Morbidity'], errors='coerce')
- 
+    competitor_data['Mortality'] = pd.to_numeric(competitor_data['Mortality'], errors='coerce')
     llm_weights = fetch_weights_from_llm(disease, quality_of_life, mortality, morbidity, safety, efficacy, competitor_data)
  
     competitor_data['quality_of_life_score'] = competitor_data['Quality_of_Life'].apply(lambda x: llm_weights['quality_of_life_weight'])

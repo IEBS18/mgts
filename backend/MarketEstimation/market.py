@@ -2,15 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-# List of country-specific files
-country_files = {
-    'USA': 'MarketEstimation/data/USA_final_combined_file.xlsx',
-    'UK': 'MarketEstimation/data/UK_Disease_Data_3000_Final_output_new.xlsx',
-    'Italy': 'MarketEstimation/data/Italy_Disease_Data_3000_Final_output_new.xlsx',
-    'Ireland': 'MarketEstimation/data/Ireland_Disease_Data_3000_Final_output_new.xlsx',
-    'France': 'MarketEstimation/data/France_Disease_Data_3000_Final_output_new.xlsx'
-    # Add more countries as needed
-}
+# Path to the single Excel file
+file_path = 'MarketEstimation/data/Complete_MarketEstimation_data.xlsx'
 
 years = ['2019', '2020', '2021', '2022', '2023']
 forecast_years = ['2024', '2025', '2026', '2027', '2028']
@@ -29,32 +22,48 @@ def preprocess_data(values, min_value=1e-5):
             processed_values.append(min_value)  # Replace invalid values with the threshold
     return processed_values
 
-def forecast_values(X, y, future_periods=5, min_value=1e-4):
-    """Train Linear Regression and forecast future values."""
+def forecast_with_noise(X, y, future_periods=5, noise_scale=1.98, min_value=1e-4):
+    """Train Linear Regression and forecast future values with controlled noise and a minimum value"""
     model = LinearRegression()
     model.fit(X, y)
+ 
     future_X = np.array(range(len(X), len(X) + future_periods)).reshape(-1, 1)
     predictions = model.predict(future_X)
-    predictions = np.maximum(predictions, min_value)  # Ensure no predictions are zero or negative
-    return predictions
-
+ 
+    # Ensure no predictions are zero
+    predictions = np.maximum(predictions, min_value)  # Replace any zero or negative values with min_value
+ 
+    noise = np.random.normal(0, predictions.std() * noise_scale, predictions.shape)
+ 
+    predictions_with_noise = predictions + noise
+    predictions_with_noise = np.clip(predictions_with_noise, min_value, None)  # Clip to avoid values less than min_value
+ 
+    return predictions_with_noise 
 def get_country_data(disease_name):
     """Retrieve market and therapy cost data for a disease across multiple countries."""
     country_data = {}
-    for country, file_path in country_files.items():
-        try:
-            df = pd.read_excel(file_path)
-            disease_data = df[df['Disease'] == disease_name]
-            if not disease_data.empty:
+    try:
+        # Read the single Excel file
+        df = pd.read_excel(file_path)
+
+        # Filter data for the given disease
+        disease_data = df[df['Disease'] == disease_name]
+
+        if not disease_data.empty:
+            # Iterate through each country in the filtered data
+            for country in disease_data['Country'].unique():
+                country_specific_data = disease_data[disease_data['Country'] == country]
+                
                 # Process market size and therapy cost for existing years and forecast future values
-                market_size = preprocess_data([disease_data[f'Market_Size_{year}'].values[0] for year in years])
-                therapy_cost = preprocess_data([disease_data[f'Average_therapy_cost_{year}'].values[0] for year in years])
+                market_size = preprocess_data([country_specific_data[f'Market_Size_{year}'].values[0] for year in years])
+                therapy_cost = preprocess_data([country_specific_data[f'Average_therapy_cost_{year}'].values[0] for year in years])
                 
                 # Forecast future values
                 X = np.array(range(len(years))).reshape(-1, 1)
-                market_forecast = forecast_values(X, np.array(market_size), future_periods=len(forecast_years))
-                therapy_cost_forecast = forecast_values(X, np.array(therapy_cost), future_periods=len(forecast_years))
-                
+                market_forecast = forecast_with_noise(X, np.array(market_size), future_periods=len(forecast_years))
+                therapy_cost_forecast = forecast_with_noise(X, np.array(therapy_cost), future_periods=len(forecast_years))
+                print(market_forecast)
+                print(therapy_cost_forecast)
                 # Store results in dictionary
                 country_data[country] = {
                     'years': years,
@@ -63,11 +72,11 @@ def get_country_data(disease_name):
                     'therapy_cost': therapy_cost,
                     'therapy_cost_forecast': therapy_cost_forecast,
                 }
-        except Exception as e:
-            print(f"Error loading data for {country}: {e}")
+    except Exception as e:
+        print(f"Error loading data: {e}")
     
     if not country_data:
-        print(f"No data found for disease '{disease_name}' in any country files.")
+        print(f"No data found for disease '{disease_name}' in the file.")
     return country_data
 
 def visualize_market_and_therapy(disease_name):
