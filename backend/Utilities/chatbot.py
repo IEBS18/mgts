@@ -129,6 +129,7 @@ def get_elasticsearch_results(query):
             },
             "size": 10000
         }
+        
     ]
     result = es.msearch(body=es_query)
     return [hit['_source'] for res in result['responses'] for hit in res['hits']['hits']]
@@ -139,7 +140,7 @@ def create_openai_prompt(results):
     context = ""
     for hit in results:
         context += '\n'.join(f"{key}: {value}" for key, value in hit.items()) + "\n\n"
-    print(context)
+    # print(context)
     prompt = f"""
 - You are a research consultant specializing in answering questions based on structured data provided by the user.
 - The user will provide a query followed by context data in dictionary format.
@@ -191,7 +192,7 @@ def generate_openai_completion(question, conversation_history):
 
 # Main function to process the question using the provided results
 def process_question(results, question, conversation_history):
-    print(results)
+    # print(results)
     # Filter and preprocess the results if necessary
     # updated_results = remove_english_description(results)
     # _, filtered_results = search_with_tfidf_and_fuzziness(updated_results, question)
