@@ -23,7 +23,7 @@ from Utilities.summarize import summarize_by_title_or_org
 from Utilities.chatbot import (
     # process_question,
     es,
-    conversation_history,
+    # conversation_history,
 )
 from Utilities.diseasechatbot import (
     process_question,
@@ -32,7 +32,7 @@ from Utilities.diseasechatbot import (
 from Utilities.AIColumn import update_drug_data
 from Utilities.query_classifier import (
     route_to_chatbot,
-    disease_conversation_history
+    conversation_history
 )
 
 app = Flask(__name__)
@@ -463,7 +463,7 @@ def ask():
     query = data.get('query')
     results = data.get('results')
     print(results)
-    response = route_to_chatbot(results, query, disease_conversation_history)
+    response = route_to_chatbot(results, query, conversation_history)
     # print(conversation_history)
     # Create OpenAI prompt
     # context_prompt = create_openai_prompt(filtered_results[:5])

@@ -168,52 +168,52 @@ def createpubmedcontext(pubmed_data):
         return "No PubMed data available for this query."
 
     pubmed_context_prompt = (
-    """"You are a highly knowledgeable assistant specializing in biomedical literature. Below is the context data regarding scientific publications from PubMed. Use this data to answer user queries effectively.\n\n"
-    "Explanation of PubMed Data Keys:\n"
-    "Pubmed" data: Involves scientific publications, with attributes like "PMID", "Title", "AbstractText", "Author Name", "Country", "Journal Issue", "PubDate", "ISSN", "ISSN Type" and "type".
-    the details of each attribute is given below:
-    ['PMID':A unique identifier assigned to each article in the PubMed database. It is a numeric code that allows for easy referencing and retrieval of the specific article.
-    'Title':The title of the research article. It provides a brief description of the main topic or findings of the study and is often the first element that researchers and readers will look at.
-    'AbstractText':A summary of the research article that includes the main objectives, methods, results, and conclusions. The abstract is designed to give readers a quick overview of the study's content and significance.
-    'Author Name':The names of the authors who contributed to the research article. This attribute may include multiple names and is essential for crediting those who conducted the research.
-    'Country':The country where the research was conducted or where the authors are based. This information can be important for understanding the geographical context of the study and its implications.
-    'Journal Issue':The specific issue of the journal in which the article was published, typically including the volume and issue number. This attribute helps in locating the article within the journal's archive.
-    'PubDate':The date when the article was published. This information is crucial for referencing and understanding the timeliness of the research.
-    'ISSN':A unique code used to identify the journal in which the article was published. The ISSN helps in distinguishing between different serial publications and is essential for library cataloging.
-    'ISSN Type':Indicates whether the ISSN is for the print version, the electronic version, or both. This information is helpful for understanding how the journal is available to readers.
-    'type':The classification type is pubmed.]"""
+    # """"You are a highly knowledgeable assistant specializing in biomedical literature. Below is the context data regarding scientific publications from PubMed. Use this data to answer user queries effectively.\n\n"
+    """Explanation of PubMed Data Attributes:\n
+    - **PMID**:A unique identifier assigned to each article in the PubMed database. It is a numeric code that allows for easy referencing and retrieval of the specific article.
+    - **Title**:The title of the research article. It provides a brief description of the main topic or findings of the study and is often the first element that researchers and readers will look at.
+    - **AbstractText**:A summary of the research article that includes the main objectives, methods, results, and conclusions. The abstract is designed to give readers a quick overview of the study's content and significance.
+    - **Author Name**:The names of the authors who contributed to the research article. This attribute may include multiple names and is essential for crediting those who conducted the research.
+    - **Country**:The country where the research was conducted or where the authors are based. This information can be important for understanding the geographical context of the study and its implications.
+    - **Journal Issue**:The specific issue of the journal in which the article was published, typically including the volume and issue number. This attribute helps in locating the article within the journal's archive.
+    - **PubDate**:The date when the article was published. This information is crucial for referencing and understanding the timeliness of the research.
+    - **ISSN**:A unique code used to identify the journal in which the article was published. The ISSN helps in distinguishing between different serial publications and is essential for library cataloging.
+    - **ISSN Type**:Indicates whether the ISSN is for the print version, the electronic version, or both. This information is helpful for understanding how the journal is available to readers.
+    - **type**:The classification type is pubmed."""
     )
 
-    pubmed_context_prompt += "PubMed Articles:\n\n"
-    for idx, article in enumerate(pubmed_data, start=1):
-        source = article.get('_source', {})
-        pmid = source.get('PMID', 'No PMID provided.')
-        title = source.get('Title', 'No title available.')
-        abstract = source.get('AbstractText', 'No abstract available.')
-        authors = source.get('Author Name', 'No authors listed.')
-        country = source.get('Country', 'Country not specified.')
-        journal_issue = source.get('Journal Issue', 'Journal issue not specified.')
-        pub_date = source.get('PubDate', 'Publication date not provided.')
-        issn = source.get('ISSN', 'No ISSN provided.')
-        issn_type = source.get('ISSN Type', 'ISSN type not specified.')
-        article_type = source.get('type', 'Not classified.')
+    pubmed_context_prompt += f"\n\nPUBMED ARTICLES:\n\n {pubmed_data}"
+    # for idx, article in enumerate(pubmed_data, start=1):
+        
+    #     print(article)
+    #     source = article.get('_source', {})
+    #     pmid = source.get('PMID', 'No PMID provided.')
+    #     title = source.get('Title', 'No title available.')
+    #     abstract = source.get('AbstractText', 'No abstract available.')
+    #     authors = source.get('Author Name', 'No authors listed.')
+    #     country = source.get('Country', 'Country not specified.')
+    #     journal_issue = source.get('Journal Issue', 'Journal issue not specified.')
+    #     pub_date = source.get('PubDate', 'Publication date not provided.')
+    #     issn = source.get('ISSN', 'No ISSN provided.')
+    #     issn_type = source.get('ISSN Type', 'ISSN type not specified.')
+    #     article_type = source.get('type', 'Not classified.')
 
-        pubmed_context_prompt += (
-            f"{idx}. Title: {title}\n"
-            f"   - PMID: {pmid}\n"
-            f"   - AbstractText: {abstract}\n"
-            f"   - Author Name: {authors}\n"
-            f"   - Country: {country}\n"
-            f"   - Journal Issue: {journal_issue}\n"
-            f"   - PubDate: {pub_date}\n"
-            f"   - ISSN: {issn} (Type: {issn_type})\n"
-            f"   - type: {article_type}\n\n"
-        )
+    #     pubmed_context_prompt += (
+    #         f"{idx}. Title: {title}\n"
+    #         f"   - PMID: {pmid}\n"
+    #         f"   - AbstractText: {abstract}\n"
+    #         f"   - Author Name: {authors}\n"
+    #         f"   - Country: {country}\n"
+    #         f"   - Journal Issue: {journal_issue}\n"
+    #         f"   - PubDate: {pub_date}\n"
+    #         f"   - ISSN: {issn} (Type: {issn_type})\n"
+    #         f"   - type: {article_type}\n\n"
+    #     )
 
     # Final instructions to OpenAI
-    pubmed_context_prompt += (
-        "Please use the above data to answer user queries factually and concisely. Do not hallucinate information or provide responses outside the context of the data provided.\n"
-    )
+    # pubmed_context_prompt += (
+    #     "Please use the above data to answer user queries factually and concisely. Do not hallucinate information or provide responses outside the context of the data provided.\n"
+    # )
     # print(pubmed_context_prompt)
     return pubmed_context_prompt
 
@@ -233,92 +233,92 @@ def createclinicalcontext(clinical_data):
         return "No clinical trial data available for this query."
 
     clinical_context_prompt = (
-       """ "You are a highly knowledgeable assistant specializing in clinical trials. Below is the context data regarding clinical trial information. Use this data to answer user queries effectively.\n\n"
-        "Clinicaltrial" data: Refers to clinical trial information with attributes such as "NCT Number", "Study Status", "Study Title", "Brief Summary", "Study Results", "Conditions", "Interventions", "Sponsor", "Collaborators", "Sex", "Age", "Phases", "Enrollment", "Study Type", "Study Design", "Other IDs", "Start Date", "Primary Completion Date", "Completion Date", "First Posted", "Last Update Posted", "Locations" and "type".
-    
-    The details of the attributes are:
-    ['Primary Completion Date': The date when the last participant's last visit occurred, marking the completion of the primary endpoint data collection.
-    'Study Title': The title of the clinical trial, describing its focus or objective.
-    'Study Status': The current status of the clinical trial (e.g., Recruiting, Completed, Terminated).
-    'Sex': The sex of the participants eligible for the trial (e.g., male, female, both).
-    'Locations': The sites where the clinical trial is conducted.
-    'Sponsor': The organization or entity that initiates, manages, or finances the clinical trial.
-    'Completion Date': The actual date when the trial was completed.
-    'Study Results': Findings or outcomes from the clinical trial.
-    'Conditions': The medical conditions being studied in the trial.
-    'Study Description': A detailed overview of the study's objectives, design, and methodology.
-    'Brief Summary': A concise summary of the study's purpose and design.
-    'Interventions': The treatments, drugs, or procedures being tested in the trial.
-    'Phases': The different stages of the clinical trial (e.g., Phase 1, Phase 2, Phase 3).
-    'Start Date': The date when the trial commenced.
-    'Other IDs': Additional identifiers related to the trial, which may include registry numbers or codes.
-    'First Posted': The date when the trial information was first made publicly available.
-    'Enrollment': The number of participants recruited for the trial.
-    'NCT Number': The unique identifier assigned to the trial in the ClinicalTrials.gov registry.
-    'Study Design': The overall plan or structure of the clinical trial.
-    'Last Update Posted': The date of the most recent update to the trial information.
-    'Collaborators': Other organizations or entities that are involved in the trial.
-    'Age': The age range of participants eligible for the trial.
-    'Study Type': The nature of the study (e.g., observational, interventional).
-    'type': The classification type is clinicaltrial.]"""
+    #    """ "You are a highly knowledgeable assistant specializing in clinical trials. Below is the context data regarding clinical trial information. Use this data to answer user queries effectively.\n\n"
+    #     "Clinicaltrial" data: Refers to clinical trial information with attributes such as "NCT Number", "Study Status", "Study Title", "Brief Summary", "Study Results", "Conditions", "Interventions", "Sponsor", "Collaborators", "Sex", "Age", "Phases", "Enrollment", "Study Type", "Study Design", "Other IDs", "Start Date", "Primary Completion Date", "Completion Date", "First Posted", "Last Update Posted", "Locations" and "type".
+    """
+    Explanation of Clinical Trial Attributes:
+    - **Primary Completion Date**: The date when the last participant's last visit occurred, marking the completion of the primary endpoint data collection.
+    - **Study Title**: The title of the clinical trial, describing its focus or objective.
+    - **Study Status**: The current status of the clinical trial (e.g., Recruiting, Completed, Terminated).
+    - **Sex**: The sex of the participants eligible for the trial (e.g., male, female, both).
+    - **Locations**: The sites where the clinical trial is conducted.
+    - **Sponsor**: The organization or entity that initiates, manages, or finances the clinical trial.
+    - **Completion Date**: The actual date when the trial was completed.
+    - **Study Results**: Findings or outcomes from the clinical trial.
+    - **Conditions**: The medical conditions being studied in the trial.
+    - **Study Description**: A detailed overview of the study's objectives, design, and methodology.
+    - **Brief Summary**: A concise summary of the study's purpose and design.
+    - **Interventions**: The treatments, drugs, or procedures being tested in the trial.
+    - **Phases**: The different stages of the clinical trial (e.g., Phase 1, Phase 2, Phase 3).
+    - **Start Date**: The date when the trial commenced.
+    - **Other IDs**: Additional identifiers related to the trial, which may include registry numbers or codes.
+    - **First Posted**: The date when the trial information was first made publicly available.
+    - **Enrollment**: The number of participants recruited for the trial.
+    - **NCT Number**: The unique identifier assigned to the trial in the ClinicalTrials.gov registry.
+    - **Study Design**: The overall plan or structure of the clinical trial.
+    - **Last Update Posted**: The date of the most recent update to the trial information.
+    - **Collaborators**: Other organizations or entities that are involved in the trial.
+    - **Age**: The age range of participants eligible for the trial.
+    - **Study Type**: The nature of the study (e.g., observational, interventional).
+    - **type**: The classification type is clinicaltrial."""
     )
 
-    clinical_context_prompt += "Clinical Trial Information:\n\n"
-    for idx, trial in enumerate(clinical_data, start=1):
-        source = trial.get('_source', {})
-        nct_number = source.get('NCT Number', 'No NCT Number provided.')
-        study_title = source.get('Study Title', 'No title available.')
-        study_status = source.get('Study Status', 'No status provided.')
-        brief_summary = source.get('Brief Summary', 'No brief summary available.')
-        study_results = source.get('Study Results', 'No results available.')
-        conditions = source.get('Conditions', 'No conditions listed.')
-        interventions = source.get('Interventions', 'No interventions listed.')
-        sponsor = source.get('Sponsor', 'No sponsor provided.')
-        collaborators = source.get('Collaborators', 'No collaborators listed.')
-        sex = source.get('Sex', 'No sex information provided.')
-        age = source.get('Age', 'No age range specified.')
-        phases = source.get('Phases', 'No phase information provided.')
-        enrollment = source.get('Enrollment', 'No enrollment information provided.')
-        study_type = source.get('Study Type', 'No study type provided.')
-        study_design = source.get('Study Design', 'No study design provided.')
-        primary_completion_date = source.get('Primary Completion Date', 'No primary completion date provided.')
-        start_date = source.get('Start Date', 'No start date provided.')
-        completion_date = source.get('Completion Date', 'No completion date provided.')
-        first_posted = source.get('First Posted', 'No first posted date provided.')
-        last_update_posted = source.get('Last Update Posted', 'No last update posted date provided.')
-        locations = source.get('Locations', 'No location information provided.')
-        other_ids = source.get('Other IDs', 'No other IDs provided.')
-        trial_type = source.get('type', 'Not classified.')
+    clinical_context_prompt += f"CLINICAL TRIAL INFORMATION:\n\n {clinical_data}"
+    # for idx, trial in enumerate(clinical_data, start=1):
+    #     source = trial.get('_source', {})
+    #     nct_number = source.get('NCT Number', 'No NCT Number provided.')
+    #     study_title = source.get('Study Title', 'No title available.')
+    #     study_status = source.get('Study Status', 'No status provided.')
+    #     brief_summary = source.get('Brief Summary', 'No brief summary available.')
+    #     study_results = source.get('Study Results', 'No results available.')
+    #     conditions = source.get('Conditions', 'No conditions listed.')
+    #     interventions = source.get('Interventions', 'No interventions listed.')
+    #     sponsor = source.get('Sponsor', 'No sponsor provided.')
+    #     collaborators = source.get('Collaborators', 'No collaborators listed.')
+    #     sex = source.get('Sex', 'No sex information provided.')
+    #     age = source.get('Age', 'No age range specified.')
+    #     phases = source.get('Phases', 'No phase information provided.')
+    #     enrollment = source.get('Enrollment', 'No enrollment information provided.')
+    #     study_type = source.get('Study Type', 'No study type provided.')
+    #     study_design = source.get('Study Design', 'No study design provided.')
+    #     primary_completion_date = source.get('Primary Completion Date', 'No primary completion date provided.')
+    #     start_date = source.get('Start Date', 'No start date provided.')
+    #     completion_date = source.get('Completion Date', 'No completion date provided.')
+    #     first_posted = source.get('First Posted', 'No first posted date provided.')
+    #     last_update_posted = source.get('Last Update Posted', 'No last update posted date provided.')
+    #     locations = source.get('Locations', 'No location information provided.')
+    #     other_ids = source.get('Other IDs', 'No other IDs provided.')
+    #     trial_type = source.get('type', 'Not classified.')
 
-        clinical_context_prompt += (
-            f"{idx}. Study Title: {study_title}\n"
-            f"   - NCT Number: {nct_number}\n"
-            f"   - Study Status: {study_status}\n"
-            f"   - Brief Summary: {brief_summary}\n"
-            f"   - Study Results: {study_results}\n"
-            f"   - Conditions: {conditions}\n"
-            f"   - Interventions: {interventions}\n"
-            f"   - Sponsor: {sponsor}\n"
-            f"   - Collaborators: {collaborators}\n"
-            f"   - Sex: {sex}\n"
-            f"   - Age: {age}\n"
-            f"   - Phases: {phases}\n"
-            f"   - Enrollment: {enrollment}\n"
-            f"   - Study Type: {study_type}\n"
-            f"   - Study Design: {study_design}\n"
-            f"   - Primary Completion Date: {primary_completion_date}\n"
-            f"   - Start Date: {start_date}\n"
-            f"   - Completion Date: {completion_date}\n"
-            f"   - First Posted: {first_posted}\n"
-            f"   - Last Update Posted: {last_update_posted}\n"
-            f"   - Locations: {locations}\n"
-            f"   - Other IDs: {other_ids}\n"
-            f"   - type: {trial_type}\n\n"
-        )
+    #     clinical_context_prompt += (
+    #         f"{idx}. Study Title: {study_title}\n"
+    #         f"   - NCT Number: {nct_number}\n"
+    #         f"   - Study Status: {study_status}\n"
+    #         f"   - Brief Summary: {brief_summary}\n"
+    #         f"   - Study Results: {study_results}\n"
+    #         f"   - Conditions: {conditions}\n"
+    #         f"   - Interventions: {interventions}\n"
+    #         f"   - Sponsor: {sponsor}\n"
+    #         f"   - Collaborators: {collaborators}\n"
+    #         f"   - Sex: {sex}\n"
+    #         f"   - Age: {age}\n"
+    #         f"   - Phases: {phases}\n"
+    #         f"   - Enrollment: {enrollment}\n"
+    #         f"   - Study Type: {study_type}\n"
+    #         f"   - Study Design: {study_design}\n"
+    #         f"   - Primary Completion Date: {primary_completion_date}\n"
+    #         f"   - Start Date: {start_date}\n"
+    #         f"   - Completion Date: {completion_date}\n"
+    #         f"   - First Posted: {first_posted}\n"
+    #         f"   - Last Update Posted: {last_update_posted}\n"
+    #         f"   - Locations: {locations}\n"
+    #         f"   - Other IDs: {other_ids}\n"
+    #         f"   - type: {trial_type}\n\n"
+    #     )
 
-    clinical_context_prompt += (
-        "Please use the above data to answer user queries factually and concisely. Do not hallucinate information or provide responses outside the context of the data provided.\n"
-    )
+    # clinical_context_prompt += (
+    #     "Please use the above data to answer user queries factually and concisely. Do not hallucinate information or provide responses outside the context of the data provided.\n"
+    # )
     # print(clinical_context_prompt)
     return clinical_context_prompt
 
@@ -338,8 +338,9 @@ def createdrugcontext(drug_data):
         return "No drug information available for this query."
 
     drug_context_prompt = (
-        "You are a highly knowledgeable assistant specializing in pharmacology and drug information. Below is the context data regarding drugs used for treating specific diseases. Use this data to answer user queries effectively.\n\n"
-        "Explanation of Drug Data Keys:\n"
+        # "You are a highly knowledgeable assistant specializing in pharmacology and drug information. Below is the context data regarding drugs used for treating specific diseases. Use this data to answer user queries effectively.\n\n"
+
+        "Explanation of Drug Data Attributes:\n"
         "- **TradeName**: Commercial or brand name of the drug.\n"
         "- **Active Ingredient**: The main active pharmaceutical compound in the drug.\n"
         "- **Type_of_Drug**: Classification of the drug (e.g., small molecule, monoclonal antibody).\n"
@@ -360,7 +361,7 @@ def createdrugcontext(drug_data):
         "- **Size**: Packaging information, such as dosage and form (e.g., capsules, vials).\n\n"
     )
 
-    drug_context_prompt += "Drug Information:\n\n"
+    drug_context_prompt += "DRUG INFORMATION:\n\n"
     for idx, drug in enumerate(drug_data, start=1):
         trade_name = drug.get('TradeName', 'No trade name provided.')
         active_ingredient = drug.get('Active Ingredient', 'No active ingredient provided.')
@@ -402,10 +403,10 @@ def createdrugcontext(drug_data):
             f"   - Size: {size}\n\n"
         )
 
-    drug_context_prompt += (
-        "Please use the above data to answer user queries factually and concisely. "
-        "Do not hallucinate information or provide responses outside the context of the data provided.\n"
-    )
+    # drug_context_prompt += (
+    #     "Please use the above data to answer user queries factually and concisely. "
+    #     "Do not hallucinate information or provide responses outside the context of the data provided.\n"
+    # )
     
     return drug_context_prompt
 
@@ -425,8 +426,8 @@ def creatediseasecontext(disease_data):
         return "No disease information available for this query."
 
     disease_context_prompt = (
-        "You are a highly knowledgeable assistant specializing in medical diseases and treatments. Below is the context data regarding a specific disease. Use this data to answer user queries effectively.\n\n"
-        "Explanation of Disease Data Keys:\n"
+        # "You are a highly knowledgeable assistant specializing in medical diseases and treatments. Below is the context data regarding a specific disease. Use this data to answer user queries effectively.\n\n"
+        "Explanation of Disease Data Attributes:\n"
         "- **Disease**: Name of the disease being described.\n"
         "- **Disease Overview**: Provides a general description of the disease, including its definition and basic details.\n"
         "- **Disease Biology**: In-depth biological background of the disease, including the molecular basis and pathology.\n"
@@ -451,17 +452,18 @@ def creatediseasecontext(disease_data):
         "Treatment & Management", "Treatment options", "Unmet Needs", "Document"
     ]
 
-    disease_context_prompt += "Disease Information:\n\n"
+    disease_context_prompt += "DISEASE INFORMATION:\n\n"
     
     for key in expected_keys:
         # Fetch the corresponding data or a default message if the data is missing
         value = disease_data.get(key, "Data unavailable").strip()
-        disease_context_prompt += f"- **{key}**: {value}\n"
+        disease_context_prompt += f"- {key}: {value}\n"
 
-    disease_context_prompt += (
-        "Please use the above data to answer user queries factually and concisely. "
-        "Do not hallucinate information or provide responses outside the context of the data provided.\n"
-    )
+    
+    # disease_context_prompt += (
+    #     "Please use the above data to answer user queries factually and concisely. "
+    #     "Do not hallucinate information or provide responses outside the context of the data provided.\n"
+    # )
     
     # print(creatediseasecontext)
 
