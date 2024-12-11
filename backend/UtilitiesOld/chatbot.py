@@ -83,36 +83,36 @@ def search_with_tfidf_and_fuzziness(results, query, fuzz_threshold=70):
 def get_elasticsearch_results(query):
     es_query = [
         # Query for categorix_v2 (specific fields: title, abstract)
-        # {"index": "categorix_v2"},
-        # {
-        #     "query": {
-        #         "query_string": {
-        #             "query": query,
-        #             "fields": ["title", "abstract"],
-        #             "default_operator": "AND",  # Search only in title and abstract fields
-        #             "fuzziness": "AUTO"  # Adding fuzziness
-        #         }
-        #     },
-        #     "size": 10000
-        # },
+        {"index": "categorix_v2"},
+        {
+            "query": {
+                "query_string": {
+                    "query": query,
+                    "fields": ["title", "abstract"],
+                    "default_operator": "AND",  # Search only in title and abstract fields
+                    "fuzziness": "AUTO"  # Adding fuzziness
+                }
+            },
+            "size": 10000
+        },
         # Query for drug-disease-indication (search all fields)
-        # {"index": "drug-disease-indication"},
-        # {
-        #     "query": {
-        #         "query_string": {
-        #             "query": query, 
-        #             "default_operator": "OR",  # Search the same query across all fields
-        #             "fuzziness": "AUTO"  # Adding fuzziness
-        #         }
-        #     },
-        #     "size": 10000
-        # },
-        {"index": "clinicaltrial"},
+        {"index": "drug-disease-indication"},
         {
             "query": {
                 "query_string": {
                     "query": query, 
-                    "default_operator": "AND",  # Search the same query across all fields
+                    "default_operator": "OR",  # Search the same query across all fields
+                    "fuzziness": "AUTO"  # Adding fuzziness
+                }
+            },
+            "size": 10000
+        },
+        {"index": "clinical-trial-outcomes"},
+        {
+            "query": {
+                "query_string": {
+                    "query": query, 
+                    "default_operator": "OR",  # Search the same query across all fields
                     "fuzziness": "AUTO"  # Adding fuzziness
                 }
             },
@@ -123,13 +123,12 @@ def get_elasticsearch_results(query):
             "query": {
                 "query_string": {
                     "query": query, 
-                    "default_operator": "AND",  # Search the same query across all fields
+                    "default_operator": "OR",  # Search the same query across all fields
                     "fuzziness": "AUTO"  # Adding fuzziness
                 }
             },
             "size": 10000
         }
-        
     ]
     result = es.msearch(body=es_query)
     return [hit['_source'] for res in result['responses'] for hit in res['hits']['hits']]
@@ -140,7 +139,7 @@ def create_openai_prompt(results):
     context = ""
     for hit in results:
         context += '\n'.join(f"{key}: {value}" for key, value in hit.items()) + "\n\n"
-    # print(context)
+    print(context)
     prompt = f"""
 - You are a research consultant specializing in answering questions based on structured data provided by the user.
 - The user will provide a query followed by context data in dictionary format.
@@ -192,7 +191,7 @@ def generate_openai_completion(question, conversation_history):
 
 # Main function to process the question using the provided results
 def process_question(results, question, conversation_history):
-    # print(results)
+    print(results)
     # Filter and preprocess the results if necessary
     # updated_results = remove_english_description(results)
     # _, filtered_results = search_with_tfidf_and_fuzziness(updated_results, question)

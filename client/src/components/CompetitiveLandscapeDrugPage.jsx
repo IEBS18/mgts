@@ -61,6 +61,7 @@ const DonutChart = ({ data }) => {
 // Bubble Chart Component
 
 const BubbleChart = ({ data }) => {
+    console.log(data);
     const CustomTooltip = ({ active, payload }) => {
         if (active && payload && payload.length) {
             const { TradeName, Disease, Annual_Therapy_Costs, Size } = payload[0].payload;
@@ -231,7 +232,7 @@ const CompetitiveLandscapeDrugPage = () => {
         );
     }
 
-    const { top_diseases_data, annual_therapy_data, adverse_events_data } = searchResults;
+    const { top_diseases_data, annual_therapy_data } = searchResults;
     console.log(searchResults);
 
     // Transform data for charts
@@ -242,18 +243,18 @@ const CompetitiveLandscapeDrugPage = () => {
 
     const bubbleChartData = annual_therapy_data.map(item => ({
         TradeName: item.TradeName,
-        Annual_Therapy_Costs: item["Annual_Therapy_Costs(Numbers)"],
+        Annual_Therapy_Costs: item["Annual_Therapy_Costs"],
         Disease: item.Disease,
         Size: item.Size
     }));
 
-    const heatmapData = Object.entries(adverse_events_data).flatMap(([score, drugs]) =>
-        Object.entries(drugs).map(([TradeName, value]) => ({
-            Adverse_Events_Score: parseFloat(score),
-            TradeName,
-            value,
-        }))
-    );
+    // const heatmapData = Object.entries(adverse_events_data).flatMap(([score, drugs]) =>
+    //     Object.entries(drugs).map(([TradeName, value]) => ({
+    //         Adverse_Events_Score: parseFloat(score),
+    //         TradeName,
+    //         value,
+    //     }))
+    // );
 
     return (
         <div className="space-y-8 p-8">

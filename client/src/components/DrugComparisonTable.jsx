@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -13,6 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Filter, PlusCircle } from 'lucide-react';
+import { ThreeDots } from 'react-loader-spinner';
+import { toast, ToastContainer } from 'react-toastify';
 
 const topics = [
     "Active Ingredient",
@@ -31,7 +32,6 @@ export function DrugComparisonTable() {
     const location = useLocation();
     const navigate = useNavigate();
     const data = location.state?.comparisonData || [];
-    console.log(data)
     const [visibleColumns, setVisibleColumns] = useState(data.map((d) => `${d.TradeName} (${d.Size})`));
     const [aiColumnDialogOpen, setAiColumnDialogOpen] = useState(false);
     const [aiColumnName, setAiColumnName] = useState("");
@@ -39,7 +39,10 @@ export function DrugComparisonTable() {
     const [isExporting, setIsExporting] = useState(false);
     const [isAiColumnLoading, setIsAiColumnLoading] = useState(false);
     const [aiColumns, setAiColumns] = useState([]);
-    const [aiColumnEnabled, setAiColumnEnabled] = useState(false);
+
+    // State to hold fetched scores
+    const [scores, setScores] = useState({});
+    const [isLoadingScores, setIsLoadingScores] = useState(true);
 
     const toggleColumnVisibility = (column) => {
         setVisibleColumns((prev) =>
@@ -82,21 +85,26 @@ export function DrugComparisonTable() {
                     [aiColumnName]: result[aiColumnName] || "",
                 }));
 
-                alert("AI column added successfully!");
+                
                 setAiColumnDialogOpen(false);
                 setIsAiColumnLoading(false);
+                
 
                 // Add the new AI column to the state without removing the old ones
                 setAiColumns((prevAiColumns) => [...prevAiColumns, aiColumnName]);
+
+                
 
                 // Navigate to the same page, passing updated data and updated columns
                 navigate(location.pathname, {
                     state: { comparisonData: updatedResults, aiColumns: [...aiColumns, aiColumnName] },
                 });
+
+                toast.success("AI column added successfully!");
             })
             .catch((error) => {
                 console.error("Error adding AI column:", error);
-                alert("Error adding AI column");
+                toast.warn("Error adding AI column");
                 setIsAiColumnLoading(false);
             });
     };
@@ -148,21 +156,103 @@ export function DrugComparisonTable() {
             });
     };
 
+    // Function to calculate background color based on score
+    const getBackgroundColor = (score, type) => {
+        if (type === "Adverse_Events") {
+            // Scale from green (low adverse events) to red (high adverse events)
+            const greenValue = Math.max(0, 255 - (score / 10) * 255); // Green decreases as score increases
+            const redValue = Math.min(255, (score / 10) * 255); // Red increases as score increases
+            return `rgba(${redValue}, ${greenValue}, 0, 0.5)`; // Green to Red gradient
+        } else if (type === "Efficacy" || type === "Safety") {
+            // Scale from red (low efficacy/safety) to green (high efficacy/safety)
+            const greenValue = Math.min(255, score * 255); // Green increases as score increases
+            const redValue = Math.max(0, 255 - score * 255); // Red decreases as score increases
+            return `rgba(${redValue}, ${greenValue}, 0, 0.5)`; // Red to Green gradient
+        }
+        return "transparent"; // Default color
+    };
+    
+
+
+    // Fetch scores from the backend when the component mounts
+    useEffect(() => {
+        const fetchScores = async () => {
+            const fetchedScores = {};
+
+            for (const drug of data) {
+                const { TradeName, Country, Efficacy, Safety, Adverse_Events, Annual_Therapy_Costs } = drug;
+
+                // Fetch annual therapy cost
+                const annualCostResponse = await fetch(`${import.meta.env.VITE_API_URL}/annual_therapy_cost`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ cost_statement: Annual_Therapy_Costs }),
+                });
+                const annualCostData = await annualCostResponse.json();
+                fetchedScores[TradeName] = { ...fetchedScores[TradeName], annual_therapy_cost: annualCostData['Annual_Therapy_Costs(Numbers)'] || "N/A" };
+
+                // Fetch adverse event score
+                const adverseEventResponse = await fetch(`${import.meta.env.VITE_API_URL}/adverse_event_score`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ drug_name: TradeName, adverse_event_statement: Adverse_Events }),
+                });
+                const adverseEventData = await adverseEventResponse.json();
+                fetchedScores[TradeName] = { ...fetchedScores[TradeName], adverse_events: adverseEventData['Final Score'] || "N/A" };
+
+                // Fetch safety and efficacy score
+                const safetyEfficacyResponse = await fetch(`${import.meta.env.VITE_API_URL}/safety_efficacy_score`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        trade_name: TradeName,
+                        country: Country,
+                        disease: drug.Disease,
+                        efficacy_statement: Efficacy,
+                        safety_statement: Safety,
+                    }),
+                });
+                const safetyEfficacyData = await safetyEfficacyResponse.json();
+                fetchedScores[TradeName] = { ...fetchedScores[TradeName], efficacy: safetyEfficacyData['Efficacy_Score'] || "N/A", safety: safetyEfficacyData['Safety_Score'] || "N/A" };
+            }
+
+            setScores(fetchedScores);
+            setIsLoadingScores(false);
+        };
+
+        fetchScores();
+    }, [data]);
 
     return (
         <div className="w-full overflow-x-auto">
+            <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+            />
+
             <div className="flex justify-between m-4 space-x-2 top-div"
                 style={{ position: "sticky", top: 0 }}>
                 <div className='flex w-1/2'>
                     <h1 className="text-2xl w-1/2 font-bold text-gray-800">Drugs Comparison</h1>
                 </div>
                 <div className='flex flex-row gap-x-4 '>
-
                     <Button onClick={() => setAiColumnDialogOpen(true)} variant="outline" disabled={isAiColumnLoading} className="bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2">
                         <PlusCircle className="h-4 w-4" />
                         {isAiColumnLoading ? "Loading..." : "Add AI Column"}
                     </Button>
-                    <Button onClick={handleExport} disabled={isExporting} className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? 'cursor-not-allowed opacity-50' : ''}`}>
+                    <Button onClick={handleExport} disabled={isExporting} className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? 'cursor-not-allowed opacity -50' : ''}`}>
                         {isExporting ? "Exporting..." : "Export"}
                     </Button>
                     <DropdownMenu>
@@ -187,7 +277,7 @@ export function DrugComparisonTable() {
                 style={{ maxHeight: "calc(90vh - 100px)" }}>
                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
-                        <tr >
+                        <tr>
                             <th scope="col" className="px-6 py-3 sticky left-0 bg-gray-50 dark:bg-gray-700">
                                 Topic
                             </th>
@@ -202,20 +292,18 @@ export function DrugComparisonTable() {
                         {/* Iterate over topics (including AI column names) */}
                         {[...topics, ...aiColumns].map((topic) => (
                             <tr
-                            key={topic}
-                            className={`border-b ${
-                                aiColumns.includes(topic)
+                                key={topic}
+                                className={`border-b ${aiColumns.includes(topic)
                                     ? "bg-[#a6ce39]/60 text-black backdrop-blur-md shadow-lg dark:bg-[#a6ce39]/80" // Distinct color with opacity and blur
                                     : "bg-white dark:bg-gray-800"
-                            } dark:border-gray-700`}
-                        >
-                            <th
-                                scope="row"
-                                className={`px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white sticky left-0 ${
-                                    aiColumns.includes(topic)
+                                    } dark:border-gray-700`}
+                            >
+                                <th
+                                    scope="row"
+                                    className={`px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white sticky left-0 ${aiColumns.includes(topic)
                                         ? "bg-[#a6ce39]/60 backdrop-blur-md shadow-lg dark:bg-[#a6ce39]/80" // Matches the row with glassmorphism effect
                                         : "bg-white dark:bg-gray-800"
-                                }`}>
+                                        }`}>
                                     <div className="flex items-center">
                                         {aiColumns.includes(topic)}
                                         <label htmlFor={`select-${topic}`} className="capitalize font-bold">
@@ -224,8 +312,23 @@ export function DrugComparisonTable() {
                                     </div>
                                 </th>
                                 {visibleData.map((d) => (
-                                    <td key={`${d.TradeName} (${d.Size})`} className="px-6 py-4">
-                                        {topic === "Price($)" ? (
+                                    <td key={`${d.TradeName} (${d.Size})`} className="px-6 py-4"
+                                        style={{
+                                            backgroundColor: topic === "Adverse_Events" ? getBackgroundColor(scores[d.TradeName]?.adverse_events, "Adverse_Events") :
+                                                topic === "Efficacy" ? getBackgroundColor(scores[d.TradeName]?.efficacy, "Efficacy") :
+                                                    topic === "Safety" ? getBackgroundColor(scores[d.TradeName]?.safety, "Safety") : "transparent"
+                                        }}>
+                                        {isLoadingScores ? (
+                                            <ThreeDots color="#a6ce39" height={20} width={20} />
+                                        ) : topic === "Efficacy" ? (
+                                            <span>{scores[d.TradeName]?.efficacy || "N/A"}</span>
+                                        ) : topic === "Safety" ? (
+                                            <span>{scores[d.TradeName]?.safety || "N/A"}</span>
+                                        ) : topic === "Adverse_Events" ? (
+                                            <span>{scores[d.TradeName]?.adverse_events || "N/A"}</span>
+                                        ) : topic === "Annual_Therapy_Costs" ? (
+                                            <span>{scores[d.TradeName]?.annual_therapy_cost || "N/A"}</span>
+                                        ) : topic === "Price($)" ? (
                                             <span>{d["Price"]}</span>
                                         ) : (
                                             d[topic]
@@ -238,7 +341,7 @@ export function DrugComparisonTable() {
                 </table>
             </div>
 
-            <Dialog open={aiColumnDialogOpen} onOpenChange={setAiColumnDialogOpen} >
+            <Dialog open={aiColumnDialogOpen} onOpenChange={setAiColumnDialogOpen}>
                 <DialogContent className='bg-white'>
                     <DialogTitle>Add AI Column</DialogTitle>
                     <DialogDescription>

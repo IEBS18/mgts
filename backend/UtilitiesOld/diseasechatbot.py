@@ -119,8 +119,7 @@ def process_question(results, question, conversation_history):
     
     # Create an OpenAI prompt using the search results
     context_prompt = create_prompt(results)
-    strlength = len(context_prompt)
-    print(context_prompt, strlength)
+    # print(context_prompt)
     # Check if the system prompt is already in the last 10 items of conversation history
     # if any(item["role"] == "system" for item in conversation_history[-10:]):
     #     presentinlast10 = True

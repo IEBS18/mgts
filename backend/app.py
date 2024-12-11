@@ -9,7 +9,10 @@ import os
 import json
 
 from PricePrediction.pp import display_competitor_details, fetch_competitor_data, parse_data, predict_price
-from PlayerLandscape.dm import get_bubble_chart_data, get_donut_chart_data, get_heatmap_data
+from PlayerLandscape.dm import get_bubble_chart_data, get_donut_chart_data
+# , get_heatmap_data
+from Calculations.ATC import adverse_effect_score, calculate_safety_efficacy_scores, extract_adverse_events, extract_annual_therapy_cost
+from Utilities.query_classifier import route_to_chatbot
 sys.stdout.reconfigure(encoding='utf-8')
 
 from PlayerLandscape.player import get_disease_data
@@ -147,92 +150,6 @@ def check_login():
     if user_id:
         return jsonify({'logged_in': True}), 200
     return jsonify({'logged_in': False}), 401
-
-
-
-# @app.route('/search', methods=['POST'])
-# def search():
-#     # Get the search keyword from the request
-#     search_keyword = request.json.get('keyword')
-    
-#     # Ensure the keyword is provided before further processing
-#     if not search_keyword:
-#         return jsonify({"error": "No search keyword provided."}), 400
-
-#     # Preprocess the search keyword
-#     query = preprocess(search_keyword)
-    
-#     if isinstance(query, set):
-#         query = ' '.join(query)
-    
-#     print(query)
-
-#     # Define two separate queries: one for `categorix_v2` and one for `drug-disease-indication`
-#     es_query = [
-#         # Query for categorix_v2 (specific fields: title, abstract)
-#         {"index": "pregranted"},
-#         {
-#             "query": {
-#                 "query_string": {
-#                     "query": query,
-#                     "fields": ["Title", "Abstract"],
-#                     "default_operator": "AND",  # Search only in title and abstract fields
-#                     "fuzziness": "AUTO"  # Adding fuzziness
-#                 }
-#             },
-#             "size": 10000
-#         },
-#         # Query for drug-disease-indication (search all fields)
-#         {"index": "drug-disease-indication"},
-#         {
-#             "query": {
-#                 "query_string": {
-#                     "query": query, 
-#                     "default_operator": "AND",  # Search the same query across all fields
-#                     "fuzziness": "AUTO"  # Adding fuzziness
-#                 }
-#             },
-#             "size": 10000
-#         },
-#         {"index": "clinicaltrial"},
-#         {
-#             "query": {
-#                 "query_string": {
-#                     "query": query, 
-#                     "default_operator": "AND",  # Search the same query across all fields
-#                     "fuzziness": "AUTO"  # Adding fuzziness
-#                 }
-#             },
-#             "size": 10000
-#         },
-#         {"index": "pubmed"},
-#         {
-#             "query": {
-#                 "query_string": {
-#                     "query": query, 
-#                     "default_operator": "AND",  # Search the same query across all fields
-#                     "fuzziness": "AUTO"  # Adding fuzziness
-#                 }
-#             },
-#             "size": 10000
-#         }
-#     ]
-
-#     # Perform the multi-search in Elasticsearch
-#     try:
-#         response = es.msearch(body=es_query)
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-#     # Extract and combine hits from both queries directly
-#     documents = [hit['_source'] for res in response['responses'] for hit in res['hits']['hits']]
-
-#     # Reset the conversation history
-#     conversation_history.clear()
-
-#     # Return the combined results as a single list of documents
-#     return jsonify({"documents": documents, "query": query}), 200
-
 
 
 @app.route('/search-by-disease', methods=['POST'])
@@ -460,7 +377,7 @@ def ask():
     query = data.get('query')
     results = data.get('results')
     print(results)
-    response = process_question(results, query, disease_conversation_history)
+    response = route_to_chatbot(query, results, conversation_history)
     # print(conversation_history)
     # Create OpenAI prompt
     # context_prompt = create_openai_prompt(filtered_results[:5])
@@ -473,7 +390,6 @@ def ask():
     # openai_completion = generate_openai_completion(query)
  
     return jsonify({"results": response})
-
 @app.route('/therapy-cost-estimation', methods=['POST'])
 def therapy_cost_estimation():
     data = request.json
@@ -612,7 +528,7 @@ def price_prediction():
         
 
         # Return the prediction as a JSON response
-        return jsonify({'predicted_price': prediction['average_price'], 'chart_data': chart_data, 'competitor_details': competitor_details})
+        return jsonify({'predicted_price': prediction['predicted_price'], 'chart_data': chart_data, 'competitor_details': competitor_details})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -652,13 +568,12 @@ def get_drug_data():
         top_diseases_data = get_donut_chart_data(data)
         annual_therapy_data = get_bubble_chart_data(data)
         # print(annual_therapy_data)
-        adverse_events_data = get_heatmap_data(data)
+        # adverse_events_data = get_heatmap_data(data)
 
         # Combine results
         result = {
             "top_diseases_data": top_diseases_data,
-            "annual_therapy_data": annual_therapy_data,
-            "adverse_events_data": adverse_events_data
+            "annual_therapy_data": annual_therapy_data
         }
         
         print(result)
@@ -666,6 +581,66 @@ def get_drug_data():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+ 
+@app.route('/annual_therapy_cost', methods=['POST'])
+def annual_therapy_cost_calculator():
+    try:
+        data = request.json
+        cost_statement = data.get('cost_statement')
+        if not cost_statement:
+            return jsonify({'error': 'cost_statement is required'}), 400
+
+        result = extract_annual_therapy_cost(cost_statement)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Route: Adverse Event Score Calculator
+@app.route('/adverse_event_score', methods=['POST'])
+def adverse_event_score_calculator():
+    try:
+        data = request.json
+        drug_name = data.get('drug_name')
+        adverse_event_statement = data.get('adverse_event_statement')
+
+        if not drug_name or not adverse_event_statement:
+            return jsonify({'error': 'drug_name and adverse_event_statement are required'}), 400
+
+        # Extract adverse events
+        adverse_events = extract_adverse_events(adverse_event_statement)
+        if not adverse_events:
+            return jsonify({'error': 'No adverse events found'}), 400
+
+        result = adverse_effect_score(drug_name, adverse_events)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Route: Safety and Efficacy Score Calculator
+@app.route('/safety_efficacy_score', methods=['POST'])
+def safety_efficacy_score_calculator():
+    try:
+        data = request.json
+        trade_name = data.get('trade_name')
+        country = data.get('country')
+        disease = data.get('disease')
+        efficacy_statement = data.get('efficacy_statement')
+        safety_statement = data.get('safety_statement')
+        print(data)
+
+        if not (trade_name and country and disease and efficacy_statement and safety_statement):
+            return jsonify({
+                'error': 'trade_name, country, disease, efficacy_statement, and safety_statement are required'
+            }), 400
+
+        result = calculate_safety_efficacy_scores(trade_name, country, disease, efficacy_statement, safety_statement)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+   
 if __name__ == '__main__':
     app.run(debug=True)

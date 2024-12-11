@@ -1,8 +1,6 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from Utilities.chatbot import get_elasticsearch_results
-
 load_dotenv()
 
 # Set up OpenAI API key
@@ -15,12 +13,6 @@ def update_drug_data(drug_list, header_name, header_description):
     updated_list = []
     
     for drug in drug_list:
-        
-        drug_name = drug['TradeName']
-        print(drug_name)
-        elasticresults = get_elasticsearch_results(drug_name)
-        # print(elasticresults)
-        print(len(elasticresults))
         # Create the prompt to send to OpenAI API
         drug_context = "\n".join([f"{key}: {value}" for key, value in drug.items()])
         prompt = (
@@ -31,8 +23,8 @@ def update_drug_data(drug_list, header_name, header_description):
             {
                 "role": "system", 
                 "content": f'''You are a medical professional providing information about pharmaceutical drugs. 
-                Here is some information about a drug:\n{drug_context}\n\n
-        Explanation of Drug Data Keys:
+                        Here is some information about a drug:\n{drug_context}\n\n
+                        Explanation of Drug Data Keys:
                     - **TradeName**: Commercial or brand name of the drug.
                     - **Active Ingredient**: The main active pharmaceutical compound in the drug.
                     - **Type_of_Drug**: Classification of the drug (e.g., small molecule, monoclonal antibody).
@@ -51,48 +43,7 @@ def update_drug_data(drug_list, header_name, header_description):
                     - **Price**: Price per unit of the medication strictly in USD.
                     - **Quality_of_Life**: Impact of the drug on the patient's quality of life.
                     - **Size**: Packaging information, such as dosage and form (e.g., capsules, vials).
- 
-                "Explanation of PubMed Data Keys:\n"
-                 **Pubmed** data: Involves scientific publications, with attributes like "PMID", "Title", "AbstractText", "Author Name", "Country", "Journal Issue", "PubDate", "ISSN", "ISSN Type" and "type".
-                    the details of each attribute is given below:
-                    [**PMID**:A unique identifier assigned to each article in the PubMed database. It is a Alphanumeric code that allows for easy referencing and retrieval of the specific article.
-                    **Title**:The title of the research article. It provides a brief description of the main topic or findings of the study and is often the first element that researchers and readers will look at.
-                    **AbstractText**:A summary of the research article that includes the main objectives, methods, results, and conclusions. The abstract is designed to give readers a quick overview of the study's content and significance.
-                    **Author Name**:The names of the authors who contributed to the research article. This attribute may include multiple names and is essential for crediting those who conducted the research.
-                    **Country**:The country where the research was conducted or where the authors are based. This information can be important for understanding the geographical context of the study and its implications.
-                    **Journal Issue**:The specific issue of the journal in which the article was published, typically including the volume and issue number. This attribute helps in locating the article within the journal's archive.
-                    **PubDate**:The date when the article was published. This information is crucial for referencing and understanding the timeliness of the research.
-                    **ISSN**:A unique code used to identify the journal in which the article was published. The ISSN helps in distinguishing between different serial publications and is essential for library cataloging.
-                    **ISSN Type**:Indicates whether the ISSN is for the print version, the electronic version, or both. This information is helpful for understanding how the journal is available to readers.
-                    **type**:The classification type is pubmed.]
- 
- 
-                **Clinicaltrial** data: Refers to clinical trial information with attributes such as "NCT Number", "Study Status", "Study Title", "Brief Summary", "Study Results", "Conditions", "Interventions", "Sponsor", "Collaborators", "Sex", "Age", "Phases", "Enrollment", "Study Type", "Study Design", "Other IDs", "Start Date", "Primary Completion Date", "Completion Date", "First Posted", "Last Update Posted", "Locations" and "type".
-                   The details of the attributes are:
-                        [**Primary Completion Date**: The date when the last participant's last visit occurred, marking the completion of the primary endpoint data collection.
-                        **Study Title**: The title of the clinical trial, describing its focus or objective.
-                        **Study Status**: The current status of the clinical trial (e.g., Recruiting, Completed, Terminated).
-                        **Sex**: The sex of the participants eligible for the trial (e.g., male, female, both).
-                        **Locations**: The sites where the clinical trial is conducted.
-                        **Sponsor**: The organization or entity that initiates, manages, or finances the clinical trial.
-                        **Completion Date**: The actual date when the trial was completed.
-                        **Study Results**: Findings or outcomes from the clinical trial.
-                        **Conditions**: The medical conditions being studied in the trial.
-                        **Study Description**: A detailed overview of the study's objectives, design, and methodology.
-                        **Brief Summary**: A concise summary of the study's purpose and design.
-                        **Interventions**: The treatments, drugs, or procedures being tested in the trial.
-                        **Phases**: The different stages of the clinical trial (e.g., Phase 1, Phase 2, Phase 3).
-                        **Start Date**: The date when the trial commenced.
-                        **Other IDs**: Additional identifiers related to the trial, which may include registry numbers or codes.
-                        **First Posted**: The date when the trial information was first made publicly available.
-                        **Enrollment**: The number of participants recruited for the trial.
-                        **NCT Number**: The unique identifier assigned to the trial in the ClinicalTrials.gov registry.
-                        **Study Design**: The overall plan or structure of the clinical trial.
-                        **Last Update Posted**: The date of the most recent update to the trial information.
-                        **Collaborators**: Other organizations or entities that are involved in the trial.
-                        **Age**: The age range of participants eligible for the trial.
-                        **Study Type**: The nature of the study (e.g., observational, interventional).
-                        **type**: The classification type is clinicaltrial.] 
+                    
                     ONLY PROVIDE THE VALUE FOR THE HEADER '{header_name}'. NO OTHER INFORMATION IS REQUIRED.
                     '''
             },

@@ -16,3 +16,6 @@ matplotlib
 chardet
 seaborn
 mplcursors
+transformers
+torch
+dill

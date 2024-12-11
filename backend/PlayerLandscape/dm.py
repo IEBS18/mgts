@@ -161,6 +161,7 @@
 #     print("No data found for the given active ingredient!")
 
 
+from PricePrediction.pp import clean_price
 from elasticsearch import Elasticsearch
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -184,22 +185,26 @@ def get_donut_chart_data(data):
 
 # Function for Bubble Chart Data
 def get_bubble_chart_data(data):
-    if 'Annual_Therapy_Costs(Numbers)' not in data.columns:
-        return {"error": "Missing Annual Therapy Costs data"}
-    data = data.dropna(subset=['Annual_Therapy_Costs(Numbers)'])
-    bubble_chart_data = data[['TradeName', 'Annual_Therapy_Costs(Numbers)', 'Disease', 'Size']].to_dict(orient='records')
+    # if 'Annual_Therapy_Costs(Numbers)' not in data.columns:
+    #     return {"error": "Missing Annual Therapy Costs data"}
+    print(data['Annual_Therapy_Costs'])
+    data['Annual_Therapy_Costs'] = (data['Annual_Therapy_Costs']).apply(clean_price)
+    
+    data = data.dropna(subset=['Annual_Therapy_Costs'])
+    bubble_chart_data = data[['TradeName', 'Annual_Therapy_Costs', 'Disease', 'Size']].to_dict(orient='records')
+    # print(bubble_chart_data)
     return bubble_chart_data
 
 # Function for Heatmap Data
-def get_heatmap_data(data):
-    if 'Adverse_Events_Score' not in data.columns or 'Morbidity' not in data.columns:
-        return {"error": "Missing necessary fields for heatmap"}
-    data['Adverse_Events_Score'] = pd.to_numeric(data['Adverse_Events_Score'], errors='coerce')
-    data['Morbidity'] = pd.to_numeric(data['Morbidity'], errors='coerce')
-    if data['Adverse_Events_Score'].isnull().all() or data['Morbidity'].isnull().all():
-        return {"error": "No valid data for heatmap"}
-    pivot_data = data.pivot_table(index='TradeName', columns='Adverse_Events_Score', values='Morbidity', aggfunc='mean')
-    return pivot_data.to_dict()
+# def get_heatmap_data(data):
+#     if 'Adverse_Events_Score' not in data.columns or 'Morbidity' not in data.columns:
+#         return {"error": "Missing necessary fields for heatmap"}
+#     data['Adverse_Events_Score'] = pd.to_numeric(data['Adverse_Events_Score'], errors='coerce')
+#     data['Morbidity'] = pd.to_numeric(data['Morbidity'], errors='coerce')
+#     if data['Adverse_Events_Score'].isnull().all() or data['Morbidity'].isnull().all():
+#         return {"error": "No valid data for heatmap"}
+#     pivot_data = data.pivot_table(index='TradeName', columns='Adverse_Events_Score', values='Morbidity', aggfunc='mean')
+#     return pivot_data.to_dict()
 # Function to process data and create charts
 # def charts(data, active_ingredient, graph_choice):
 #     if graph_choice == '1':
