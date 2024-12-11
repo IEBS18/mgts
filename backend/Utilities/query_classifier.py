@@ -143,10 +143,10 @@ def route_to_chatbot(user_query, search_results, conversation_history):
 
     for label in predicted_labels:
         if label== 'PubMed' :
-            user_query=preprocess(user_query, diseasename)
+            pubmed_query=preprocess(user_query, diseasename)
             pubmedresults=get_elasticsearch_results(
         index="pubmed",
-        query=user_query,
+        query=pubmed_query,
         fields=["Title", "AbstractText", "PMID"],
         operator="OR"
         )
@@ -154,10 +154,10 @@ def route_to_chatbot(user_query, search_results, conversation_history):
             search_results['pubmedData'] = pubmedresults
 
         elif label =='Clinical Trials':
-            user_query=preprocess(user_query, diseasename)
+            clinical_query=preprocess(user_query, diseasename)
             clinicalresults= get_elasticsearch_results(
         index="clinicaltrial",
-        query=user_query,
+        query=clinical_query,
         fields=["Study Title", "Study Description", "NCT Number", "Study Status", "Conditions",
                 "Interventions", "Sponsor", "Collaborators", "Study Design", "Phases"],
         operator="OR"
@@ -173,8 +173,6 @@ def process_question(results, question, conversation_history):
     
     context_prompt = create_prompt(results, keys)
     print(context_prompt)
-    # strlength = len(context_prompt)
-    # print(strlength)
     conversation_history.append({"role": "system", "content": context_prompt})
     answer = generate_openai_completion(question)
     return answer
