@@ -4,9 +4,19 @@ from openai import OpenAI
 from elasticsearch import Elasticsearch
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('punkt_tab')
+nltk_data_path = 'nltk_data'  # Replace with your desired path
+
+# Ensure the directory exists
+if not os.path.exists(nltk_data_path):
+    os.makedirs(nltk_data_path)
+
+# Set the NLTK data path
+nltk.data.path.append(nltk_data_path)
+
+# Download the required NLTK data
+nltk.download('punkt', download_dir=nltk_data_path)
+nltk.download('stopwords', download_dir=nltk_data_path)
+nltk.download('punkt_tab', download_dir=nltk_data_path)
 
 openai_client = OpenAI(
     api_key=os.environ["OPENAI_API_KEY"],
