@@ -30,4 +30,5 @@ backend/MarketEstimation/__pycache__/*
 backend/embeddings/__pycache__/*
 backend/users.json
 */nltk_data
-*/query_router.pkl
+backend/Utilities/query_router.pkl
+ensure.txt
