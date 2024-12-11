@@ -5,14 +5,18 @@ from flask_cors import CORS
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
 # from flask_sqlalchemy import SQLAlchemy
-import os
 import json
 
 from PricePrediction.pp import display_competitor_details, fetch_competitor_data, parse_data, predict_price
 from PlayerLandscape.dm import get_bubble_chart_data, get_donut_chart_data
 # , get_heatmap_data
 from Calculations.ATC import adverse_effect_score, calculate_safety_efficacy_scores, extract_adverse_events, extract_annual_therapy_cost
-from Utilities.query_classifier import route_to_chatbot
+from Utilities.query_classifier import (
+    route_to_chatbot,
+    es,
+    conversation_history
+)
+
 sys.stdout.reconfigure(encoding='utf-8')
 
 from PlayerLandscape.player import get_disease_data
@@ -20,42 +24,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from MarketEstimation.market import get_country_data
-
-# from MarketEstimation.market import visualize_therapy_cost
-# from Utilities.search import preprocess
 from Utilities.summarize import summarize_by_title_or_org
-from Utilities.chatbot import (
-    # process_question,
-    es,
-    conversation_history,
-)
-from Utilities.diseasechatbot import (
-    process_question,
-    disease_conversation_history,
-)
+
 from Utilities.AIColumn import update_drug_data
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://68.154.56.138:3000"])
-
-# # Load database URL from environment variables (or you can hardcode it for local development)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@localhost:5432/db_name'
-
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# db = SQLAlchemy(app)
-
-# # Define User model
-# class User(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(db.Text, unique=True, nullable=False)  # UUID for user identification
-#     first_name = db.Column(db.Text, nullable=False)
-#     last_name = db.Column(db.Text, nullable=False)
-#     email = db.Column(db.Text, unique=True, nullable=False)
-#     password = db.Column(db.Text, nullable=False)
-
-# with app.app_context():
-#     db.create_all()
 
 # Path to the user data file
 USER_FILE_PATH = './users.json'
@@ -376,7 +350,7 @@ def ask():
     data = request.json
     query = data.get('query')
     results = data.get('results')
-    print(results)
+    # print(results)
     response = route_to_chatbot(query, results, conversation_history)
     # print(conversation_history)
     # Create OpenAI prompt

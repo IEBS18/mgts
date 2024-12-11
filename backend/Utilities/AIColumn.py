@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from Utilities.chatbot import get_elasticsearch_results
+from Utilities.query_classifier import get_elasticsearch_results
 
 load_dotenv()
 
@@ -18,9 +18,23 @@ def update_drug_data(drug_list, header_name, header_description):
         
         drug_name = drug['TradeName']
         print(drug_name)
-        elasticresults = get_elasticsearch_results(drug_name)
+        pubmedresults = get_elasticsearch_results(
+            index="pubmed",
+            query=drug_name,
+            fields=["Title", "AbstractText", "PMID"],
+            operator="OR"
+        )
+        clinicalresults = get_elasticsearch_results(
+            index="clinicaltrial",
+            query=drug_name,
+            fields=["Study Title", "Study Description", "NCT Number", "Study Status", "Conditions",
+                "Interventions", "Sponsor", "Collaborators", "Study Design", "Phases"],
+            operator="OR"
+        )
         # print(elasticresults)
-        print(len(elasticresults))
+        # print(len(elasticresults))
+        print(len(pubmedresults))
+        print(len(clinicalresults))
         # Create the prompt to send to OpenAI API
         drug_context = "\n".join([f"{key}: {value}" for key, value in drug.items()])
         prompt = (

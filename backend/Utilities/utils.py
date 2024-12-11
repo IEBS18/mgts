@@ -7,8 +7,7 @@ from nltk.tokenize import word_tokenize
 nltk_data_path = 'nltk_data'  # Replace with your desired path
 
 # Ensure the directory exists
-if not os.path.exists(nltk_data_path):
-    os.makedirs(nltk_data_path)
+os.makedirs(nltk_data_path, exist_ok=True)
 
 # Set the NLTK data path
 nltk.data.path.append(nltk_data_path)
@@ -33,49 +32,6 @@ def filter_keys(input_list, keys_to_keep):
         filtered_dict = {key: item[key] for key in keys_to_keep if key in item}
         filtered_list.append(filtered_dict)
     return filtered_list   
-
-
-#function for elastic search for pubmed
-def get_elasticsearch_results_pubmed(query):
-    es_query = [
-        # Query for categorix_v2 (specific fields: title, abstract)
-        {'index':'pubmed'},
-        {
-            "query": {
-                "query_string": {
-                    "query": query,
-                    "fields": ["Title", "AbstractText", 'PMID'],
-                    "default_operator": "AND",  # Search only in title and abstract fields
-                    "fuzziness": "AUTO"  # Adding fuzziness
-                }
-            },
-            "size": 10000
-        }
-    ]
-    result = es.msearch(body=es_query)
-    return [hit['_source'] for res in result['responses'] for hit in res['hits']['hits']]
-
-
-def get_elasticsearch_results_clinical(query):
-    es_query = [
-        # Query for categorix_v2 (specific fields: title, abstract)
-        {'index':'clinicaltrial'},
-        {
-            "query": {
-                "query_string": {
-                    "query": query,
-                    "fields": ["Study Title", "Study Description", "NCT Number","Study Status","Conditions","Interventions","Sponsor","Collaborators","Study Design","Phases"],
-                    "default_operator": "OR",  # Search only in title and abstract fields
-                    "fuzziness": "AUTO"  # Adding fuzziness
-                }
-            },
-            "size": 10000
-        }
-    ]
-
-    result = es.msearch(body=es_query)
-    return [hit['_source'] for res in result['responses'] for hit in res['hits']['hits']]
-
 
 def preprocess(text, dn):
     """
@@ -163,6 +119,46 @@ def clinicallink(nctid):
 
 def pubmedlink(pmid):
     return "https://pubmed.ncbi.nlm.nih.gov/" + str(pmid)
+
+def create_prompt(search_results, keys):
+    """
+    Create a comprehensive OpenAI prompt based on the search results.
+
+    Parameters:
+        search_results: A dictionary containing data for disease, drug, PubMed, and clinical trials.
+
+    Returns:
+        str: A formatted OpenAI prompt string.
+    """
+    disease_data = search_results.get('diseaseData', [{}])[0]
+    disease_context = str(creatediseasecontext(disease_data))
+    disease_name = disease_data.get('Disease', 'Unknown Disease')
+
+    drug_data = search_results.get('drugData', [])
+    filtered_drug_data = filter_keys(drug_data, keys)
+    drug_context = str(createdrugcontext(filtered_drug_data))
+    
+    final_prompt = (
+        f"YOU ARE A HIGHLY KNOWLEDGEABLE MEDICAL PROFESSIONAL SPECIALIZING IN '{disease_name.upper()}' DISEASE, ITS DRUG TREATMENTS, CLINICAL RESEARCH, AND BIOMEDICAL LITERATURE.\n"
+        "Use the provided context data about the same to ANSWER THE USER QUERIES accurately and effectively.\n"
+        "### CONTEXT : For each section we first have explanation of attributes , followed by the actual data.\n\n"
+        f"## DISEASE INFORMATION FOR '{disease_name}':\n\n{disease_context}\n\n"
+        f"## CORRESPONDING DRUG INFORMATION:\n\n{drug_context}\n\n"
+    )
+
+    if 'pubmedData' in search_results:
+        pubmed_context = str(createpubmedcontext(search_results['pubmedData']))
+        final_prompt += f"## CORRESPONDING PUBMED ARTICLES:\n\n{pubmed_context}\n\n"
+
+    if 'clinicalData' in search_results:
+        clinical_context = str(createclinicalcontext(search_results['clinicalData']))
+        final_prompt += f"## RELEVANT CLINICAL TRIALS INFORMATION:\n\n{clinical_context}\n\n"
+
+    final_prompt += (
+        "Please use the above data to ANSWER THE USER'S QUERY accurately and factually. "
+        "Do not hallucinate information or provide responses outside the context of the data provided."
+    )
+    return final_prompt
 
 def createpubmedcontext(pubmed_data):
     """

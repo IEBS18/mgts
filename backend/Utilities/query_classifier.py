@@ -20,11 +20,7 @@ from Utilities.train_query_classifier import QueryClassifierModel
 # from train_query_classifier import QueryClassifierModel
 from Utilities.utils import(
     preprocess,
-    filter_keys,
-    createclinicalcontext,
-    creatediseasecontext,
-    createdrugcontext,
-    createpubmedcontext
+    create_prompt
 )  
 MODEL = "gpt-4o-mini"
 
@@ -172,52 +168,11 @@ def route_to_chatbot(user_query, search_results, conversation_history):
 
     return response
 
-def create_prompt(search_results):
-    """
-    Create a comprehensive OpenAI prompt based on the search results.
-
-    Parameters:
-        search_results: A dictionary containing data for disease, drug, PubMed, and clinical trials.
-
-    Returns:
-        str: A formatted OpenAI prompt string.
-    """
-    disease_data = search_results.get('diseaseData', [{}])[0]
-    disease_context = str(creatediseasecontext(disease_data))
-    disease_name = disease_data.get('Disease', 'Unknown Disease')
-
-    drug_data = search_results.get('drugData', [])
-    filtered_drug_data = filter_keys(drug_data, keys)
-    drug_context = str(createdrugcontext(filtered_drug_data))
-
-    final_prompt = (
-        f"YOU ARE A HIGHLY KNOWLEDGEABLE ASSISTANT SPECIALIZING IN RARE DISEASES, NOVEL DRUG TREATMENTS, CLINICAL RESEARCH, AND BIOMEDICAL LITERATURE.\n"
-        "Use the provided context data to ANSWER THE USER QUERIES accurately and effectively.\n"
-        
-        "### CONTEXT : For each section we first have explanation of attributes , followed by the actual data.\n\n"
-        f"## DISEASE INFORMATION FOR '{disease_name}':\n\n{disease_context}\n\n"
-        f"## CORRESPONDING DRUG INFORMATION:\n\n{drug_context}\n\n"
-    )
-
-    if 'pubmedData' in search_results:
-        pubmed_context = str(createpubmedcontext(search_results['pubmedData']))
-        final_prompt += f"## CORRESPONDING PUBMED ARTICLES:\n\n{pubmed_context}\n\n"
-
-    if 'clinicalData' in search_results:
-        clinical_context = str(createclinicalcontext(search_results['clinicalData']))
-        final_prompt += f"## RELEVANT CLINICAL TRIALS INFORMATION:\n\n{clinical_context}\n\n"
-
-    final_prompt += (
-        "Please use the above data to ANSWER THE USER'S QUERY accurately and factually. "
-        "Do not hallucinate information or provide responses outside the context of the data provided."
-    )
-    return final_prompt
-
 
 def process_question(results, question, conversation_history):
     
-    context_prompt = create_prompt(results)
-    # print(context_prompt)
+    context_prompt = create_prompt(results, keys)
+    print(context_prompt)
     # strlength = len(context_prompt)
     # print(strlength)
     conversation_history.append({"role": "system", "content": context_prompt})
