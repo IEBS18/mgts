@@ -101,6 +101,17 @@ const MarketShareChart = ({ data, diseaseName }) => {
 
 const REVENUECOLORS = ["#29c4f8", "#a6ce39", "#f39c12"]; // Customize the colors as needed.
 
+const formatRevenue = (value) => {
+  if (value >= 1) {
+    return `${(value).toFixed(2)}B`; // Billions
+  } else if (value >= 0.001) {
+    return `${(value * 1000).toFixed(2)}M`; // Millions (multiply by 1000)
+  } else if (value >= 0.000001) {
+    return `${(value * 1000000).toFixed(2)}K`; // Thousands (multiply by 1,000,000)
+  }
+  return value.toFixed(2); // For values less than 0.000001
+};
+
 const RevenueOverYearsChart = ({ data, diseaseName }) => {
   // Process the data into a format suitable for the chart
   const processedData = data.reduce((acc, item) => {
@@ -127,12 +138,10 @@ const RevenueOverYearsChart = ({ data, diseaseName }) => {
             <CartesianGrid strokeDasharray="3 3" />
             {/* Format the X-axis to show the year only */}
             <XAxis dataKey="year" />
-            {/* Format the Y-axis to display values with two decimal places */}
-            <YAxis tickFormatter={(value) => value.toFixed(2)} />
+            {/* Format the Y-axis to display values with appropriate unit (K, M, B) */}
+            <YAxis tickFormatter={formatRevenue} />
             {/* Custom Tooltip formatting */}
-            <Tooltip
-              formatter={(value) => `$${value.toFixed(2)}B`} // Format the tooltip value to 2 decimal places
-            />
+            <Tooltip formatter={(value) => formatRevenue(value)} />
             <Legend />
             {/* Dynamic Line rendering based on manufacturers */}
             {Object.keys(chartData[0] || {}).filter(key => key !== 'year').map((manufacturer, index) => (
@@ -150,6 +159,7 @@ const RevenueOverYearsChart = ({ data, diseaseName }) => {
     </Card>
   );
 };
+
 
 const DrugTypeDistributionChart = ({ data, diseaseName }) => {
   const pieData = Object.entries(data).map(([name, value]) => ({ name, value }))
