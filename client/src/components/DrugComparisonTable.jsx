@@ -56,7 +56,7 @@ export function DrugComparisonTable() {
 
     const handleSubmitAiColumn = () => {
         if (!aiColumnName || !aiColumnDescription) {
-            alert("Please fill out both fields");
+            // alert("Please fill out both fields");
             return;
         }
 
@@ -152,7 +152,7 @@ export function DrugComparisonTable() {
             .catch((error) => {
                 console.error("Error exporting visible data:", error);
                 setIsExporting(false);
-                alert("Failed to export data");
+                // alert("Failed to export data");
             });
     };
 
@@ -259,12 +259,13 @@ export function DrugComparisonTable() {
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="bg-white text-[#a6ce39] border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2"><Filter className="h-4 w-4" />Filter Columns</Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56 bg-white rounded-lg">
+                        <DropdownMenuContent className="w-56 bg-white rounded-lg dropdown-scroll">
                             {data.map((d) => (
                                 <DropdownMenuCheckboxItem
                                     key={`${d.TradeName} (${d.Size})`}
                                     checked={visibleColumns.includes(`${d.TradeName} (${d.Size})`)}
                                     onCheckedChange={() => toggleColumnVisibility(`${d.TradeName} (${d.Size})`)}
+                                    onSelect={(e) => e.preventDefault()}
                                 >
                                     {`${d.TradeName} (${d.Size})`}
                                 </DropdownMenuCheckboxItem>

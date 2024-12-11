@@ -91,13 +91,13 @@ export default function ChatBot({ chatMessages, setChatMessages, fulldata, isMin
             <div className={`flex items-start space-x-2 ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
               <Avatar className={`w-8 h-8 ${message.type === 'user' ? 'bg-blue-500' : 'bg-gray-200'}`}>
                 <AvatarImage
-                  src={message.type === 'user' ? '/path-to-user-avatar.png' : '/path-to-bot-avatar.png'}
+                  src={message.type === 'user' ? '/path-to-user-avatar.' : '../assets/Insimine.svg'}
                   alt={message.type === 'user' ? 'User' : 'Bot'}
                 />
                 <AvatarFallback>{message.type === 'user' ? 'U' : 'B'}</AvatarFallback>
               </Avatar>
 
-              <div className={`p-2 rounded-xl shadow-md ${message.type === 'user' ? 'bg-blue-500 text-white' : 'bg-[#95D524] text-white'}`}>
+              <div className={`p-2 rounded-xl shadow-md ${message.type === 'bot' ? 'bg-blue-500 text-white' : 'bg-[#95D524] text-white'}`}>
                 <p className="text-sm">
                   {message.content}
                 </p>

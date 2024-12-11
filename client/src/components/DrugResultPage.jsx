@@ -294,6 +294,7 @@ const DrugResultsPage = () => {
 
                     <Button
                         onClick={handleComparison}
+                        disabled={selectedCards.length === 0}
                         className="bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2"
                     >
                         {/* <PlusCircle className="h-4 w-4" /> */}
