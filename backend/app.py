@@ -191,6 +191,7 @@ def disease_search():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 @app.route('/search-by-drug', methods=['POST'])
 def drug_search():
     data = request.json
@@ -236,6 +237,7 @@ def drug_search():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 @app.route('/search-by-symptoms', methods=['POST'])
 def symptom_search():
     data = request.json
@@ -614,6 +616,47 @@ def safety_efficacy_score_calculator():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/formulary', methods=['POST'])
+def formulary():
+    try:
+        data = request.json
+        selected_drug_names = [drug['name'] for drug in data['selectedDrugs']]
+        selected_state = data['selectedState']
+        selected_plan_id = data['selectedPlans'][0]['id']
+        selected_plan_name = data['selectedPlans'][0]['name']
+       
+        excel_file_path = 'formulary/Formulary_File.xlsx'  # Update with your actual file path
+        df = pd.read_excel(excel_file_path)
+ 
+        # Filter the DataFrame based on the selected drugs
+        filtered_df = df[df['DRUG NAME'].isin(selected_drug_names)].copy()  # Use .copy() to avoid SettingWithCopyWarning
+ 
+        # Further filter by state if not "All States"
+        if selected_state != 'All States':
+            filtered_df = filtered_df[filtered_df['State'] == selected_state]
+ 
+        # Add a column for plan coverage using .loc to avoid the warning
+        filtered_df.loc[:, 'COVERED'] = filtered_df['Name'].apply(lambda x: 'Yes' if x == selected_plan_name else 'No')
+ 
+        # Prepare the response format
+        response_data = []
+        for _, row in filtered_df.iterrows():
+            response_data.append({
+                'State': row['State'],
+                'Plan Type': row['Plan Type'],
+                'ID': row['ID'],
+                'Name': row['Name'],
+                'Drug Type': row['DRUG TYPE'],
+                'Drug Name': row['DRUG NAME'],
+                'Covered': row['COVERED']
+            })
+ 
+        print(response_data)  # Optional: for debugging purposes
+        return jsonify(response_data)
+ 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
    
 if __name__ == '__main__':
