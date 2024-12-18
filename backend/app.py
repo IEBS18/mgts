@@ -1,10 +1,9 @@
-from flask import Flask, request, jsonify, send_file, make_response
+from flask import Flask, request, jsonify, send_file
 import pandas as pd
 from io import BytesIO
 from flask_cors import CORS
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
-# from flask_sqlalchemy import SQLAlchemy
 import json
 
 from PricePrediction.pp import display_competitor_details, fetch_competitor_data, parse_data, predict_price
@@ -165,14 +164,6 @@ def disease_search():
     }
 
     try:
-        # Search the 'combined-drug-data' index
-        # drug_response = es.search(index='combined_country_drug', body=query)
-
-        # # Extract relevant data from the Elasticsearch response
-        # drugs = []
-        # for hit in response['hits']['hits']:
-        #     drug_info = hit['_source']  # Assuming the relevant drug info is in the "_source" field
-        #     drugs.append(drug_info)
         # Perform the multi-search query
         response = es.msearch(body=es_query)
         documents = [
@@ -241,12 +232,10 @@ def drug_search():
 @app.route('/search-by-symptoms', methods=['POST'])
 def symptom_search():
     data = request.json
-    search_type = data.get("search_type")
     index = "disease_data_final"
 
     es_query = []
     search_keyword = data.get("search_keyword", "")
-    # country_names = data.get("country_name", [])
 
     es_query.append({"index": index})
 
@@ -501,8 +490,6 @@ def price_prediction():
         # details= competitor_details.to_dict(orient='records')
         # print("x:", competitor_details)
         
-        
-
         # Return the prediction as a JSON response
         return jsonify({'predicted_price': prediction['predicted_price'], 'chart_data': chart_data, 'competitor_details': competitor_details})
 
