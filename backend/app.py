@@ -29,7 +29,7 @@ from Utilities.summarize import summarize_by_title_or_org
 from Utilities.AIColumn import update_drug_data
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://68.154.56.138:3000"])
+CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://68.154.56.138:3000","http://localhost:5174"])
 
 # Path to the user data file
 USER_FILE_PATH = './users.json'
