@@ -1,10 +1,9 @@
 // src/components/DiseaseOverviewModal.jsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -20,6 +19,37 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
   const [searchType, setSearchType] = useState("disease");
   const [searchValue, setSearchValue] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+
+  const [diseaseOptions, setDiseaseOptions] = useState([]);
+  const [drugOptions, setDrugOptions] = useState([]);
+
+  useEffect(() => {
+    // Fetch disease options
+    fetch("/output.json")
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Fetched Disease Data:", data);
+        const options = data.DISEASE.map((disease) => ({
+          value: disease,
+          label: disease,
+        }));
+        setDiseaseOptions(options);
+      })
+      .catch((error) => console.error("Error fetching disease data:", error));
+
+    // Fetch drug options
+    fetch("/output.json")
+      .then((response) => response.json())
+      .then((data) => {
+        const options = data["ACTIVE INGREDIENT"].map((drug) => ({
+          value: drug,
+          label: drug,
+        }));
+        setDrugOptions(options);
+      })
+      .catch((error) => console.error("Error fetching drug data:", error));
+  }, []);
+
 
   const handleSearchSubmitDisease = async () => {
     setIsSearching(true);
@@ -184,7 +214,7 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
                 <Label htmlFor="disease-select" className="text-gray-700">Disease Name</Label>
                 <Select
                   id="disease-select"
-                  options={outputData.DISEASE.map(disease => ({ value: disease, label: disease }))}
+                  options={diseaseOptions}
                   onChange={(option) => setSearchValue(option.value)}
                   styles={selectStyles}
                   placeholder="Select disease..."
@@ -205,7 +235,7 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
                 <Label htmlFor="drug-select" className="text-gray-700">Drug Name</Label>
                 <Select
                   id="drug-select"
-                  options={outputData["ACTIVE INGREDIENT"].map(drug => ({ value: drug, label: drug }))}
+                  options={drugOptions}
                   onChange={(option) => setSearchValue(option.value)}
                   styles={selectStyles}
                   placeholder="Select drug..."

@@ -80,7 +80,7 @@ const TherapyCostForecast = ({ isChatMinimized, diseaseName, allData }) => {
                         <XAxis dataKey="year">
                             <Label value="Year" offset={-10} position="insideBottom" />
                         </XAxis>
-                        <YAxis domain={[0, roundedMaxCost]} tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}>
+                        <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}>
                             <Label value="Annual Therapy Cost (in USD)" angle={-90} position="insideLeft" offset={10} style={{ textAnchor: 'middle' }} />
                         </YAxis>
                         <Tooltip content={<ChartTooltipContent />} />

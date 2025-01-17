@@ -4,21 +4,21 @@ from torch.utils.data import DataLoader, Dataset
 from transformers import BertTokenizer, BertForSequenceClassification
 import pickle
 from sklearn.preprocessing import MultiLabelBinarizer
-
+ 
 class QueryDataset(Dataset):
     def __init__(self, queries, labels, tokenizer, max_len=64):
         self.queries = queries
         self.labels = labels
         self.tokenizer = tokenizer
         self.max_len = max_len
-
+ 
     def __len__(self):
         return len(self.queries)
-
+ 
     def __getitem__(self, index):
         query = self.queries[index]
         label = self.labels[index]
-
+ 
         encoding = self.tokenizer.encode_plus(
             query,
             add_special_tokens=True,
@@ -27,23 +27,23 @@ class QueryDataset(Dataset):
             truncation=True,
             return_tensors="pt"
         )
-
+ 
         return {
             'input_ids': encoding['input_ids'].squeeze(),
             'attention_mask': encoding['attention_mask'].squeeze(),
             'labels': torch.tensor(label, dtype=torch.float32)
         }
-
+ 
 class QueryClassifierModel(nn.Module):
     def __init__(self, num_labels=3):
         super(QueryClassifierModel, self).__init__()
         self.num_labels = num_labels
         self.bert = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=self.num_labels)
-    
+   
     def forward(self, input_ids, attention_mask):
         outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
         return outputs.logits
-
+ 
 data = [
 ("What is the association between the drug and disease?", [2]),
 ("Give me the PubMed articles for the drug and clinical trial information for the disease.", [0, 1]),
@@ -255,46 +255,47 @@ data = [
 ("Give me the clinical trials for the disease.", [1]),
 ("Give me the clinical trials for the disease and PubMed articles for the drug.", [0, 1]),
 ]
-
+ 
 queries = [item[0] for item in data]
 labels = [item[1] for item in data]
-
+ 
 mlb = MultiLabelBinarizer()
 labels_bin = mlb.fit_transform(labels)
-
+ 
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 dataset = QueryDataset(queries, labels_bin, tokenizer)
 dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
-
+ 
 num_labels = labels_bin.shape[1]
 model = QueryClassifierModel(num_labels)
 optimizer = torch.optim.AdamW(model.parameters(), lr=2e-5)
 loss_fn = nn.BCEWithLogitsLoss()
-
+ 
 epochs = 20
-
+ 
 if __name__=="__main__":
-
+ 
     for epoch in range(epochs):
         model.train()
         for batch in dataloader:
             optimizer.zero_grad()
-
+ 
             input_ids = batch['input_ids']
             attention_mask = batch['attention_mask']
             labels = batch['labels']
-
+ 
             outputs = model(input_ids, attention_mask)
             loss = loss_fn(outputs, labels)
             loss.backward()
             optimizer.step()
-
+ 
         print(f"Epoch {epoch + 1}/{epochs} - Loss: {loss.item()}")
-
-    with open(r'Utilities\query_router.pkl', 'wb') as f:
+ 
+    with open(r'query_router.pkl', 'wb') as f:
         state = model.state_dict()
         pickle.dump(state, f)
-
+ 
     # with open('tokenizer.pkl', 'wb') as f:
     #     state = tokenizer.
     #     pickle.dump(tokenizer, f)
+ 

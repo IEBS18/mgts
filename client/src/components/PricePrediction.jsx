@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Label } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
@@ -10,6 +10,7 @@ export default function CompetitorAnalysis() {
     const location = useLocation();
     //   const { predicted_price, chart_data, competitor_details } = location.state;
     const { data, payload } = location.state;
+    console.log(data.competitor_details)
 
     return (
         <div className="container mx-auto p-4">
@@ -17,26 +18,26 @@ export default function CompetitorAnalysis() {
 
             <div className="mb-8 flex flex-row gap-x-2">
                 <Card className='w-1/2 p-2'>
-                  {/* <CardHeader>
+                    {/* <CardHeader>
                     <CardTitle>
                     Input Details
                     </CardTitle>
                   </CardHeader> */}
-                   <CardContent>
-                   <p className="text-2xl font-bold"> Disease: {(payload.disease_name)}</p>
-                   <p className="text-2xl font-bold"> Country: {(payload.country)}</p>
-                   <p className="text-2xl font-bold"> Quality of Life: {(payload.quality_of_life)}</p>
-                   <p className="text-2xl font-bold"> Mortality: {(payload.mortality)}</p>
-                   <p className="text-2xl font-bold"> Morbidity: {(payload.morbidity)}</p>
-                   <p className="text-2xl font-bold"> Safety: {(payload.safety)}</p>
-                   <p className="text-2xl font-bold"> Efficacy: {(payload.efficacy)}</p>
-                   </CardContent>
+                    <CardContent>
+                        <p className="text-2xl font-bold"> Disease: {(payload.disease_name)}</p>
+                        <p className="text-2xl font-bold"> Country: {(payload.country)}</p>
+                        <p className="text-2xl font-bold"> Quality of Life: {(payload.quality_of_life)}</p>
+                        <p className="text-2xl font-bold"> Mortality: {(payload.mortality)}</p>
+                        <p className="text-2xl font-bold"> Morbidity: {(payload.morbidity)}</p>
+                        <p className="text-2xl font-bold"> Safety: {(payload.safety)}</p>
+                        <p className="text-2xl font-bold"> Efficacy: {(payload.efficacy)}</p>
+                    </CardContent>
                     {/* <h3></h3>
                     <pre>{JSON.stringify(payload, null, 2)}</pre> */}
                 </Card>
                 <Card className='w-1/2 p-2'>
                     <CardHeader>
-                        <CardTitle>Predicted Price</CardTitle>
+                        <CardTitle>Predicted Annual Therapy Cost:</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-3xl font-bold">${(data.predicted_price).toFixed(2)}</p>
@@ -46,7 +47,7 @@ export default function CompetitorAnalysis() {
 
             <Card className="mb-8">
                 <CardHeader>
-                    <CardTitle>Top 10 Competitor Prices</CardTitle>
+                    <CardTitle>Top {data.chart_data.length} Competitor Prices</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="h-[400px]">
@@ -69,11 +70,18 @@ export default function CompetitorAnalysis() {
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="TradeName" textAnchor="middle" interval={0} />
-                                <YAxis label={{ value: 'Price ($)', angle: -90, position: 'insideLeft' }} />
+                                <YAxis>
+                                    <Label
+                                        value="Annual Therapy Cost (in USD)"
+                                        angle={-90}
+                                        position="insideLeft"
+                                        style={{ textAnchor: 'middle' }} // Center the text
+                                    />
+                                </YAxis>
                                 <Tooltip
                                     formatter={(value, name) => [`$${value.toFixed(2)}`, name]}
                                 />
-                                <Bar dataKey="Price" fill="url(#forecastGradient)" />
+                                <Bar dataKey="Annual_Therapy_Costs" fill="url(#forecastGradient)" />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -90,6 +98,7 @@ export default function CompetitorAnalysis() {
                             <TableRow>
                                 <TableHead>Trade Name</TableHead>
                                 <TableHead>Price ($)</TableHead>
+                                {/* <TableHead>Annual Therapy Costs</TableHead> */}
                                 <TableHead>Morbidity</TableHead>
                                 <TableHead>Mortality</TableHead>
                                 <TableHead>Safety</TableHead>
@@ -100,6 +109,7 @@ export default function CompetitorAnalysis() {
                                 <TableRow key={index}>
                                     <TableCell>{competitor.TradeName}</TableCell>
                                     <TableCell>{competitor.Price.toFixed(2)}</TableCell>
+                                    {/* <TableCell>{competitor.Annual_Therapy_Costs}</TableCell> */}
                                     <TableCell>{competitor.Morbidity}</TableCell>
                                     <TableCell>{competitor.Mortality}</TableCell>
                                     <TableCell>{competitor.Safety}</TableCell>

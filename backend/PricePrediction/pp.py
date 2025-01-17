@@ -63,6 +63,8 @@ def parse_data(raw_data):
         })
     return pd.DataFrame(records)
  
+import re
+
 def clean_price(price):
     """
     Extract numeric value from price strings.
@@ -70,16 +72,25 @@ def clean_price(price):
     """
     if not isinstance(price, str):
         return None  # Skip non-string values
- 
+
     # Extract numeric values (e.g., '$100' -> 100)
-    match = re.search(r"\$?([\d,\.]+)", price)
+    match = re.search(r"\$?([\d,]+(?:\.\d+)?)", price)  # Updated regex to handle decimals
     if match:
         # Remove commas and convert to float
-        numeric_price = float(match.group(1).replace(",", ""))
-        print(numeric_price)
-        return numeric_price
-    return None
- 
+        cleaned_value = match.group(1).replace(",", "")
+        
+        # Check if the cleaned value is a valid number
+        if cleaned_value == '.' or cleaned_value == '':
+            return None  # Return None for invalid numeric values
+
+        try:
+            numeric_price = float(cleaned_value)
+            print(numeric_price)  # Debugging line to see the extracted price
+            return numeric_price
+        except ValueError:
+            return None  # Return None if conversion fails
+
+    return None  # Return None if no match is found
 def fetch_weights_from_llm(disease, quality_of_life, mortality, morbidity, safety, efficacy, competitor_data):
     prompt = f"""
     Based on the following details, calculate and return appropriate weights for Quality of Life, Mortality, Morbidity, Safety, and Efficacy.
@@ -127,7 +138,10 @@ def predict_price(competitor_data, disease, quality_of_life, mortality, morbidit
     # Drop rows with invalid or missing prices
     competitor_data = competitor_data.dropna(subset=['Price'])
     print(clean_price)
-    # competitor_data['Annual_Therapy_Costs'] = competitor_data['Annual_Therapy_Costs'].apply(clean_price)
+    competitor_data['Annual_Therapy_Costs'] = competitor_data['Annual_Therapy_Costs'].apply(clean_price)
+    
+    competitor_data['Morbidity'] = competitor_data['Morbidity'].str.replace('%', '', regex=True)
+    competitor_data['Mortality'] = competitor_data['Mortality'].str.replace('%', '', regex=True)
  
     competitor_data['Mortality'] = pd.to_numeric(competitor_data['Mortality'], errors='coerce')
     competitor_data['Morbidity'] = pd.to_numeric(competitor_data['Morbidity'], errors='coerce')
@@ -140,31 +154,31 @@ def predict_price(competitor_data, disease, quality_of_life, mortality, morbidit
     competitor_data['safety_score'] = competitor_data['Safety'].apply(lambda x: llm_weights['safety_weight'])
     competitor_data['efficacy_score'] = competitor_data['Efficacy'].apply(lambda x: llm_weights['efficacy_weight'])
  
-    competitor_data['weighted_price'] = (competitor_data['Price'] * competitor_data['quality_of_life_score'] +
-                                          competitor_data['Price'] * competitor_data['mortality_score'] +
-                                          competitor_data['Price'] * competitor_data['morbidity_score'] +
-                                          competitor_data['Price'] * competitor_data['safety_score'] +
-                                          competitor_data['Price'] * competitor_data['efficacy_score'])
+    competitor_data['weighted_price'] = (competitor_data['Annual_Therapy_Costs'] * competitor_data['quality_of_life_score'] +
+                                          competitor_data['Annual_Therapy_Costs'] * competitor_data['mortality_score'] +
+                                          competitor_data['Annual_Therapy_Costs'] * competitor_data['morbidity_score'] +
+                                          competitor_data['Annual_Therapy_Costs'] * competitor_data['safety_score'] +
+                                          competitor_data['Annual_Therapy_Costs'] * competitor_data['efficacy_score'])
  
-    competitor_data_sorted = competitor_data.sort_values(by='Price', ascending=False)
+    competitor_data_sorted = competitor_data.sort_values(by='Annual_Therapy_Costs', ascending=False)
  
     avg_weighted_price = competitor_data['weighted_price'].mean()
-    return {"average_price": avg_weighted_price, "competitor_data": competitor_data_sorted}
+    return {"predicted_price": avg_weighted_price, "competitor_data": competitor_data_sorted}
  
 def plot_competitor_prices(competitor_data):
     if competitor_data.empty:
         return "No data available for plotting."
    
     # Ensure 'Price' is numeric and 'TradeName' is a string for plotting
-    competitor_data['Price'] = pd.to_numeric(competitor_data['Price'], errors='coerce')
+    competitor_data['Annual_Therapy_Costs'] = pd.to_numeric(competitor_data['Annual_Therapy_Costs'], errors='coerce')
     competitor_data['TradeName'] = competitor_data['TradeName'].astype(str)
    
     # Plotting
     plt.figure(figsize=(10, 6))
-    plt.scatter(competitor_data['TradeName'], competitor_data['Price'], s=competitor_data['Price']*5, alpha=0.7)
+    plt.scatter(competitor_data['TradeName'], competitor_data['Annual_Therapy_Costs'], s=competitor_data['Annual_Therapy_Costs']*5, alpha=0.7)
     plt.title('Top 10 Competitor Prices')
     plt.xlabel('Competitor Trade Name')
-    plt.ylabel('Price ($)')
+    plt.ylabel('Annual_Therapy_Costs ($)')
     plt.xticks(rotation=45)
     plt.grid(True)
     plt.tight_layout()
@@ -212,7 +226,7 @@ def main():
     # Price prediction
     price_prediction = predict_price(competitor_df, disease, quality_of_life, mortality, morbidity, safety, efficacy)
     if isinstance(price_prediction, dict):
-        print(f"\nPredicted Price of the new drug:\nApproximate Price: ${price_prediction['average_price']:.2f}")
+        print(f"\nPredicted Price of the new drug:\nApproximate Price: ${price_prediction['Annual_Therapy_Costs']:.2f}")
         competitor_data_sorted = price_prediction['competitor_data']
        
         # Plot competitor prices

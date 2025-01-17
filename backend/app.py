@@ -1,14 +1,21 @@
-from flask import Flask, request, jsonify, send_file, make_response
+from flask import Flask, request, jsonify, send_file
 import pandas as pd
 from io import BytesIO
 from flask_cors import CORS
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
-# from flask_sqlalchemy import SQLAlchemy
-import os
 import json
 
 from PricePrediction.pp import display_competitor_details, fetch_competitor_data, parse_data, predict_price
+from PlayerLandscape.dm import get_bubble_chart_data, get_donut_chart_data
+# , get_heatmap_data
+from Calculations.ATC import adverse_effect_score, calculate_safety_efficacy_scores, extract_adverse_events, extract_annual_therapy_cost
+from Utilities.query_classifier import (
+    route_to_chatbot,
+    es,
+    conversation_history
+)
+
 sys.stdout.reconfigure(encoding='utf-8')
 
 from PlayerLandscape.player import get_disease_data
@@ -16,19 +23,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from MarketEstimation.market import get_country_data
-
-# from MarketEstimation.market import visualize_therapy_cost
-# from Utilities.search import preprocess
 from Utilities.summarize import summarize_by_title_or_org
-from Utilities.chatbot import (
-    # process_question,
-    es,
-    # conversation_history,
-)
-from Utilities.diseasechatbot import (
-    process_question,
-    # disease_conversation_history,
-)
+
 from Utilities.AIColumn import update_drug_data
 from Utilities.query_classifier import (
     route_to_chatbot,
@@ -37,25 +33,6 @@ from Utilities.query_classifier import (
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://68.154.56.138:3000"])
-
-# # Load database URL from environment variables (or you can hardcode it for local development)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@localhost:5432/db_name'
-
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# db = SQLAlchemy(app)
-
-# # Define User model
-# class User(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(db.Text, unique=True, nullable=False)  # UUID for user identification
-#     first_name = db.Column(db.Text, nullable=False)
-#     last_name = db.Column(db.Text, nullable=False)
-#     email = db.Column(db.Text, unique=True, nullable=False)
-#     password = db.Column(db.Text, nullable=False)
-
-# with app.app_context():
-#     db.create_all()
 
 # Path to the user data file
 USER_FILE_PATH = './users.json'
@@ -152,92 +129,6 @@ def check_login():
     return jsonify({'logged_in': False}), 401
 
 
-
-# @app.route('/search', methods=['POST'])
-# def search():
-#     # Get the search keyword from the request
-#     search_keyword = request.json.get('keyword')
-    
-#     # Ensure the keyword is provided before further processing
-#     if not search_keyword:
-#         return jsonify({"error": "No search keyword provided."}), 400
-
-#     # Preprocess the search keyword
-#     query = preprocess(search_keyword)
-    
-#     if isinstance(query, set):
-#         query = ' '.join(query)
-    
-#     print(query)
-
-#     # Define two separate queries: one for `categorix_v2` and one for `drug-disease-indication`
-#     es_query = [
-#         # Query for categorix_v2 (specific fields: title, abstract)
-#         {"index": "pregranted"},
-#         {
-#             "query": {
-#                 "query_string": {
-#                     "query": query,
-#                     "fields": ["Title", "Abstract"],
-#                     "default_operator": "AND",  # Search only in title and abstract fields
-#                     "fuzziness": "AUTO"  # Adding fuzziness
-#                 }
-#             },
-#             "size": 10000
-#         },
-#         # Query for drug-disease-indication (search all fields)
-#         {"index": "drug-disease-indication"},
-#         {
-#             "query": {
-#                 "query_string": {
-#                     "query": query, 
-#                     "default_operator": "AND",  # Search the same query across all fields
-#                     "fuzziness": "AUTO"  # Adding fuzziness
-#                 }
-#             },
-#             "size": 10000
-#         },
-#         {"index": "clinicaltrial"},
-#         {
-#             "query": {
-#                 "query_string": {
-#                     "query": query, 
-#                     "default_operator": "AND",  # Search the same query across all fields
-#                     "fuzziness": "AUTO"  # Adding fuzziness
-#                 }
-#             },
-#             "size": 10000
-#         },
-#         {"index": "pubmed"},
-#         {
-#             "query": {
-#                 "query_string": {
-#                     "query": query, 
-#                     "default_operator": "AND",  # Search the same query across all fields
-#                     "fuzziness": "AUTO"  # Adding fuzziness
-#                 }
-#             },
-#             "size": 10000
-#         }
-#     ]
-
-#     # Perform the multi-search in Elasticsearch
-#     try:
-#         response = es.msearch(body=es_query)
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-#     # Extract and combine hits from both queries directly
-#     documents = [hit['_source'] for res in response['responses'] for hit in res['hits']['hits']]
-
-#     # Reset the conversation history
-#     conversation_history.clear()
-
-#     # Return the combined results as a single list of documents
-#     return jsonify({"documents": documents, "query": query}), 200
-
-
-
 @app.route('/search-by-disease', methods=['POST'])
 def disease_search():
     data = request.json
@@ -277,14 +168,6 @@ def disease_search():
     }
 
     try:
-        # Search the 'combined-drug-data' index
-        # drug_response = es.search(index='combined_country_drug', body=query)
-
-        # # Extract relevant data from the Elasticsearch response
-        # drugs = []
-        # for hit in response['hits']['hits']:
-        #     drug_info = hit['_source']  # Assuming the relevant drug info is in the "_source" field
-        #     drugs.append(drug_info)
         # Perform the multi-search query
         response = es.msearch(body=es_query)
         documents = [
@@ -303,6 +186,7 @@ def disease_search():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 @app.route('/search-by-drug', methods=['POST'])
 def drug_search():
     data = request.json
@@ -348,15 +232,14 @@ def drug_search():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 @app.route('/search-by-symptoms', methods=['POST'])
 def symptom_search():
     data = request.json
-    search_type = data.get("search_type")
     index = "disease_data_final"
 
     es_query = []
     search_keyword = data.get("search_keyword", "")
-    # country_names = data.get("country_name", [])
 
     es_query.append({"index": index})
 
@@ -462,8 +345,8 @@ def ask():
     data = request.json
     query = data.get('query')
     results = data.get('results')
-    print(results)
-    response = route_to_chatbot(results, query, conversation_history)
+    # print(results)
+    response = route_to_chatbot(query, results, conversation_history)
     # print(conversation_history)
     # Create OpenAI prompt
     # context_prompt = create_openai_prompt(filtered_results[:5])
@@ -476,7 +359,6 @@ def ask():
     # openai_completion = generate_openai_completion(query)
  
     return jsonify({"results": response})
-
 @app.route('/therapy-cost-estimation', methods=['POST'])
 def therapy_cost_estimation():
     data = request.json
@@ -612,13 +494,161 @@ def price_prediction():
         # details= competitor_details.to_dict(orient='records')
         # print("x:", competitor_details)
         
-        
-
         # Return the prediction as a JSON response
-        return jsonify({'predicted_price': prediction['average_price'], 'chart_data': chart_data, 'competitor_details': competitor_details})
+        return jsonify({'predicted_price': prediction['predicted_price'], 'chart_data': chart_data, 'competitor_details': competitor_details})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+    
+@app.route('/get-drug-data', methods=['POST'])
+def get_drug_data():
+    try:
+        # Get active ingredient from request
+        active_ingredient = request.json.get('active_ingredient')
+        print(active_ingredient)
+        if not active_ingredient:
+            return jsonify({"error": "Active ingredient is required"}), 400
+
+        # Query Elasticsearch
+        query = {
+            "size": 10000,
+            "query": {
+                "bool": {
+                    "must": [
+                        {"match": {"Active Ingredient.keyword": active_ingredient}}
+                    ]
+                }
+            }
+        }
+        response = es.search(index="combined_country_drug1", body=query)
+        hits = response['hits']['hits']
+        if not hits:
+            return jsonify({"error": "No data found for the given active ingredient"}), 404
+
+        # Process data
+        data = pd.DataFrame([hit['_source'] for hit in hits])
+        if data.empty:
+            return jsonify({"error": "No data found for the given active ingredient"}), 404
+
+        # Get chart data
+        top_diseases_data = get_donut_chart_data(data)
+        annual_therapy_data = get_bubble_chart_data(data)
+        # print(annual_therapy_data)
+        # adverse_events_data = get_heatmap_data(data)
+
+        # Combine results
+        result = {
+            "top_diseases_data": top_diseases_data,
+            "annual_therapy_data": annual_therapy_data
+        }
+        
+        print(result)
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+ 
+@app.route('/annual_therapy_cost', methods=['POST'])
+def annual_therapy_cost_calculator():
+    try:
+        data = request.json
+        cost_statement = data.get('cost_statement')
+        if not cost_statement:
+            return jsonify({'error': 'cost_statement is required'}), 400
+
+        result = extract_annual_therapy_cost(cost_statement)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Route: Adverse Event Score Calculator
+@app.route('/adverse_event_score', methods=['POST'])
+def adverse_event_score_calculator():
+    try:
+        data = request.json
+        drug_name = data.get('drug_name')
+        adverse_event_statement = data.get('adverse_event_statement')
+
+        if not drug_name or not adverse_event_statement:
+            return jsonify({'error': 'drug_name and adverse_event_statement are required'}), 400
+
+        # Extract adverse events
+        adverse_events = extract_adverse_events(adverse_event_statement)
+        if not adverse_events:
+            return jsonify({'error': 'No adverse events found'}), 400
+
+        result = adverse_effect_score(drug_name, adverse_events)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Route: Safety and Efficacy Score Calculator
+@app.route('/safety_efficacy_score', methods=['POST'])
+def safety_efficacy_score_calculator():
+    try:
+        data = request.json
+        trade_name = data.get('trade_name')
+        country = data.get('country')
+        disease = data.get('disease')
+        efficacy_statement = data.get('efficacy_statement')
+        safety_statement = data.get('safety_statement')
+        print(data)
+
+        if not (trade_name and country and disease and efficacy_statement and safety_statement):
+            return jsonify({
+                'error': 'trade_name, country, disease, efficacy_statement, and safety_statement are required'
+            }), 400
+
+        result = calculate_safety_efficacy_scores(trade_name, country, disease, efficacy_statement, safety_statement)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/formulary', methods=['POST'])
+def formulary():
+    try:
+        data = request.json
+        selected_drug_names = [drug['name'] for drug in data['selectedDrugs']]
+        selected_state = data['selectedState']
+        selected_plan_id = data['selectedPlans'][0]['id']
+        selected_plan_name = data['selectedPlans'][0]['name']
+       
+        excel_file_path = 'formulary/Formulary_File.xlsx'  # Update with your actual file path
+        df = pd.read_excel(excel_file_path)
+ 
+        # Filter the DataFrame based on the selected drugs
+        filtered_df = df[df['DRUG NAME'].isin(selected_drug_names)].copy()  # Use .copy() to avoid SettingWithCopyWarning
+ 
+        # Further filter by state if not "All States"
+        if selected_state != 'All States':
+            filtered_df = filtered_df[filtered_df['State'] == selected_state]
+ 
+        # Add a column for plan coverage using .loc to avoid the warning
+        filtered_df.loc[:, 'COVERED'] = filtered_df['Name'].apply(lambda x: 'Yes' if x == selected_plan_name else 'No')
+ 
+        # Prepare the response format
+        response_data = []
+        for _, row in filtered_df.iterrows():
+            response_data.append({
+                'State': row['State'],
+                'Plan Type': row['Plan Type'],
+                'ID': row['ID'],
+                'Name': row['Name'],
+                'Drug Type': row['DRUG TYPE'],
+                'Drug Name': row['DRUG NAME'],
+                'Covered': row['COVERED']
+            })
+ 
+        print(response_data)  # Optional: for debugging purposes
+        return jsonify(response_data)
+ 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+   
 if __name__ == '__main__':
     app.run(debug=True)

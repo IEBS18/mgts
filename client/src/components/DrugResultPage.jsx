@@ -8,7 +8,7 @@ import { Download, Filter, PlusCircle, X } from 'lucide-react'; // Adjust import
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog";
 
 import { Input } from "./ui/input";
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 
 const DrugResultsPage = () => {
     const location = useLocation();
@@ -166,15 +166,23 @@ const DrugResultsPage = () => {
                 setFilteredResults(updatedResults);
 
                 console.log(data.updated_results);
-                toast("AI column added successfully!");
+                toast.success("AI column added successfully!");
                 setAiColumnDialogOpen(false);
             })
             .catch((error) => {
                 console.error("Error adding AI column:", error);
-                toast("Error adding AI column");
+                toast.warn("Error adding AI column");
             });
     };
     const handleComparison = () => {
+        // Ensure all selected cards belong to the same country
+        const uniqueCountries = [...new Set(selectedCards.map((card) => card.Country))];
+
+        if (uniqueCountries.length > 1) {
+            toast.warn("Please select drugs from the same country for comparison.");
+            return;
+        }
+
         console.log("Compared: ", selectedCards);
         const comparisonData = selectedCards.map((card) => ({
             TradeName: card.TradeName,
@@ -184,6 +192,8 @@ const DrugResultsPage = () => {
             Size: card.Size,
             Price: card.Price,
             Quality_of_Life: card.Quality_of_Life,
+            "Adverse Events Score": card.Adverse_Events_Score,
+            "Annual Therapy Costs": card["Annual_Therapy_Costs"],
             Efficacy: card.Efficacy,
             Safety: card.Safety,
             Adverse_Events: card.Adverse_Events,
@@ -197,11 +207,11 @@ const DrugResultsPage = () => {
             Age_Group: card.Age_Group,
             Gender: card.Gender,
         }));
-        
 
         // Navigate to the /drug-comparison route and pass data via state
         navigate('/drug-comparison', { state: { comparisonData } });
     };
+
     const handleOpenDialog = useCallback((result) => {
         setSelectedResult(result);
         setDialogOpen(true);
@@ -226,6 +236,17 @@ const DrugResultsPage = () => {
 
     return (
         <div className="w-full p-2">
+
+            <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+            />
             {/* Select All and Export Buttons */}
             <div className="flex sticky items-center justify-between gap-x-4 pb-4 pt-2">
                 <h1 className="text-2xl font-bold text-gray-800">
@@ -273,6 +294,7 @@ const DrugResultsPage = () => {
 
                     <Button
                         onClick={handleComparison}
+                        disabled={selectedCards.length === 0}
                         className="bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2"
                     >
                         {/* <PlusCircle className="h-4 w-4" /> */}
@@ -406,33 +428,6 @@ const DrugResultsPage = () => {
                     </DialogContent>
                 </Dialog>
             )}
-
-            <Dialog open={aiColumnDialogOpen} onOpenChange={setAiColumnDialogOpen} >
-                <DialogContent className='bg-white'>
-                    <DialogTitle>Add AI Column</DialogTitle>
-                    <DialogDescription>
-                        Enter the name and description for the new AI column to be added.
-                    </DialogDescription>
-                    <div className="space-y-4">
-                        <Input
-                            value={aiColumnName}
-                            onChange={(e) => setAiColumnName(e.target.value)}
-                            placeholder="Column Name"
-                            className="w-full p-2 border border-gray-200 rounded-[12px] text-gray-800 focus:border-[#a6ce39] focus:ring-[#a6ce39] hover:border-[#a6ce39] transition duration-200 ease-in-out"
-                        />
-                        <Input
-                            value={aiColumnDescription}
-                            onChange={(e) => setAiColumnDescription(e.target.value)}
-                            placeholder="Column Description"
-                            className="w-full p-2 border border-gray-200 rounded-[12px] text-gray-800 focus:border-[#a6ce39] focus:ring-[#a6ce39] hover:border-[#a6ce39] transition duration-200 ease-in-out"
-                        />
-                    </div>
-                    <DialogFooter>
-                        <Button onClick={handleSubmitAiColumn} className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]">Submit</Button>
-                        <Button onClick={() => setAiColumnDialogOpen(false)} variant="outline" className='bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2'>Cancel</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
             <style jsx global>{`
                 .scrollbar-hide {
                 -ms-overflow-style: none;

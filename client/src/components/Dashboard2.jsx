@@ -486,6 +486,7 @@ import DrugCostPredictionModal from './DrugCostPredictionModal';
 import CompetitiveLandscapeModal from './CompetitiveLandscapePopUp';
 import { useNavigate } from 'react-router-dom';
 
+
 const reportTypes = [
   {
     icon: Map,
@@ -507,9 +508,9 @@ const reportTypes = [
   },
   {
     icon: Award,
-    title: "FDA Label Analysis",
+    title: "Formulary",
     description:
-      "FDA-approved drug labels with safety, efficacy data, and use guidelines. Great for benchmarking.",
+      "A systematic process determining insurance coverage and preferred medications based on clinical effectiveness, cost, and patient needs.",
   },
   {
     icon: Users,
@@ -600,6 +601,16 @@ export default function Dashboard() {
                       onSearchSubmit={handleCompetitiveLandscapeSearchSubmit}
                     />
                   );
+                } else if (report.title === "Formulary") {
+                  button = (
+                    <Button
+                      onClick={() => navigate('/formulary')}
+                      className="w-full md:w-auto bg-[#a6ce39] text-black rounded-[12px] hover:bg-[#95b833]"
+                    >
+                      Get Started
+                    </Button>
+                  );
+                  
                 } else if (report.title === "Price Prediction") {
                   button = (
                     <Button

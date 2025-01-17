@@ -83,7 +83,7 @@ def plot_drug_type_distribution(filtered_df, disease_name):
 #     plot_drug_type_distribution(filtered_df, disease_name)
 
 def get_disease_data(disease_name):
-    df = pd.read_excel('PlayerLandscape/Final_Drug_Sales_Data.xlsx')
+    df = pd.read_excel('PlayerLandscape/simplified_excel_file.xlsx')
 
     if 'Disease' not in df.columns or 'TradeName' not in df.columns:
         raise ValueError("'Disease' or 'TradeName' column is missing in the dataset.")
