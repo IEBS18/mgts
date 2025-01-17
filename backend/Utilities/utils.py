@@ -33,7 +33,7 @@ def filter_keys(input_list, keys_to_keep):
         filtered_list.append(filtered_dict)
     return filtered_list   
 
-def preprocess(text, dn):
+def preprocess(text, diseasename):
     """
     Preprocess the input text by tokenizing, converting to lowercase,
     removing stop words and non-alphanumeric tokens.
@@ -100,7 +100,7 @@ def preprocess(text, dn):
     ]
    
     filtered = [word for word in filtered if word not in toremove]
-    filtered.append(dn)
+    filtered.append(diseasename)
    
     return set(filtered)
  
