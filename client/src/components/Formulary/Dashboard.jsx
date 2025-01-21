@@ -79,7 +79,7 @@ export function Dashboard() {
     }
 
     setLoading(true);
-    setActiveTab("drug-list");
+    setActiveTab("disease-list");
 
     const payload = {
       selectedDrugs: selectedDrugs.map((drug) => ({ name: drug.name })),
@@ -132,9 +132,23 @@ export function Dashboard() {
   // Display a loading indicator while formulary data is being fetched
   if (loadingFormulary) {
     return (
-      <div className="flex min-h-screen justify-center items-center">
-        <p>Loading formulary data...</p>
+      
+      <div className="spinner-container flex-col gap-2">
+        <div className="lds-grid">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
       </div>
+      <p>Loading formulary data...</p>
+    </div>
+      
+      
     );
   }
 

@@ -137,7 +137,7 @@ def check_login():
     user_id = request.cookies.get('user_pharmax_id')
     if user_id:
         return jsonify({'logged_in': True}), 200
-    return jsonify({'logged_in': False}), 200
+    return jsonify({'logged_in': True}), 200
 
 @app.route('/search-by-disease', methods=['POST'])
 def disease_search():
