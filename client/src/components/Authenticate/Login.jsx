@@ -21,6 +21,7 @@ function Login({ onSwitchToSignup }) {
             console.log(import.meta.env.VITE_API_URL)
             const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
                 method: 'POST',
+                credentials: 'include', 
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -28,7 +29,6 @@ function Login({ onSwitchToSignup }) {
                     email,
                     password
                 }),
-                credentials: 'include'
             });
 
             const data = await response.json();

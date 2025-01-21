@@ -1,40 +1,67 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";  // <-- Import Button here
 import { DrugList } from "./DrugList";
 import { PlanList } from "./PlanList";
 import { Sidebar } from "./Sidebar";
-import drugsData from "../../assets/data/formulary/drugs.json";
-import typewiseDrugsData from "../../assets/data/formulary/typewise_drugs.json";
-import statePlansData from "../../assets/data/formulary/state_plans_data.json";
-import usPlansData from "../../assets/data/formulary/US_plans_data.json";
+import { DiseaseList } from "./DiseaseList";
 
 export function Dashboard() {
-  const [activeTab, setActiveTab] = useState("drug-list");
+  const [activeTab, setActiveTab] = useState("disease-list");
   const [selectedDrugs, setSelectedDrugs] = useState([]);
   const [selectedPlans, setSelectedPlans] = useState([]);
-  const [therapeuticArea, setTherapeuticArea] = useState("All Therapeutic Areas");
+  const [selectedDiseases, setSelectedDiseases] = useState([]);
   const [selectedState, setSelectedState] = useState("All States");
-  const [results, setResults] = useState([]); // Track results state
-  const [loading, setLoading] = useState(false); // Track loading state
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingFormulary, setLoadingFormulary] = useState(true);
 
-  const combinedDrugs = {
-    "All Therapeutic Areas": drugsData["All Therapeutic Areas"] || [],
-    ...typewiseDrugsData,
-  };
+  const [formularyData, setFormularyData] = useState({
+    diseases: [],
+    drugs: [],
+    states: [],
+    plans: [],
+    drugTiers: []
+  });
 
-  const combinedPlans = {
-    "All States": usPlansData["all states"] || {},
-    ...statePlansData,
+  useEffect(() => {
+    // Fetch data from /formularyData only once
+    fetch(`${import.meta.env.VITE_API_URL}/formularyData`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "success") {
+          setFormularyData({
+            diseases: data.diseases,
+            drugs: data.drugs,
+            states: data.states,
+            plans: data.plans,
+            drugTiers: data.drugTiers
+          });
+        }
+      })
+      .catch((err) => console.error("Error fetching formulary data:", err))
+      .finally(() => setLoadingFormulary(false));
+  }, []);
+
+  const handleDiseaseSelect = (disease) => {
+    setSelectedDiseases((prev) =>
+      prev.includes(disease)
+        ? prev.filter((d) => d !== disease)
+        : [...prev, disease]
+    );
   };
 
   const handleDrugSelect = (drug) => {
-    setSelectedDrugs((prev) =>
-      prev.some((d) => d.id === drug.id)
-        ? prev.filter((d) => d.id !== drug.id)
-        : [...prev, drug]
-    );
+    if (!drug || drug.trim() === "") return;
+
+    setSelectedDrugs((prev) => {
+      const exists = prev.some((d) => d.id === drug);
+      return exists
+        ? prev.filter((d) => d.id !== drug)
+        : [...prev, { id: drug, name: drug }];
+    });
   };
 
   const handlePlanSelect = (plan) => {
@@ -51,24 +78,21 @@ export function Dashboard() {
       return;
     }
 
-    setLoading(true); // Start loading
-    setActiveTab("drug-list"); // Ensure Results tab isn't active during fetch
+    setLoading(true);
+    setActiveTab("drug-list");
 
     const payload = {
-      therapeuticArea,
-      selectedDrugs: selectedDrugs.map((drug) => ({
-        id: drug.id,
-        name: drug.name || "Unknown Drug",
-      })),
+      selectedDrugs: selectedDrugs.map((drug) => ({ name: drug.name })),
       selectedState,
       selectedPlans: selectedPlans.map((plan) => ({
         id: plan.id,
         name: plan.name || "Unknown Plan",
       })),
+      selectedDiseases,
     };
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/formulary`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/formularyResult`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -81,13 +105,18 @@ export function Dashboard() {
       }
 
       const data = await response.json();
-      setResults(data); // Update results
-      setActiveTab("results"); // Switch to Results tab
+      if (data.status === "success") {
+        setResults(data.data);
+      } else {
+        console.error("Unexpected response format:", data);
+        alert("Unexpected response format.");
+      }
+      setActiveTab("results");
     } catch (error) {
       console.error("Error:", error);
       alert("An error occurred while fetching results. Please try again later.");
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
@@ -100,35 +129,48 @@ export function Dashboard() {
     return acc;
   }, {});
 
+  // Display a loading indicator while formulary data is being fetched
+  if (loadingFormulary) {
+    return (
+      <div className="flex min-h-screen justify-center items-center">
+        <p>Loading formulary data...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen">
       <div className="flex-1 p-6">
         <Tabs
-          defaultValue="drug-list"
+          defaultValue="disease-list"
           className="w-full"
-          onValueChange={(val) => !loading && setActiveTab(val)} // Disable tab switching during loading
+          onValueChange={(val) => !loading && setActiveTab(val)}
           value={activeTab}
         >
-          <TabsList className="border-b w-full justify-start rounded-none h-auto p-0 bg-transparent">
-            {/* Drug List Tab */}
+          <TabsList className="flex flex-row border-b w-full justify-start rounded-none h-auto p-0 bg-transparent space-x-48">
+            <div>
+            <TabsTrigger
+              value="disease-list"
+              className="w-[160px] data-[state=active]:h-[32px] data-[state=active]:rounded-[19px] data-[state=active]:bg-green-500 data-[state=active]:border-green-600 data-[state=active]:text-black data-[state=active]:font-bold border-transparent rounded-none"
+            >
+              Disease List
+            </TabsTrigger>
             <TabsTrigger
               value="drug-list"
               className="w-[160px] data-[state=active]:h-[32px] data-[state=active]:rounded-[19px] data-[state=active]:bg-green-500 data-[state=active]:border-green-600 data-[state=active]:text-black data-[state=active]:font-bold border-transparent rounded-none"
             >
               Drug List
             </TabsTrigger>
-            {/* Plan List Tab */}
             <TabsTrigger
               value="plan-list"
               className="w-[160px] data-[state=active]:h-[32px] data-[state=active]:rounded-[19px] data-[state=active]:bg-green-500 data-[state=active]:border-green-600 data-[state=active]:text-black data-[state=active]:font-bold border-transparent rounded-none"
             >
               Plan List
             </TabsTrigger>
-            {/* Results Tab */}
             <TabsTrigger
               value="results"
-              disabled={results.length === 0 || loading} // Disable until results are generated
-              className={`w-[160px] data-[state=active]:h-[32px] data-[state=active]:rounded-[19px] data-[state=active]:bg-green-500 data-[state=active]:border-green-600 data-[state=active]:text-black data-[state=active]:font-bold  border-transparent rounded-none ${
+              disabled={results.length === 0 || loading}
+              className={`w-[160px] data-[state=active]:h-[32px] data-[state=active]:rounded-[19px] data-[state=active]:bg-green-500 data-[state=active]:border-green-600 data-[state=active]:text-black data-[state=active]:font-bold border-transparent rounded-none ${
                 results.length === 0 || loading
                   ? "cursor-not-allowed text-gray-400"
                   : ""
@@ -136,23 +178,65 @@ export function Dashboard() {
             >
               Results
             </TabsTrigger>
+            </div>
+            {results.length > 0 && (
+                <div className="">
+                  <Button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`${import.meta.env.VITE_API_URL}/downloadExcelFormulary`, {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({ results }), 
+                        });
+                        
+                        if (!response.ok) {
+                          throw new Error("Failed to download Excel file.");
+                        }
+                        
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(new Blob([blob]));
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.setAttribute("download", "results.xlsx");
+                        document.body.appendChild(link);
+                        link.click();
+                        link.parentNode.removeChild(link);
+                      } catch (error) {
+                        console.error("Download failed:", error);
+                        alert("Failed to download Excel file.");
+                      }
+                    }}
+                    className="mb-4 bg-green-500 text-white hover:bg-green-600 rounded-[12px] px-4 py-2"
+                  >
+                    Download Excel
+                  </Button>
+                </div>
+              )}
           </TabsList>
+
+          <TabsContent value="disease-list">
+            <DiseaseList 
+              diseases={formularyData.diseases} 
+              onSelect={handleDiseaseSelect}
+              selectedDiseases={selectedDiseases}
+            />
+          </TabsContent>
 
           <TabsContent value="drug-list">
             <DrugList
-              allDrugs={combinedDrugs["All Therapeutic Areas"]}
-              drugsByType={combinedDrugs}
+              drugs={formularyData.drugs}
               onSelect={handleDrugSelect}
               selectedDrugs={selectedDrugs}
-              therapeuticArea={therapeuticArea}
-              setTherapeuticArea={setTherapeuticArea}
             />
           </TabsContent>
 
           <TabsContent value="plan-list">
             <PlanList
-              statePlans={statePlansData}
-              usPlans={usPlansData}
+              plans={formularyData.plans}
+              states={formularyData.states}
               onSelect={handlePlanSelect}
               selectedPlans={selectedPlans}
               selectedState={selectedState}
@@ -162,60 +246,40 @@ export function Dashboard() {
 
           <TabsContent value="results">
             <div className="space-y-4">
-              {Object.entries(groupedResults).map(([drugName, drugResults]) => {
-                const drugType =
-                  drugResults[0]?.["Drug Type"] || "Unknown Drug Type";
-                return (
-                  <div key={drugName}>
-                    <div className="bg-[#a6ce39da] p-3 mb-2 rounded-[12px]">
-                      <h3 className="font-medium text-black text-lg">{drugType}</h3>
-                      <p className="text-md text-gray-800">{drugName}</p>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr>
-                            <th className="px-4 py-2 text-left border-b text-[#54681D] bg-[#F4F4F4]">
-                              Health Plan Name
-                            </th>
-                            <th className="px-4 py-2 text-left border-b text-[#54681D] bg-[#F4F4F4]">
-                              Plan Type
-                            </th>
-                            <th className="px-4 py-2 text-left border-b text-[#54681D] bg-[#F4F4F4]">State</th>
-                            <th className="px-4 py-2 text-left border-b text-[#54681D] bg-[#F4F4F4]">
-                              Drug Type
-                            </th>
-                            <th className="px-4 py-2 text-left border-b text-[#54681D] bg-[#F4F4F4]">
-                              Drug Name
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {drugResults.map((result, index) => (
-                            <tr key={index} className="hover:bg-gray-50 bg-white">
-                              <td className="px-4 py-2 border-b">{result.Name}</td>
-                              <td className="px-4 py-2 border-b">
-                                {result["Plan Type"]}
-                              </td>
-                              <td className="px-4 py-2 border-b">{result.State}</td>
-                              <td className="px-4 py-2 border-b">
-                                {result["Drug Type"]}
-                              </td>
-                              <td className="px-4 py-2 border-b">
-                                {result["Drug Name"]}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                );
-              })}
-              {results.length === 0 && activeTab === "results" && (
-                <div className="text-center text-gray-500">
-                  No results to display.
+
+              {results.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse">
+                    <thead>
+                      <tr className="bg-[#FFF]">
+                        <th className="px-4 py-2 border text-[#54681D]">Disease Name</th>
+                        <th className="px-4 py-2 border text-[#54681D]">Drug Name</th>
+                        <th className="px-4 py-2 border text-[#54681D]">Drug Tier</th>
+                        <th className="px-4 py-2 border text-[#54681D]">Health Plan Name</th>
+                        <th className="px-4 py-2 border text-[#54681D]">Requirements/Limits</th>
+                        <th className="px-4 py-2 border text-[#54681D]">State Name</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {results.map((result, index) => (
+                        <tr key={index} className="hover:bg-gray-50 bg-white">
+                          <td className="px-4 py-2 border">{result["Disease Name"] || "N/A"}</td>
+                          <td className="px-4 py-2 border">{result["Drug Name"] || "N/A"}</td>
+                          <td className="px-4 py-2 border">{result["Drug Tier"] || "N/A"}</td>
+                          <td className="px-4 py-2 border">{result["Health Plan Name"] || "N/A"}</td>
+                          <td className="px-4 py-2 border">{result["Requirements/Limits"] || "N/A"}</td>
+                          <td className="px-4 py-2 border">{result["State Name"] || "N/A"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
+              ) : (
+                activeTab === "results" && (
+                  <div className="text-center text-gray-500">
+                    No results to display.
+                  </div>
+                )
               )}
             </div>
           </TabsContent>
@@ -224,20 +288,24 @@ export function Dashboard() {
 
       <div className="w-80 border-l bg-gray-100">
         <Sidebar
-          therapeuticArea={therapeuticArea}
           selectedDrugs={selectedDrugs}
+          selectedDiseases={selectedDiseases}
           selectedState={selectedState}
           selectedPlans={selectedPlans}
           onRemoveDrug={(drug) =>
             setSelectedDrugs((prev) => prev.filter((d) => d.id !== drug.id))
+          }
+          onRemoveDisease={(disease) =>
+            setSelectedDiseases((prev) => prev.filter((d) => d !== disease))
           }
           onRemovePlan={(plan) =>
             setSelectedPlans((prev) => prev.filter((p) => p.id !== plan.id))
           }
           onViewResults={handleViewResults}
           clearAllDrugs={() => setSelectedDrugs([])}
+          clearAllDiseases={() => setSelectedDiseases([])}
           clearAllPlans={() => setSelectedPlans([])}
-          loading={loading} // Pass loading state
+          loading={loading}
         />
       </div>
     </div>

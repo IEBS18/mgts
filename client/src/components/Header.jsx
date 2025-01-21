@@ -34,11 +34,12 @@ const Header = () => {
                         className="h-8 w-8"
                     />
                 </a>
+                
             </div>
 
             {/* Center text */}
-            <h1 className="text-2xl font-bold text-gray-800">
-                Welcome to <span className="text-[#a6ce39]">PharmaX</span>
+            <h1 className=" ml-8 text-2xl font-bold text-gray-800">
+                PHARMA<span className="text-[#a6ce39]">X</span>
             </h1>
 
             {/* Account icon, greeting, and logout on the right */}

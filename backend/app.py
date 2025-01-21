@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, make_response
 import pandas as pd
 from io import BytesIO
 from flask_cors import CORS
@@ -21,14 +21,14 @@ sys.stdout.reconfigure(encoding='utf-8')
 from PlayerLandscape.player import get_disease_data
 from dotenv import load_dotenv
 load_dotenv()
-
+import io
 from MarketEstimation.market import get_country_data
 from Utilities.summarize import summarize_by_title_or_org
 
 from Utilities.AIColumn import update_drug_data
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://68.154.56.138:3000","http://localhost:5174"])
+CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://68.154.56.138:3000","http://localhost:5174", "http://127.0.0.1:5000"])
 
 # Path to the user data file
 USER_FILE_PATH = './users.json'
@@ -48,6 +48,7 @@ def save_users(users):
             json.dump(users, f, indent=4)
     except Exception as e:
         print(f"Error saving users to file: {e}")
+
 
 # Signup route
 @app.route('/signup', methods=['POST'])
@@ -87,43 +88,56 @@ def signup():
     # Save the updated users list back to the JSON file
     save_users(users)
 
-    # Respond with success
-    return jsonify({
+    # Prepare response with success and set cookie
+    response = make_response(jsonify({
         "user_pharmax_id": new_user["id"],
         "first_name": first_name,
         "message": "Account created successfully!"
-    }), 201
+    }), 201)
 
-# Login route
+    # Set the user_pharmax_id cookie
+    response.set_cookie(
+        'user_pharmax_id', 
+        value=str(new_user["id"]), 
+        max_age=60*60*24*7,  # 1 week validity
+        samesite='Lax'       # Adjust based on your requirements
+    )
+
+    return response
+
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
-
     users = load_users()
     user = next((u for u in users if u['email'] == email), None)
 
     if user and check_password_hash(user['password_hash'], password):
-        response = jsonify({
+        response = make_response(jsonify({
             "user_pharmax_id": user["id"],
             "first_name": user["first_name"],
             "message": "Login successful!"
-        })
-        # Set the user_id cookie
-        response.set_cookie('user_id', str(user["id"]), httponly=True)
-        return response, 200
+        }), 200)
+
+        # Set the cookie with proper attributes for local development
+        response.set_cookie(
+            'user_pharmax_id',
+            value=str(user["id"]),
+            max_age=60*60*24*7,  
+            samesite='Lax'
+        )
+        return response
+
     return jsonify({"error": "Invalid credentials!"}), 401
 
-
-# Check if user is logged in (session or cookie based)
 @app.route('/check_login', methods=['GET'])
 def check_login():
-    user_id = request.cookies.get('user_id')  # Retrieve the 'user_id' cookie
+    user_id = request.cookies.get('user_pharmax_id')
     if user_id:
         return jsonify({'logged_in': True}), 200
-    return jsonify({'logged_in': False}), 401
-
+    return jsonify({'logged_in': False}), 200
 
 @app.route('/search-by-disease', methods=['POST'])
 def disease_search():
@@ -603,48 +617,179 @@ def safety_efficacy_score_calculator():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/formularyResult', methods=['POST'])
+def formulary_result():
+    data = request.json
+    index = "reimbursement"
 
-@app.route('/formulary', methods=['POST'])
-def formulary():
+    # Extract filters from payload
+    selected_diseases = data.get('selectedDiseases', [])
+    selected_drugs = data.get('selectedDrugs', [])
+    selected_plans = data.get('selectedPlans', [])
+    selected_state = data.get('selectedState', None)
+
+    # Start building the Elasticsearch multi-search query
+    es_query = [
+        {"index": index}
+    ]
+
+    # Construct the bool query with must clauses
+    bool_query = {"must": []}
+
+    if selected_diseases:
+        bool_query["must"].append({
+            "terms": {
+                "Disease Name.keyword": selected_diseases
+            }
+        })
+
+    if selected_drugs:
+        # Extract drug names if the items are objects
+        drug_names = [drug['name'] if isinstance(drug, dict) else drug for drug in selected_drugs]
+        bool_query["must"].append({
+            "terms": {
+                "Drug Name.keyword": drug_names
+            }
+        })
+
+    if selected_plans:
+        # Extract plan names if the items are objects
+        plan_names = [plan['name'] if isinstance(plan, dict) else plan for plan in selected_plans]
+        bool_query["must"].append({
+            "terms": {
+                "Health Plan Name.keyword": plan_names
+            }
+        })
+
+    if selected_state and selected_state != "All States":
+        bool_query["must"].append({
+            "term": {
+                "State Name.keyword": selected_state
+            }
+        })
+
+    # If no filters provided, default to match all to avoid errors
+    if not bool_query["must"]:
+        bool_query["must"].append({"match_all": {}})
+
+    es_query.append({
+        "query": {
+            "bool": bool_query
+        },
+        "size": 10000  # Adjust size as needed for performance
+    })
+
     try:
-        data = request.json
-        selected_drug_names = [drug['name'] for drug in data['selectedDrugs']]
-        selected_state = data['selectedState']
-        selected_plan_id = data['selectedPlans'][0]['id']
-        selected_plan_name = data['selectedPlans'][0]['name']
-       
-        excel_file_path = 'formulary/Formulary_File.xlsx'  # Update with your actual file path
-        df = pd.read_excel(excel_file_path)
- 
-        # Filter the DataFrame based on the selected drugs
-        filtered_df = df[df['DRUG NAME'].isin(selected_drug_names)].copy()  # Use .copy() to avoid SettingWithCopyWarning
- 
-        # Further filter by state if not "All States"
-        if selected_state != 'All States':
-            filtered_df = filtered_df[filtered_df['State'] == selected_state]
- 
-        # Add a column for plan coverage using .loc to avoid the warning
-        filtered_df.loc[:, 'COVERED'] = filtered_df['Name'].apply(lambda x: 'Yes' if x == selected_plan_name else 'No')
- 
-        # Prepare the response format
-        response_data = []
-        for _, row in filtered_df.iterrows():
-            response_data.append({
-                'State': row['State'],
-                'Plan Type': row['Plan Type'],
-                'ID': row['ID'],
-                'Name': row['Name'],
-                'Drug Type': row['DRUG TYPE'],
-                'Drug Name': row['DRUG NAME'],
-                'Covered': row['COVERED']
-            })
- 
-        print(response_data)  # Optional: for debugging purposes
-        return jsonify(response_data)
- 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Perform multi-search query
+        response = es.msearch(body=es_query)
 
-   
+        # Extract matching documents from the response
+        documents = [
+            hit['_source']
+            for res in response['responses']
+            for hit in res['hits']['hits']
+        ]
+
+        return jsonify({"status": "success", "data": documents})
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/formularyData', methods=['GET'])
+def formulary_data():
+    try:
+        # Specify the reimbursement index containing the data
+        index = "reimbursement"
+
+        # Define aggregation queries for each field
+        aggregation_query = {
+            "size": 0,
+            "aggs": {
+                "unique_diseases": {
+                    "terms": {
+                        "field": "Disease Name.keyword",
+                        "size": 10000
+                    }
+                },
+                "unique_drugs": {
+                    "terms": {
+                        "field": "Drug Name.keyword",
+                        "size": 10000
+                    }
+                },
+                "unique_states": {
+                    "terms": {
+                        "field": "State Name.keyword",
+                        "size": 10000
+                    }
+                },
+                "unique_plans": {
+                    "terms": {
+                        "field": "Health Plan Name.keyword",
+                        "size": 10000
+                    }
+                },
+                "unique_drug_tiers": {
+                    "terms": {
+                        "field": "Drug Tier.keyword",
+                        "size": 10000
+                    }
+                }
+            }
+        }
+
+        # Execute the aggregation query on the reimbursement index
+        response = es.search(index=index, body=aggregation_query)
+
+        # Extract unique values from aggregation buckets
+        diseases = [bucket['key'] for bucket in response['aggregations']['unique_diseases']['buckets']]
+        drugs = [bucket['key'] for bucket in response['aggregations']['unique_drugs']['buckets']]
+        states = [bucket['key'] for bucket in response['aggregations']['unique_states']['buckets']]
+        plans = [bucket['key'] for bucket in response['aggregations']['unique_plans']['buckets']]
+        drug_tiers = [bucket['key'] for bucket in response['aggregations']['unique_drug_tiers']['buckets']]
+
+        # Return aggregated data as JSON
+        return jsonify({
+            "status": "success",
+            "diseases": diseases,
+            "drugs": drugs,
+            "states": states,
+            "plans": plans,
+            "drugTiers": drug_tiers
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/downloadExcelFormulary', methods=['POST'])
+def download_excel_formulary():
+    try:
+        # Parse the JSON payload from the request
+        data = request.get_json()
+        results = data.get('results', [])
+
+        # Create a DataFrame from the results
+        df = pd.DataFrame(results)
+
+        # Use an in-memory bytes buffer for the Excel file
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Results')
+        output.seek(0)
+
+        # For Flask 2.x and above, use 'download_name'
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="results.xlsx",
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    except Exception as e:
+        # Log the error to the console for debugging
+        print(f"Error generating Excel file: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)

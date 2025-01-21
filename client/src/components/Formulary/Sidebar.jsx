@@ -5,14 +5,16 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Sidebar({
-  therapeuticArea,
   selectedDrugs,
+  selectedDiseases,
   selectedState,
   selectedPlans,
   onRemoveDrug,
+  onRemoveDisease,
   onRemovePlan,
   onViewResults,
   clearAllDrugs,
+  clearAllDiseases,
   clearAllPlans,
   loading,
 }) {
@@ -20,10 +22,6 @@ export function Sidebar({
     <div className="p-6 space-y-6">
       <div>
         <h2 className="text-lg font-semibold mb-4 text-dark-green">Filters</h2>
-        <div className="mb-4">
-          <h3 className="font-medium mb-2 text-dark-green">Therapeutic Area</h3>
-          <p className="text-sm text-gray-600">{therapeuticArea}</p>
-        </div>
         <div>
           <h3 className="font-medium mb-2 text-dark-green">State</h3>
           <p className="text-sm text-gray-600">{selectedState}</p>
@@ -53,6 +51,39 @@ export function Sidebar({
                   variant="ghost"
                   size="sm"
                   onClick={() => onRemoveDrug(drug)}
+                  className="p-0"
+                >
+                  <X className="h-4 w-4 text-red-500" />
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="font-medium text-dark-green">Selected Diseases</h3>
+          {selectedDiseases.length > 0 && (
+            <Button
+              onClick={clearAllDiseases}
+              className="text-sm font-medium bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] w-auto"
+            >
+              Clear All
+            </Button>
+          )}
+        </div>
+        <div className="space-y-2 max-h-40 overflow-y-auto">
+          {selectedDiseases.length === 0 ? (
+            <p className="text-sm text-gray-500">No diseases selected.</p>
+          ) : (
+            selectedDiseases.map((disease) => (
+              <div key={disease} className="flex items-center justify-between">
+                <span className="text-[12px]">{disease}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemoveDisease(disease)}
                   className="p-0"
                 >
                   <X className="h-4 w-4 text-red-500" />
@@ -97,14 +128,14 @@ export function Sidebar({
       </div>
 
       <Button
-  onClick={onViewResults}
-  disabled={loading}
-  className={`text-md font-semibold font-medium text-black bg-[#a6ce39] hover:bg-[#95b833] rounded-[12px] w-full ${
-    loading ? "opacity-50 cursor-not-allowed" : ""
-  }`}
->
-  {loading ? "Loading..." : "View Results"}
-</Button>
+        onClick={onViewResults}
+        disabled={loading}
+        className={`text-md font-semibold text-black bg-[#a6ce39] hover:bg-[#95b833] rounded-[12px] w-full ${
+          loading ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+      >
+        {loading ? "Loading..." : "View Results"}
+      </Button>
     </div>
   );
 }

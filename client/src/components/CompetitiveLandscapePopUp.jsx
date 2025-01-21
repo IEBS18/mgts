@@ -15,8 +15,8 @@ import Select from "react-select";
 import outputData from '../assets/data/competitiveLandscape/disease.json';
 import { useNavigate } from "react-router-dom";
  
-export default function CompetitiveLandscapeModal() {
-  const [isOpen, setIsOpen] = useState(false);
+export default function CompetitiveLandscapeModal({ isOpen, onOpenChange }) {
+  // const [isOpen, setIsOpen] = useState(false);
   const [diseaseName, setDiseaseName] = useState('');
   const [selectedCountries, setSelectedCountries] = useState([]);
   const [searchType, setSearchType] = useState("disease");
@@ -94,12 +94,12 @@ export default function CompetitiveLandscapeModal() {
   };
  
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      {/* <DialogTrigger asChild>
         <Button className="w-full md:w-auto bg-[#a6ce39] text-black rounded-[12px] hover:bg-[#95b833]">
           Get Started
         </Button>
-      </DialogTrigger>
+      </DialogTrigger> */}
       <DialogContent
         className="max-w-3xl bg-[#f4f4f4] rounded-[12px] overflow-y-auto"
         style={{
