@@ -17,6 +17,8 @@ import DrugAnalysis from "./components/CompetitiveLandscapeDrugPage";
 import CompetitiveLandscapeDrugPage from "./components/CompetitiveLandscapeDrugPage";
 // import { Formulary } from "./components/Formulary";
 import { Dashboard } from "./components/Formulary/Dashboard";
+import TPPDrugPage from "./components/TPPDrugPage";
+import { TPPComparison } from "./components/TPPComparison";
 
 function App() {
   return (
@@ -51,8 +53,10 @@ function App() {
         <Route path="/competitive-landscape-by-disease" element={<PrivateRoute><Layout><DiseaseAnalysis /></Layout></PrivateRoute>} />
         <Route path="/competitive-landscape-by-drug" element={<PrivateRoute><Layout><CompetitiveLandscapeDrugPage /></Layout></PrivateRoute>} />
         <Route path="/drug-comparison" element={<PrivateRoute><Layout><DrugComparisonTable /></Layout></PrivateRoute>} />
+        <Route path="/tpp-comparison" element={<PrivateRoute><Layout><TPPComparison /></Layout></PrivateRoute>} />
         <Route path="/price-prediction" element={<PrivateRoute><Layout><CompetitorAnalysis /></Layout></PrivateRoute>} />
         <Route path="/formulary" element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
+        <Route path="/tpp-by-drug" element={<PrivateRoute><Layout><TPPDrugPage/></Layout></PrivateRoute>} />
         
       </Routes>
     </Router>

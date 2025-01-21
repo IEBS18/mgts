@@ -327,7 +327,7 @@
 //     description: "Disease prevalence, incidence, and demographics. Supports market sizing and strategic planning.",
 //   },
 // ];
- 
+
 
 //  const FeatureCard = ({ icon: Icon, title, description, children }) => (
 //   <div className="bg-white border border-[#a6ce39] rounded-lg p-4 shadow-sm h-full flex flex-col">
@@ -348,7 +348,7 @@
 //     const [isDiseaseOverviewModalOpen, setIsDiseaseOverviewModalOpen] = useState(false);
 //     const [isCompetitiveLandscapeModalOpen, setIsCompetitiveLandscapeModalOpen] = useState(false);
 //     const [isDrugCostPredictionModalOpen, setIsDrugCostPredictionModalOpen] = useState(false);
-  
+
 //     // Handle Disease Overview Search Submit
 //     const handleDiseaseOverviewSearchSubmit = ({ type, data, symptoms }) => {
 //       setIsDiseaseOverviewModalOpen(false);
@@ -366,7 +366,7 @@
 //         });
 //       }
 //     };
-  
+
 //     // Handle Competitive Landscape Search Submit
 //     const handleCompetitiveLandscapeSearchSubmit = ({ type, data }) => {
 //       setIsCompetitiveLandscapeModalOpen(false);
@@ -378,7 +378,7 @@
 //   return (
 //     <div className="h-full bg-gray-50 flex flex-col overflow-y-auto scrollbar-hide">
 //       <div className="flex-grow overflow-hidden p-3">
-        
+
 //         <div className="flex h-[calc(100%)] gap-4">
 //           <div className="flex-grow ">
 //               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -456,7 +456,7 @@
 //                 );
 //               })}
 //               </div>
- 
+
 //           </div>
 //         </div>
 //       </div>
@@ -472,7 +472,7 @@
 //     </div>
 //   );
 // }
- 
+
 // // Updated src/components/Dashboard.jsx
 
 // import React, { useState } from 'react';
@@ -638,6 +638,7 @@ import Epidemiology from '../assets/dashboard/Epidemiology.png'
 import DiseaseOverviewModal from './DiseaseOverview';
 import DrugCostPredictionModal from './DrugCostPredictionModal';
 import CompetitiveLandscapeModal from './CompetitiveLandscapePopUp';
+import TPPModal from './TPPModal';
 const reportTypes = [
   {
     icon: Map,
@@ -669,10 +670,10 @@ const reportTypes = [
   },
   {
     icon: Users,
-    title: "Epidemiology",
-    description: "Analyze disease prevalence, incidence, and demographics.",
+    title: "Target Product Profile",
+    description: "Compare drug efficacy, safety, and other factors to identify optimal product attributes.",
     image: Epidemiology,
-    key: "epidemiology",
+    key: "target_product_profile",
   },
 ];
 
@@ -690,6 +691,8 @@ const Dashboard = () => {
       setOpenDialog("pricePrediction");
     } else if (key === "diseaseOverview") {
       setOpenDialog("diseaseOverview");
+    } else if (key === "target_product_profile") {
+      setOpenDialog("target_product_profile");
     }
   };
 
@@ -707,56 +710,56 @@ const Dashboard = () => {
 
       {/* Cards Layout */}
 
-<div className="grid grid-cols-5 gap-4 max-w-screen-xl">
-  {reportTypes.map(({ title, description, image, key }) => (
-    <motion.div
-      key={key}
-      className="relative cursor-pointer h-[300px] w-[220px] bg-custom-gradient-card text-white rounded-lg shadow-md overflow-hidden group"
-      onClick={() => handleCardClick(key)}
-      initial={{ background: "linear-gradient(36.59deg, #A6CE39 2.62%, #40530C 92.34%)" }}
-      whileHover={{
-        background: "linear-gradient(36.59deg, #40530C 2.62%, #A6CE39 92.34%)",
-      }}
-    >
-      {/* Card Content */}
-      <div className="p-4 flex flex-col items-center justify-center h-full group-hover:items-start group-hover:justify-start transition-all duration-300">
-        {/* Title */}
-        <motion.h3
-          className="text-2xl font-bold mb-2 group-hover:text-xl transition-all duration-300"
-        >
-          {title}
-        </motion.h3>
-        {/* Underline */}
-        <motion.div
-          className="hidden group-hover:block w-10 h-1 bg-white transition-all duration-300"
-        ></motion.div>
+      <div className="grid grid-cols-5 gap-4 max-w-screen-xl">
+        {reportTypes.map(({ title, description, image, key }) => (
+          <motion.div
+            key={key}
+            className="relative cursor-pointer h-[300px] w-[220px] bg-custom-gradient-card text-white rounded-lg shadow-md overflow-hidden group"
+            onClick={() => handleCardClick(key)}
+            initial={{ background: "linear-gradient(36.59deg, #A6CE39 2.62%, #40530C 92.34%)" }}
+            whileHover={{
+              background: "linear-gradient(36.59deg, #40530C 2.62%, #A6CE39 92.34%)",
+            }}
+          >
+            {/* Card Content */}
+            <div className="p-4 flex flex-col items-center justify-center h-full group-hover:items-start group-hover:justify-start transition-all duration-300">
+              {/* Title */}
+              <motion.h3
+                className="text-2xl font-bold mb-2 group-hover:text-xl transition-all duration-300"
+              >
+                {title}
+              </motion.h3>
+              {/* Underline */}
+              <motion.div
+                className="hidden group-hover:block w-10 h-1 bg-white transition-all duration-300"
+              ></motion.div>
 
-        {/* Description (Hidden by default) */}
-        <motion.p
-          className="text-sm text-gray-100 opacity-0 group-hover:opacity-100 mt-4 leading-relaxed transition-opacity duration-300"
-        >
-          {description}
-        </motion.p>
+              {/* Description (Hidden by default) */}
+              <motion.p
+                className="text-sm text-gray-100 opacity-0 group-hover:opacity-100 mt-4 leading-relaxed transition-opacity duration-300"
+              >
+                {description}
+              </motion.p>
 
-        {/* Image */}
-        <motion.img
-          src={image}
-          alt={`${title} icon`}
-          className="h-28 w-28 mt-4 group-hover:absolute group-hover:bottom-4 group-hover:right-4 group-hover:h-16 group-hover:w-16 transition-all duration-300"
-        />
+              {/* Image */}
+              <motion.img
+                src={image}
+                alt={`${title} icon`}
+                className="h-28 w-28 mt-4 group-hover:absolute group-hover:bottom-4 group-hover:right-4 group-hover:h-16 group-hover:w-16 transition-all duration-300"
+              />
+            </div>
+
+            {/* Button */}
+            <motion.div
+              className="hidden group-hover:block absolute bottom-4 left-4"
+            >
+              <button className="bg-white text-black text-sm px-4 py-2 rounded-[12px] hover:bg-gray-200">
+                Get Started
+              </button>
+            </motion.div>
+          </motion.div>
+        ))}
       </div>
-
-      {/* Button */}
-      <motion.div
-        className="hidden group-hover:block absolute bottom-4 left-4"
-      >
-        <button className="bg-white text-black text-sm px-4 py-2 rounded-[12px] hover:bg-gray-200">
-          Get Started
-        </button>
-      </motion.div>
-    </motion.div>
-  ))}
-</div>
 
 
 
@@ -771,12 +774,18 @@ const Dashboard = () => {
           onSearchSubmit={() => setOpenDialog(null)}
         />
       )}
-{openDialog === "competitiveLandscape" && (
-  <CompetitiveLandscapeModal
-    isOpen
-    onOpenChange={() => setOpenDialog(null)}
-  />
-)}
+      {openDialog === "competitiveLandscape" && (
+        <CompetitiveLandscapeModal
+          isOpen
+          onOpenChange={() => setOpenDialog(null)}
+        />
+      )}
+      {openDialog === "target_product_profile" && (
+        <TPPModal
+          isOpen
+          onOpenChange={() => setOpenDialog(null)}
+        />
+      )}
       {openDialog === "pricePrediction" && (
         <DrugCostPredictionModal
           isOpen

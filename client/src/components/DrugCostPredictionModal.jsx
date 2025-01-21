@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import Select from "react-select";
-import outputData from '../assets/data/output.json';
+import outputData from '../assets/data/priceprediction.json';
 import { useNavigate } from "react-router-dom";
 
 export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
@@ -17,6 +17,7 @@ export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
     country: null,
     quality_of_life: "",
     mortality: "",
+    modality: null,
     morbidity: "",
     safety: "",
     efficacy: "",
@@ -47,10 +48,10 @@ export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
   };
 
   const handleSubmit = async () => {
-    const { disease_name, country, quality_of_life, mortality, morbidity, safety, efficacy } = formData;
+    const { disease_name, country, quality_of_life, mortality, modality, morbidity, safety, efficacy } = formData;
   
     // Ensure all fields are filled
-    if (!disease_name || !country || !quality_of_life || !mortality || !morbidity || !safety || !efficacy) {
+    if (!disease_name || !country || !quality_of_life || !mortality || !modality || !morbidity || !safety || !efficacy) {
       alert("Please fill in all fields.");
       return;
     }
@@ -61,6 +62,7 @@ export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
       country: country.value,
       quality_of_life,
       mortality,
+      modality: modality.value,
       morbidity,
       safety,
       efficacy,
@@ -136,6 +138,24 @@ export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
               value={formData.country}
               onChange={(option) => handleInputChange("country", option)}
               placeholder="Select a Country"
+              className="w-full"
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+              styles={selectStyles}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="modality">Select Modality</Label>
+            <Select
+              id="modality"
+              options={[
+                // { value: 'All Countries', label: 'All Countries' },
+                { value: 'Small Molecules', label: 'Small Molecules' },
+                { value: 'Biologics', label: 'Biologics' },
+              ]}
+              value={formData.modality}
+              onChange={(option) => handleInputChange("modality", option)}
+              placeholder="Select a Modality"
               className="w-full"
               menuPortalTarget={document.body}
               menuPosition="fixed"

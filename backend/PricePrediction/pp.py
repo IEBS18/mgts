@@ -19,23 +19,90 @@ es = Elasticsearch(ELASTICSEARCH_ENDPOINT, api_key=ELASTIC_API_KEY)
  
 openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 MODEL = "gpt-4o-mini"
-# Function to fetch competitor data based on disease, country, and other factors
-def fetch_competitor_data(disease, country, quality_of_life, mortality, morbidity, safety, efficacy):
+def fetch_competitor_drug_names(disease, country):
     query = {
         "query": {
             "bool": {
                 "must": [
                     {"match": {"Disease.keyword": disease}},
-                    {"match": {"Country.keyword": country}},
+                    {"match": {"Country.keyword": country}}
                 ]
             }
-        }
+        },
+        "size":1000
     }
- 
     result = es.search(index="combined_country_drug1", body=query)
-    print("Elastic search result:", result)
-    return result['hits']['hits']
- 
+    return [hit['_source']['TradeName'] for hit in result['hits']['hits'] if 'TradeName' in hit['_source']]
+
+# Function to fetch drug details from tpp_data_refresh1
+def fetch_tpp_data(drug_names, modality):
+    query = {
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "bool": {
+                            "should": [
+                                {"match": {"Drug": {"query": drug, "fuzziness": "AUTO"}}}
+                                for drug in drug_names
+                            ]
+                        }
+                    },
+                    {"match": {"Modality.keyword": modality}},
+                    {"range": {"Patent_Expiry": {"gte": "2024-06-01"}}}
+                ]
+            }
+        },
+        "size": 1000
+    }
+    result = es.search(index="tpp_data_refine", body=query)
+    return [hit['_source'] for hit in result['hits']['hits']]
+
+# Function to fetch final competitor data
+def fetch_competitor_data(disease, country, modality):
+    # Step 1: Fetch competitor names (TradeNames) from `combined_country_drug1` index
+    drug_names = fetch_competitor_drug_names(disease, country)
+    if not drug_names:
+        return []
+
+    # Step 2: Fetch competitor details (including modality and patent expiry) from `tpp_data_refine` index
+    tpp_data = fetch_tpp_data(drug_names, modality)
+
+    # Step 3: Fetch price and annual therapy costs from `combined_country_drug1` for each competitor
+    query = {
+        "query": {
+            "bool": {
+                "must": [
+                    {"terms": {"TradeName.keyword": drug_names}}
+                ]
+            }
+        },
+        "size": 1000
+    }
+    result = es.search(index="combined_country_drug1", body=query)
+    data = {hit['_source']['TradeName']: {
+        'Price': hit['_source']['Price'],
+        'Annual_Therapy_Costs': hit['_source']['Annual_Therapy_Costs'],
+        'Morbidity': hit['_source']['Morbidity'],
+        'Mortality': hit['_source']['Mortality'],
+        'Efficacy': hit['_source']['Efficacy'],
+        'Quality_of_Life': hit['_source']['Quality_of_Life'],
+        'Safety': hit['_source']['Safety'],
+    } for hit in result['hits']['hits']}
+
+    # Merge price and annual therapy cost data into the competitor details from tpp_data
+    for competitor in tpp_data:
+        trade_name = competitor.get('Drug')
+        if trade_name and trade_name in data:
+            competitor['Price'] = data[trade_name]['Price']  # Add the price to the competitor data
+            competitor['Annual_Therapy_Costs'] = data[trade_name]['Annual_Therapy_Costs']  # Add the therapy cost
+            competitor['Morbidity'] = data[trade_name]['Morbidity'] 
+            competitor['Mortality'] = data[trade_name]['Mortality'] 
+            competitor['Efficacy'] = data[trade_name]['Efficacy'] 
+            competitor['Quality_of_Life'] = data[trade_name]['Quality_of_Life']
+            competitor['Safety'] = data[trade_name]['Safety']  
+    return tpp_data
+
 def parse_data(raw_data):
     records = []
     for hit in raw_data:
@@ -85,82 +152,121 @@ def clean_price(price):
 
         try:
             numeric_price = float(cleaned_value)
-            print(numeric_price)  # Debugging line to see the extracted price
+            # print(numeric_price)  # Debugging line to see the extracted price
             return numeric_price
         except ValueError:
             return None  # Return None if conversion fails
 
     return None  # Return None if no match is found
 def fetch_weights_from_llm(disease, quality_of_life, mortality, morbidity, safety, efficacy, competitor_data):
-    prompt = f"""
-    Based on the following details, calculate and return appropriate weights for Quality of Life, Mortality, Morbidity, Safety, and Efficacy.
-    Consider user inputs, disease-specific data, and competitor details:
-   
-    Disease: {disease}
-    Quality of Life: {quality_of_life}
-    Mortality: {mortality}
-    Morbidity: {morbidity}
-    Safety: {safety}
-    Efficacy: {efficacy}
-    Competitor Data (top entries):
-    {competitor_data.head(10).to_dict(orient='records')}
-   
-    Provide the weights as a JSON object with keys: "quality_of_life_weight", "mortality_weight", "morbidity_weight", "safety_weight", "efficacy_weight".
     """
+    Fetch weight factors from LLM for sentiment analysis and price prediction.
+    Ensures the response is structured as JSON.
+    """
+ 
+    prompt = f"""
+    You are an expert in pharmaceutical pricing. Given the disease-specific information,
+    user inputs, and competitor data, determine weights for the following factors:
+    Quality of Life, Mortality, Morbidity, Safety, and Efficacy.
+    The weights are to be given as these factors play a vital role in deciding the price for that specific drug
+ 
+    ### Disease Information:
+    - Disease: {disease}
+    - Quality of Life: {quality_of_life}
+    - Mortality: {mortality}
+    - Morbidity: {morbidity}
+    - Safety: {safety}
+    - Efficacy: {efficacy}
+ 
+    ### Competitor Data (Top 10 Entries):
+    {competitor_data.head(10).to_dict(orient='records')}
+ 
+    ### Instructions:
+    - Return a JSON object with the following keys:
+      "quality_of_life_weight", "mortality_weight", "morbidity_weight", "safety_weight", "efficacy_weight".
+    - The values should be floating-point numbers between 0 and 1.
+    - **Strictly return only the JSON output. No explanations.** do notwrite ```json tags
+    """
+ 
     try:
         response = openai_client.chat.completions.create(
-        model=MODEL,
-            messages=[{"role": "system", "content": "You are an expert in pharmaceutical pricing.you know the factors affecting the price of the drugs accroding to diseases and the morbidity, mortality, safety and efficay along with the quality of life"},
-                      {"role": "user", "content": prompt}],
-            max_tokens=200
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": "You are an AI that strictly returns JSON-formatted responses."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=150
         )
-        llm_weights = json.loads(response.choices[0].message.content)
+ 
+        llm_weights = response.choices[0].message.content.strip()
+ 
+        print("Raw LLM Response:", llm_weights)  # Debugging
+ 
+        # Ensure LLM response is valid JSON
+        llm_weights = json.loads(llm_weights)
+ 
+        # Validate that all necessary keys exist and contain numeric values
+        required_keys = ["quality_of_life_weight", "mortality_weight", "morbidity_weight", "safety_weight", "efficacy_weight"]
+        for key in required_keys:
+            if key not in llm_weights or not isinstance(llm_weights[key], (int, float)):
+                raise ValueError(f"Missing or invalid value for {key}")
+ 
         return llm_weights
+ 
+    except json.JSONDecodeError:
+        print("Error: LLM response is not valid JSON.")
+        # print("Response received:", llm_weights)
     except Exception as e:
         print(f"Error fetching weights from LLM: {e}")
-        # Fallback weights in case of failure
-        return {
-            "quality_of_life_weight": 0.4,
-            "mortality_weight": 0.8,
-            "morbidity_weight": 0.6,
-            "safety_weight": 0.4,
-            "efficacy_weight": 0.5
-        }
  
- 
+    # Return default weights in case of an error
+    return {
+        "quality_of_life_weight": 0.4,
+        "mortality_weight": 0.5,
+        "morbidity_weight": 0.5,
+        "safety_weight": 0.85,
+        "efficacy_weight": 0.9
+    }
+
+
 def predict_price(competitor_data, disease, quality_of_life, mortality, morbidity, safety, efficacy):
     if competitor_data.empty:
         return "No data available for prediction."
- 
+    print("competitior data:", competitor_data['Drug'])
     # Clean and convert 'Price' to numeric
     competitor_data['Price'] = competitor_data['Price'].apply(clean_price)
  
     # Drop rows with invalid or missing prices
     competitor_data = competitor_data.dropna(subset=['Price'])
-    print(clean_price)
-    competitor_data['Annual_Therapy_Costs'] = competitor_data['Annual_Therapy_Costs'].apply(clean_price)
-    
-    competitor_data['Morbidity'] = competitor_data['Morbidity'].str.replace('%', '', regex=True)
-    competitor_data['Mortality'] = competitor_data['Mortality'].str.replace('%', '', regex=True)
- 
-    competitor_data['Mortality'] = pd.to_numeric(competitor_data['Mortality'], errors='coerce')
-    competitor_data['Morbidity'] = pd.to_numeric(competitor_data['Morbidity'], errors='coerce')
- 
+    competitor_data = competitor_data.copy()
+    print("clean:", competitor_data['Price'])
+    # Apply clean_price to 'Annual_Therapy_Costs' with .loc
+    competitor_data.loc[:, 'Annual_Therapy_Costs'] = competitor_data['Annual_Therapy_Costs'].apply(clean_price)
+
+# Clean 'Morbidity' and 'Mortality' by removing '%' and converting them to numeric values using .loc
+    competitor_data.loc[:, 'Morbidity'] = competitor_data['Morbidity'].str.replace('%', '', regex=True)
+    competitor_data.loc[:, 'Mortality'] = competitor_data['Mortality'].str.replace('%', '', regex=True)
+
+# Convert 'Morbidity' and 'Mortality' to numeric values using .loc
+    competitor_data.loc[:, 'Mortality'] = pd.to_numeric(competitor_data['Mortality'], errors='coerce')
+    competitor_data.loc[:, 'Morbidity'] = pd.to_numeric(competitor_data['Morbidity'], errors='coerce')
+
     llm_weights = fetch_weights_from_llm(disease, quality_of_life, mortality, morbidity, safety, efficacy, competitor_data)
- 
-    competitor_data['quality_of_life_score'] = competitor_data['Quality_of_Life'].apply(lambda x: llm_weights['quality_of_life_weight'])
-    competitor_data['mortality_score'] = competitor_data['Mortality'].apply(lambda x: llm_weights['mortality_weight'] * (x / 100) if pd.notnull(x) else 0)
-    competitor_data['morbidity_score'] = competitor_data['Morbidity'].apply(lambda x: llm_weights['morbidity_weight'] * (x / 100) if pd.notnull(x) else 0)
-    competitor_data['safety_score'] = competitor_data['Safety'].apply(lambda x: llm_weights['safety_weight'])
-    competitor_data['efficacy_score'] = competitor_data['Efficacy'].apply(lambda x: llm_weights['efficacy_weight'])
- 
-    competitor_data['weighted_price'] = (competitor_data['Annual_Therapy_Costs'] * competitor_data['quality_of_life_score'] +
-                                          competitor_data['Annual_Therapy_Costs'] * competitor_data['mortality_score'] +
-                                          competitor_data['Annual_Therapy_Costs'] * competitor_data['morbidity_score'] +
-                                          competitor_data['Annual_Therapy_Costs'] * competitor_data['safety_score'] +
-                                          competitor_data['Annual_Therapy_Costs'] * competitor_data['efficacy_score'])
- 
-    competitor_data_sorted = competitor_data.sort_values(by='Annual_Therapy_Costs', ascending=False)
+    
+    competitor_data.loc[:, 'quality_of_life_score'] = competitor_data['Quality_of_Life'].apply(lambda x: llm_weights['quality_of_life_weight'])
+    competitor_data.loc[:, 'mortality_score'] = competitor_data['Mortality'].apply(lambda x: llm_weights['mortality_weight'] * (x / 100) if pd.notnull(x) else 0)
+    competitor_data.loc[:, 'morbidity_score'] = competitor_data['Morbidity'].apply(lambda x: llm_weights['morbidity_weight'] * (x / 100) if pd.notnull(x) else 0)
+    competitor_data.loc[:, 'safety_score'] = competitor_data['Safety'].apply(lambda x: llm_weights['safety_weight'])
+    competitor_data.loc[:, 'efficacy_score'] = competitor_data['Efficacy'].apply(lambda x: llm_weights['efficacy_weight'])
+
+    # Apply .loc for the 'weighted_price' calculation to avoid the warning
+    competitor_data.loc[:, 'weighted_price'] = (competitor_data['Price'] * competitor_data['quality_of_life_score'] +
+                                                competitor_data['Price'] * competitor_data['mortality_score'] +
+                                                competitor_data['Price'] * competitor_data['morbidity_score'] +
+                                                competitor_data['Price'] * competitor_data['safety_score'] +
+                                                competitor_data['Price'] * competitor_data['efficacy_score'])
+
+    competitor_data_sorted = competitor_data.sort_values(by='Price', ascending=False)
  
     avg_weighted_price = competitor_data['weighted_price'].mean()
     return {"predicted_price": avg_weighted_price, "competitor_data": competitor_data_sorted}
@@ -168,65 +274,85 @@ def predict_price(competitor_data, disease, quality_of_life, mortality, morbidit
 def plot_competitor_prices(competitor_data):
     if competitor_data.empty:
         return "No data available for plotting."
-   
-    # Ensure 'Price' is numeric and 'TradeName' is a string for plotting
+
+    # Ensure 'Price' is numeric and 'Drug' is a string for plotting
+    competitor_data['Price'] = pd.to_numeric(competitor_data['Price'], errors='coerce')
+    competitor_data['Drug'] = competitor_data['Drug'].astype(str)
+
+    # Ensure 'Annual_Therapy_Costs' is numeric
     competitor_data['Annual_Therapy_Costs'] = pd.to_numeric(competitor_data['Annual_Therapy_Costs'], errors='coerce')
-    competitor_data['TradeName'] = competitor_data['TradeName'].astype(str)
-   
-    # Plotting
+
+    # Drop rows where 'Annual_Therapy_Costs' or 'Price' is NaN
+    competitor_data_cleaned = competitor_data.dropna(subset=['Annual_Therapy_Costs', 'Price'])
+
+    # Handle empty cleaned data
+    if competitor_data_cleaned.empty:
+        return "No valid data available for plotting."
+
+    # Plotting with a bar graph
     plt.figure(figsize=(10, 6))
-    plt.scatter(competitor_data['TradeName'], competitor_data['Annual_Therapy_Costs'], s=competitor_data['Annual_Therapy_Costs']*5, alpha=0.7)
-    plt.title('Top 10 Competitor Prices')
-    plt.xlabel('Competitor Trade Name')
-    plt.ylabel('Annual_Therapy_Costs ($)')
-    plt.xticks(rotation=45)
+    
+    # Create the bar graph with drug names on the x-axis and therapy costs on the y-axis
+    bar_width = 0.35  # Width of the bars
+    index = np.arange(len(competitor_data_cleaned))  # Position of each bar
+
+    # Bar graph for Annual_Therapy_Costs
+    plt.bar(index, competitor_data_cleaned['Annual_Therapy_Costs'], bar_width, label='Annual Therapy Costs ($)', alpha=0.7)
+
+    # Add labels and title
+    plt.xlabel('Competitor Drug Name')
+    plt.ylabel('Annual Therapy Costs ($)')
+    plt.title('Top 10 Competitor Prices and Annual Therapy Costs')
+    plt.xticks(index, competitor_data_cleaned['Drug'], rotation=45)
+    plt.legend()
+
+    # Show the grid and layout adjustments
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+
+    # Display the details of dropped data (those with NaN values in Price or Annual_Therapy_Costs)
+    competitor_data_dropped = competitor_data[competitor_data.isna().any(axis=1)]
+    return competitor_data_dropped[['Drug', 'Annual_Therapy_Costs', 'Price']]
  
 def display_competitor_details(competitor_data):
     if competitor_data.empty:
         return "No data available for displaying details."
    
-    competitor_details = competitor_data[['TradeName', 'Morbidity', 'Mortality', 'Safety',"Price"]]
+    competitor_details = competitor_data[['Drug', 'Morbidity', 'Mortality', 'Safety',"Annual_Therapy_Costs"]]
     # print("\nCompetitor Details (Morbidity, Mortality, Safety,Price):")
-    # print(competitor_details)
+    print(competitor_details)
     result = competitor_details.to_dict(orient='records')
-    print(result)
+    # print(result)
     return result
  
 def get_user_input():
     print("Please enter the following information:")
-    disease = input("Disease (e.g., Eczema on Penis): ")
+    disease = input("Disease (e.g., Catatonic Schizophrenia): ")
     country = input("Country (e.g., USA): ")
-    quality_of_life = input("Quality of Life (e.g., Moderate impact due to mobility issues): ")
-    mortality = float(input("Mortality (as a percentage, e.g., 0.2 for 20%): "))
-    morbidity = float(input("Morbidity (as a percentage, e.g., 8): "))
-    safety = input("Safety (e.g., Generally Safe): ")
-    efficacy = input("Efficacy (e.g., Moderate for pain relief): ")
- 
-    return disease, country, quality_of_life, mortality, morbidity, safety, efficacy
- 
+    modality = input("Modality (Small Molecule/Biologic): ")
+    quality_of_life = input("Quality of Life: ")
+    mortality = float(input("Mortality (percentage): "))
+    morbidity = float(input("Morbidity (percentage): "))
+    safety = input("Safety: ")
+    efficacy = input("Efficacy: ")
+    return disease, country, modality, quality_of_life, mortality, morbidity, safety, efficacy
+
+def parse_data(raw_data):
+    return pd.DataFrame(raw_data)
+
 def main():
-    disease, country, quality_of_life, mortality, morbidity, safety, efficacy = get_user_input()
- 
-    # Fetch and parse competitor data
-    competitor_data_raw = fetch_competitor_data(
-        disease,
-        country,
-        quality_of_life,
-        mortality,
-        morbidity,
-        safety,
-        efficacy
-    )
- 
+    disease, country, modality, quality_of_life, mortality, morbidity, safety, efficacy = get_user_input()
+    competitor_data_raw = fetch_competitor_data(disease, country, modality)
     competitor_df = parse_data(competitor_data_raw)
+    # print("Fetched Competitor Data:", competitor_df.head())
+    # print("columns",competitor_df.columns)
+
  
     # Price prediction
     price_prediction = predict_price(competitor_df, disease, quality_of_life, mortality, morbidity, safety, efficacy)
     if isinstance(price_prediction, dict):
-        print(f"\nPredicted Price of the new drug:\nApproximate Price: ${price_prediction['Annual_Therapy_Costs']:.2f}")
+        print(f"\nPredicted Price of the new drug:\nApproximate Price: ${price_prediction['predicted_price']:.2f}")
         competitor_data_sorted = price_prediction['competitor_data']
        
         # Plot competitor prices

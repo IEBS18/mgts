@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Select from "react-select";
 import outputData from '../assets/data/output.json';
+import { useNavigate } from "react-router-dom";
 
 export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSubmit }) {
   const [selectedCountries, setSelectedCountries] = useState([]);
@@ -22,6 +23,7 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
 
   const [diseaseOptions, setDiseaseOptions] = useState([]);
   const [drugOptions, setDrugOptions] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch disease options
@@ -71,6 +73,9 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
       setIsSearching(false);
       if (onSearchSubmit) {
         onSearchSubmit({ type: 'disease', data: data.data });
+        navigate("/disease-search", {
+          state: { searchResults: data.data },
+        });
       }
     } catch (error) {
       console.error("Error submitting search:", error);
@@ -99,6 +104,9 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
       setIsSearching(false);
       if (onSearchSubmit) {
         onSearchSubmit({ type: 'drug', data: data.data });
+        navigate("/drug-search", {
+          state: { searchResults: data.data },
+        });
       }
     } catch (error) {
       console.error("Error submitting search:", error);
@@ -125,6 +133,9 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
       setIsSearching(false);
       if (onSearchSubmit) {
         onSearchSubmit({ type: 'symptoms', data: data.data, symptoms: searchParams.search_keyword });
+        navigate("/symptom-search", {
+          state: { searchResults: data.data, symptoms: searchParams.search_keyword },
+        });
       }
     } catch (error) {
       console.error("Error submitting search:", error);

@@ -1,3 +1,4 @@
+from pathlib import Path
 from flask import Flask, request, jsonify, send_file, make_response
 import pandas as pd
 from io import BytesIO
@@ -484,9 +485,10 @@ def price_prediction():
         morbidity = float(data.get("morbidity", 0))
         safety = data.get("safety")
         efficacy = data.get("efficacy")
+        modality=data.get("modality")
 
         # Fetch competitor data from Elasticsearch
-        competitor_data_raw = fetch_competitor_data(disease, country, quality_of_life, mortality, morbidity, safety, efficacy)
+        competitor_data_raw = fetch_competitor_data(disease, country, modality)
         competitor_df = parse_data(competitor_data_raw)
 
         # Predict price based on the input and competitor data
@@ -789,6 +791,127 @@ def download_excel_formulary():
         # Log the error to the console for debugging
         print(f"Error generating Excel file: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
+def load_tpp_data():
+    try:
+        # Assuming the Excel file is in a data directory relative to this script
+        excel_path = Path(__file__).parent / "tpp_database.xlsx"
+        return pd.read_excel(excel_path)
+    except Exception as e:
+        print(f"Error loading Excel file: {e}")
+        return None
+
+# Initialize the dataframe
+df = load_tpp_data()
+
+@app.route('/api/tpp-by-drug', methods=['POST'])
+def search_tpp_by_drug():
+    try:
+        data = request.json
+        
+        # Extract search parameters
+        drug_name = data.get('drugName', '').strip()
+        disease_name = data.get('diseaseName', '').strip()
+        # country = data.get('country', '').strip()
+        modality = data.get('modality', '').strip()
+        
+        # Validate that at least one field is provided
+        # if not any([drug_name, disease_name, modality]):
+        #     return jsonify({
+        #         'error': 'Missing fields',
+        #         'message': 'At least one search field is required'
+        #     }), 400
+        
+        # Create a copy of the dataframe for filtering
+        filtered_df = df.copy()
+        
+        # Create individual masks for each condition
+        masks = []
+        if drug_name:
+            masks.append(filtered_df['Drug'].str.lower() == drug_name.lower())
+        if disease_name:
+            masks.append(filtered_df['Disease'].str.lower() == disease_name.lower())
+        # if country:
+        #     masks.append(filtered_df['Country'].str.lower() == country.lower())
+        if modality:
+            masks.append(filtered_df['Modality'].str.lower() == modality.lower())
+        
+        # Combine all masks with OR condition if there are any masks
+        if masks:
+            final_mask = masks[0]
+            for mask in masks[1:]:
+                final_mask = final_mask | mask
+            filtered_df = filtered_df[final_mask]
+        
+        # Check if we found any matches
+        if filtered_df.empty:
+            return jsonify({
+                'message': 'No matching records found',
+                'data': []
+            }), 200
+        filtered_df=filtered_df.fillna("")
+        # Convert the filtered dataframe to a list of dictionaries
+        results = filtered_df.to_dict('records')
+        
+        return jsonify({
+            'message': f'Found {len(results)} matching records',
+            'data': results
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Internal server error',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/tpp-by-therapies', methods=['POST'])
+def search_tpp_by_therapies():
+    try:
+        data = request.json
+        
+        # Extract the three main matching criteria
+        disease_name = data.get('diseaseName', '').strip()
+        route_of_administration = data.get('routeOfAdministration', '').strip()
+        modality = data.get('modality', '').strip()
+        
+        # Validate required fields
+        # if not all([disease_name, route_of_administration, modality]):
+        #     return jsonify({
+        #         'error': 'Missing required fields',
+        #         'message': 'Disease, Route of Administration, and Modality are required'
+        #     }), 400
+            
+        # Create a copy of the dataframe for filtering
+        filtered_df = df.copy()
+        
+        # Apply the three main filters - case insensitive matching
+        if disease_name:
+            filtered_df = filtered_df[filtered_df['Disease'].str.lower() == disease_name.lower()]
+        if route_of_administration:
+            filtered_df = filtered_df[filtered_df['Route_of_Administration'].str.lower() == route_of_administration.lower()]
+        if modality:
+            filtered_df = filtered_df[filtered_df['Modality'].str.lower() == modality.lower()]
+            
+        # Check if we found any matches
+        if filtered_df.empty:
+            return jsonify({
+                'message': 'No matching records found',
+                'data': []
+            }), 200
+            
+        # Convert the filtered dataframe to a list of dictionaries
+        results = filtered_df.to_dict('records')
+        
+        return jsonify({
+            'message': f'Found {len(results)} matching records',
+            'data': results
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Internal server error',
+            'message': str(e)
+        }), 500
 
 
 if __name__ == '__main__':

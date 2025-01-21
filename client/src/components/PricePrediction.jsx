@@ -37,7 +37,7 @@ export default function CompetitorAnalysis() {
                 </Card>
                 <Card className='w-1/2 p-2'>
                     <CardHeader>
-                        <CardTitle>Predicted Annual Therapy Cost:</CardTitle>
+                        <CardTitle>Predicted Unit Cost:</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-3xl font-bold">${(data.predicted_price).toFixed(2)}</p>
@@ -47,7 +47,7 @@ export default function CompetitorAnalysis() {
 
             <Card className="mb-8">
                 <CardHeader>
-                    <CardTitle>Top {data.chart_data.length} Competitor Prices</CardTitle>
+                    <CardTitle>Top {data.chart_data.length} Competitor Annual Therapy Costs</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="h-[400px]">
@@ -69,7 +69,7 @@ export default function CompetitorAnalysis() {
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="TradeName" textAnchor="middle" interval={0} />
+                                <XAxis dataKey="Drug" textAnchor="middle" interval={0} />
                                 <YAxis>
                                     <Label
                                         value="Annual Therapy Cost (in USD)"
@@ -96,7 +96,7 @@ export default function CompetitorAnalysis() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Trade Name</TableHead>
+                                <TableHead>Drug</TableHead>
                                 <TableHead>Price ($)</TableHead>
                                 {/* <TableHead>Annual Therapy Costs</TableHead> */}
                                 <TableHead>Morbidity</TableHead>
@@ -107,9 +107,9 @@ export default function CompetitorAnalysis() {
                         <TableBody>
                             {(data.competitor_details).map((competitor, index) => (
                                 <TableRow key={index}>
-                                    <TableCell>{competitor.TradeName}</TableCell>
-                                    <TableCell>{competitor.Price.toFixed(2)}</TableCell>
-                                    {/* <TableCell>{competitor.Annual_Therapy_Costs}</TableCell> */}
+                                    <TableCell>{competitor.Drug}</TableCell>
+                                    {/* <TableCell>{competitor.Price.toFixed(2)}</TableCell> */}
+                                    <TableCell>{competitor.Annual_Therapy_Costs}</TableCell>
                                     <TableCell>{competitor.Morbidity}</TableCell>
                                     <TableCell>{competitor.Mortality}</TableCell>
                                     <TableCell>{competitor.Safety}</TableCell>

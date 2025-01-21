@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, LogOut } from 'lucide-react'; // Adding logout icon
 import { useNavigate } from 'react-router-dom'; // For navigation
-import insimine from "@/assets/Insimine.svg";
+import insimine from "@/assets/logo.png";
 
 const Header = () => {
     const [firstName, setFirstName] = useState('');
@@ -24,23 +24,24 @@ const Header = () => {
     };
 
     return (
-        <header className="flex items-center justify-between bg-white px-6 py-4 shadow-md z-50">
+        <header className="flex items-center justify-between bg-gradient-alt-ego px-6 py-4 shadow-md z-50">
             {/* Logo on the left */}
             <div className="flex items-center">
                 <a href="/dashboard">
                     <img
                         src={insimine} // Replace with your logo's path
                         alt="Insimine"
-                        className="h-8 w-8"
+                        className="h-full w-20"
                     />
                 </a>
-                
+                <h1 className="px-4 text-white">|</h1>
+                <a href="/dashboard" className="font-bold text-white hover:text-white">
+                    Pharma<span className="text-[#a6ce39]">X</span>
+                </a>
+
             </div>
 
             {/* Center text */}
-            <h1 className=" ml-8 text-2xl font-bold text-gray-800">
-                PHARMA<span className="text-[#a6ce39]">X</span>
-            </h1>
 
             {/* Account icon, greeting, and logout on the right */}
             <div className="flex items-center gap-4">
