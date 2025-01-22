@@ -75,4 +75,4 @@ const FormatText = ({ text }) => {
   return <div>{elements}</div>;
 };
 
-export default FormattedText;
+export default FormatText;
