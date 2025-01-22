@@ -115,3 +115,22 @@
     border-radius: 10px;
     border: 2px solid #f4f4f4;
 }
+
+
+/* If you're using Tailwind CSS, you can customize the classes directly in the component.
+   Otherwise, you can add these styles to your CSS file. */
+
+   ul.list-disc {
+    list-style-type: disc;
+    margin-left: 1.25rem; /* Equivalent to pl-5 in Tailwind */
+    margin-bottom: 0.5rem; /* Equivalent to mb-2 */
+  }
+  
+  li {
+    margin-bottom: 0.25rem; /* Adjust as needed */
+  }
+  
+  p {
+    margin-bottom: 0.5rem; /* Equivalent to mb-2 */
+  }
+  

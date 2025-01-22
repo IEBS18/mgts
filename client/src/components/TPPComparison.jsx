@@ -2,18 +2,13 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Filter, PlusCircle } from 'lucide-react';
-import { ThreeDots } from 'react-loader-spinner';
+import { PlusCircle } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
+import FormatText from './FormatText';
 
 const topics = [
     "Drug",
@@ -246,7 +241,7 @@ export function TPPComparison() {
                                                 topic === "Efficacy" ? getBackgroundColor(scores[d.TradeName]?.efficacy, "Efficacy") :
                                                     topic === "Safety" ? getBackgroundColor(scores[d.TradeName]?.safety, "Safety") : "transparent"
                                         }}>
-                                            {d[topic]}
+                                            <FormatText text={d[topic]} />
                                     </td>
                                 ))}
                             </tr>
