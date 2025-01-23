@@ -2,18 +2,13 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Filter, PlusCircle } from 'lucide-react';
-import { ThreeDots } from 'react-loader-spinner';
+import { PlusCircle } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
+import FormatText from './FormatText';
 
 const topics = [
     "Drug",
@@ -228,7 +223,7 @@ export function TPPComparison() {
                             >
                                 <th
                                     scope="row"
-                                    className={`px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white sticky left-0 ${aiColumns.includes(topic)
+                                    className={`px-6 py-4 font-medium align-text-top text-gray-900 whitespace-nowrap dark:text-white sticky left-0 ${aiColumns.includes(topic)
                                         ? "bg-[#a6ce39]/60 backdrop-blur-md shadow-lg dark:bg-[#a6ce39]/80" // Matches the row with glassmorphism effect
                                         : "bg-white dark:bg-gray-800"
                                         }`}>
@@ -240,13 +235,13 @@ export function TPPComparison() {
                                     </div>
                                 </th>
                                 {visibleData.map((d) => (
-                                    <td key={`${d.TradeName} (${d.Size})`} className="px-6 py-4"
+                                    <td key={`${d.TradeName} (${d.Size})`} className="px-6 py-4 align-text-top"
                                         style={{
                                             backgroundColor: topic === "Adverse_Events" ? getBackgroundColor(scores[d.TradeName]?.adverse_events, "Adverse_Events") :
                                                 topic === "Efficacy" ? getBackgroundColor(scores[d.TradeName]?.efficacy, "Efficacy") :
                                                     topic === "Safety" ? getBackgroundColor(scores[d.TradeName]?.safety, "Safety") : "transparent"
                                         }}>
-                                            {d[topic]}
+                                            <FormatText text={d[topic]} />
                                     </td>
                                 ))}
                             </tr>
