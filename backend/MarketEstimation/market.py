@@ -3,7 +3,8 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 # Path to the single Excel file
-file_path = 'MarketEstimation/data/Complete_MarketEstimation_data.xlsx'
+# file_path = 'MarketEstimation/data/Complete_MarketEstimation_data.xlsx'
+file_path = 'MarketEstimation/data/MnP.xlsx'
 
 years = ['2019', '2020', '2021', '2022', '2023']
 forecast_years = ['2024', '2025', '2026', '2027', '2028']
