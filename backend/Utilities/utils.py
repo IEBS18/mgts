@@ -156,6 +156,7 @@ def create_prompt(search_results, keys):
 
     final_prompt += (
         "Please use the above data to ANSWER THE USER'S QUERY accurately and factually. "
+        "Never say 'Provided context does not contain the requested data' if you are going to provide an answer afterwards."
         "Do not hallucinate information or provide responses outside the context of the data provided."
     )
     return final_prompt
