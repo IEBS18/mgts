@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { useLocation, useNavigate } from 'react-router-dom';
-import { PlusCircle } from 'lucide-react';
-import { toast, ToastContainer } from 'react-toastify';
-import FormatText from './FormatText';
+import React, { useState, useMemo, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { useLocation, useNavigate } from "react-router-dom"
+import { PlusCircle } from "lucide-react"
+import { toast, ToastContainer } from "react-toastify"
+import FormatText from "./FormatText"
 
 const topics = [
     "Drug",
@@ -21,42 +21,77 @@ const topics = [
     "Dosage Regime",
     "Dosage Size",
     "Special Warnings",
-    "Patient Eligibility"
-];
+    "Patient Eligibility",
+]
 
 export function TPPComparison() {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const data = location.state?.comparisonData || [];
-    const [visibleColumns, setVisibleColumns] = useState(data.map((d) => `${d.TradeName} (${d.Size})`));
-    const [aiColumnDialogOpen, setAiColumnDialogOpen] = useState(false);
-    const [aiColumnName, setAiColumnName] = useState("");
-    const [aiColumnDescription, setAiColumnDescription] = useState("");
-    const [isExporting, setIsExporting] = useState(false);
-    const [isAiColumnLoading, setIsAiColumnLoading] = useState(false);
-    const [aiColumns, setAiColumns] = useState([]);
+    const location = useLocation()
+    const navigate = useNavigate()
+    const data = location.state?.comparisonData || []
+    const [visibleColumns, setVisibleColumns] = useState(data.map((d) => `${d.TradeName} (${d.Size})`))
+    const [aiColumnDialogOpen, setAiColumnDialogOpen] = useState(false)
+    const [aiColumnName, setAiColumnName] = useState("")
+    const [aiColumnDescription, setAiColumnDescription] = useState("")
+    const [isExporting, setIsExporting] = useState(false)
+    const [isAiColumnLoading, setIsAiColumnLoading] = useState(false)
+    const [aiColumns, setAiColumns] = useState([])
 
     // State to hold fetched scores
-    const [scores, setScores] = useState({});
-    const [isLoadingScores, setIsLoadingScores] = useState(true);
+    const [scores, setScores] = useState({})
+    const [isLoadingScores, setIsLoadingScores] = useState(true)
+
+    const [mainDrugInsights, setMainDrugInsights] = useState(null)
+    const [isLoadingInsights, setIsLoadingInsights] = useState(true)
+
+    useEffect(() => {
+        const fetchMainDrugInsights = async () => {
+            setIsLoadingInsights(true)
+            try {
+                const mainDrug = location.state?.mainDrug
+                if (mainDrug) {
+                    const response = await fetch(`${import.meta.env.VITE_API_URL}/main-drug-insights`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            drug_name: mainDrug,
+                            all_data: data,
+                        }),
+                    })
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch main drug insights")
+                    }
+                    const insights = await response.json()
+                    setMainDrugInsights(insights)
+                } else {
+                    throw new Error("Main drug not found")
+                }
+            } catch (error) {
+                console.error("Error fetching main drug insights:", error)
+                toast.error(error.message || "Failed to fetch main drug insights")
+            } finally {
+                setIsLoadingInsights(false)
+            }
+        }
+
+        fetchMainDrugInsights()
+    }, [data, location.state?.mainDrug])
 
     const toggleColumnVisibility = (column) => {
-        setVisibleColumns((prev) =>
-            prev.includes(column) ? prev.filter((c) => c !== column) : [...prev, column]
-        );
-    };
+        setVisibleColumns((prev) => (prev.includes(column) ? prev.filter((c) => c !== column) : [...prev, column]))
+    }
 
     const visibleData = useMemo(() => {
-        return data.filter((d) => visibleColumns.includes(`${d.TradeName} (${d.Size})`));
-    }, [data, visibleColumns]);
+        return data.filter((d) => visibleColumns.includes(`${d.TradeName} (${d.Size})`))
+    }, [data, visibleColumns])
 
     const handleSubmitAiColumn = () => {
         if (!aiColumnName || !aiColumnDescription) {
-            // alert("Please fill out both fields");
-            return;
+            return
         }
 
-        setIsAiColumnLoading(true);
+        setIsAiColumnLoading(true)
 
         fetch(`${import.meta.env.VITE_API_URL}/add-ai-column`, {
             method: "POST",
@@ -71,56 +106,47 @@ export function TPPComparison() {
         })
             .then((response) => {
                 if (!response.ok) {
-                    throw new Error("Failed to add AI column");
+                    throw new Error("Failed to add AI column")
                 }
-                return response.json();
+                return response.json()
             })
             .then((responseData) => {
                 const updatedResults = responseData.updated_results.map((result) => ({
                     ...result,
                     [aiColumnName]: result[aiColumnName] || "",
-                }));
+                }))
 
-                
-                setAiColumnDialogOpen(false);
-                setIsAiColumnLoading(false);
-                
+                setAiColumnDialogOpen(false)
+                setIsAiColumnLoading(false)
 
-                // Add the new AI column to the state without removing the old ones
-                setAiColumns((prevAiColumns) => [...prevAiColumns, aiColumnName]);
+                setAiColumns((prevAiColumns) => [...prevAiColumns, aiColumnName])
 
-                
-
-                // Navigate to the same page, passing updated data and updated columns
                 navigate(location.pathname, {
                     state: { comparisonData: updatedResults, aiColumns: [...aiColumns, aiColumnName] },
-                });
+                })
 
-                toast.success("AI column added successfully!");
+                toast.success("AI column added successfully!")
             })
             .catch((error) => {
-                console.error("Error adding AI column:", error);
-                toast.warn("Error adding AI column");
-                setIsAiColumnLoading(false);
-            });
-    };
+                console.error("Error adding AI column:", error)
+                toast.warn("Error adding AI column")
+                setIsAiColumnLoading(false)
+            })
+    }
 
     const handleExport = () => {
-        setIsExporting(true);
+        setIsExporting(true)
 
-        // Map visible data based on selected visible columns
         const exportData = visibleData.map((card) => {
-            const exportCard = {};
+            const exportCard = {}
+                ;[...topics, ...aiColumns].forEach((topic) => {
+                    if (visibleColumns.includes(`${card.TradeName} (${card.Size})`)) {
+                        exportCard[topic] = card[topic] || ""
+                    }
+                })
 
-            // Include only visible columns
-            [...topics, ...aiColumns].forEach((topic) => {
-                if (visibleColumns.includes(`${card.TradeName} (${card.Size})`)) {
-                    exportCard[topic] = card[topic] || ""; // Fallback to an empty string if data is missing
-                }
-            });
-
-            return exportCard;
-        });
+            return exportCard
+        })
 
         fetch(`${import.meta.env.VITE_API_URL}/download-excel`, {
             method: "POST",
@@ -131,42 +157,38 @@ export function TPPComparison() {
         })
             .then((response) => {
                 if (!response.ok) {
-                    throw new Error("Failed to export data");
+                    throw new Error("Failed to export data")
                 }
-                return response.blob();
+                return response.blob()
             })
             .then((blob) => {
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.setAttribute("download", "visible_data.xlsx");
-                document.body.appendChild(link);
-                link.click();
-                link.parentNode.removeChild(link);
-                setIsExporting(false);
+                const url = window.URL.createObjectURL(blob)
+                const link = document.createElement("a")
+                link.href = url
+                link.setAttribute("download", "visible_data.xlsx")
+                document.body.appendChild(link)
+                link.click()
+                link.parentNode.removeChild(link)
+                setIsExporting(false)
             })
             .catch((error) => {
-                console.error("Error exporting visible data:", error);
-                setIsExporting(false);
-                // alert("Failed to export data");
-            });
-    };
+                console.error("Error exporting visible data:", error)
+                setIsExporting(false)
+            })
+    }
 
-    // Function to calculate background color based on score
     const getBackgroundColor = (score, type) => {
         if (type === "Adverse_Events") {
-            // Scale from green (low adverse events) to red (high adverse events)
-            const greenValue = Math.max(0, 255 - (score / 10) * 255); // Green decreases as score increases
-            const redValue = Math.min(255, (score / 10) * 255); // Red increases as score increases
-            return `rgba(${redValue}, ${greenValue}, 0, 0.5)`; // Green to Red gradient
+            const greenValue = Math.max(0, 255 - (score / 10) * 255)
+            const redValue = Math.min(255, (score / 10) * 255)
+            return `rgba(${redValue}, ${greenValue}, 0, 0.5)`
         } else if (type === "Efficacy" || type === "Safety") {
-            // Scale from red (low efficacy/safety) to green (high efficacy/safety)
-            const greenValue = Math.min(255, score * 255); // Green increases as score increases
-            const redValue = Math.max(0, 255 - score * 255); // Red decreases as score increases
-            return `rgba(${redValue}, ${greenValue}, 0, 0.5)`; // Red to Green gradient
+            const greenValue = Math.min(255, score * 255)
+            const redValue = Math.max(0, 255 - score * 255)
+            return `rgba(${redValue}, ${greenValue}, 0, 0.5)`
         }
-        return "transparent"; // Default color
-    };
+        return "transparent"
+    }
 
     return (
         <div className="w-full overflow-x-auto">
@@ -181,23 +203,34 @@ export function TPPComparison() {
                 pauseOnHover
             />
 
-            <div className="flex justify-between m-4 space-x-2 top-div"
-                style={{ position: "sticky", top: 0 }}>
-                <div className='flex w-1/2'>
+            <div className="flex justify-between m-4 space-x-2 top-div" style={{ position: "sticky", top: 0 }}>
+                <div className="flex w-1/2">
                     <h1 className="text-2xl w-1/2 font-bold text-gray-800">Drugs Comparison</h1>
                 </div>
-                <div className='flex flex-row gap-x-4 '>
-                    <Button onClick={() => setAiColumnDialogOpen(true)} variant="outline" disabled={isAiColumnLoading} className="bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2">
+                <div className="flex flex-row gap-x-4 ">
+                    <Button
+                        onClick={() => setAiColumnDialogOpen(true)}
+                        variant="outline"
+                        disabled={isAiColumnLoading}
+                        className="bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2"
+                    >
                         <PlusCircle className="h-4 w-4" />
                         {isAiColumnLoading ? "Loading..." : "Add AI Column"}
                     </Button>
-                    <Button onClick={handleExport} disabled={isExporting} className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? 'cursor-not-allowed opacity -50' : ''}`}>
+                    <Button
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        className={`bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] flex items-center gap-2 ${isExporting ? "cursor-not-allowed opacity-50" : ""
+                            }`}
+                    >
                         {isExporting ? "Exporting..." : "Export"}
                     </Button>
                 </div>
             </div>
-            <div className="relative overflow-auto shadow-md sm:rounded-lg"
-                style={{ maxHeight: "calc(90vh - 100px)" }}>
+
+
+
+            <div className="relative overflow-auto shadow-md sm:rounded-lg" style={{ maxHeight: "calc(90vh - 100px)" }}>
                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
                         <tr>
@@ -212,21 +245,21 @@ export function TPPComparison() {
                         </tr>
                     </thead>
                     <tbody>
-                        {/* Iterate over topics (including AI column names) */}
                         {[...topics, ...aiColumns].map((topic) => (
                             <tr
                                 key={topic}
                                 className={`border-b ${aiColumns.includes(topic)
-                                    ? "bg-[#a6ce39]/60 text-black backdrop-blur-md shadow-lg dark:bg-[#a6ce39]/80" // Distinct color with opacity and blur
+                                    ? "bg-[#a6ce39]/60 text-black backdrop-blur-md shadow-lg dark:bg-[#a6ce39]/80"
                                     : "bg-white dark:bg-gray-800"
                                     } dark:border-gray-700`}
                             >
                                 <th
                                     scope="row"
                                     className={`px-6 py-4 font-medium align-text-top text-gray-900 whitespace-nowrap dark:text-white sticky left-0 ${aiColumns.includes(topic)
-                                        ? "bg-[#a6ce39]/60 backdrop-blur-md shadow-lg dark:bg-[#a6ce39]/80" // Matches the row with glassmorphism effect
+                                        ? "bg-[#a6ce39]/60 backdrop-blur-md shadow-lg dark:bg-[#a6ce39]/80"
                                         : "bg-white dark:bg-gray-800"
-                                        }`}>
+                                        }`}
+                                >
                                     <div className="flex items-center">
                                         {aiColumns.includes(topic)}
                                         <label htmlFor={`select-${topic}`} className="capitalize font-bold">
@@ -235,27 +268,74 @@ export function TPPComparison() {
                                     </div>
                                 </th>
                                 {visibleData.map((d) => (
-                                    <td key={`${d.TradeName} (${d.Size})`} className="px-6 py-4 align-text-top"
+                                    <td
+                                        key={`${d.TradeName} (${d.Size})`}
+                                        className="px-6 py-4 align-text-top"
                                         style={{
-                                            backgroundColor: topic === "Adverse_Events" ? getBackgroundColor(scores[d.TradeName]?.adverse_events, "Adverse_Events") :
-                                                topic === "Efficacy" ? getBackgroundColor(scores[d.TradeName]?.efficacy, "Efficacy") :
-                                                    topic === "Safety" ? getBackgroundColor(scores[d.TradeName]?.safety, "Safety") : "transparent"
-                                        }}>
-                                            <FormatText text={d[topic]} />
+                                            backgroundColor:
+                                                topic === "Adverse_Events"
+                                                    ? getBackgroundColor(scores[d.TradeName]?.adverse_events, "Adverse_Events")
+                                                    : topic === "Efficacy"
+                                                        ? getBackgroundColor(scores[d.TradeName]?.efficacy, "Efficacy")
+                                                        : topic === "Safety"
+                                                            ? getBackgroundColor(scores[d.TradeName]?.safety, "Safety")
+                                                            : "transparent",
+                                        }}
+                                    >
+                                        <FormatText text={d[topic]} />
                                     </td>
                                 ))}
                             </tr>
                         ))}
                     </tbody>
                 </table>
+                <div className="flex flex-row gap-4 mb-4">
+                    <Card className="w-1/2">
+                        <CardHeader>
+                            <CardTitle>Differentiator for {location.state?.mainDrug}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {isLoadingInsights ? (
+                                <div className="flex items-center justify-center">
+                                    <div className="animate-pulse flex space-x-1">
+                                        <div className="w-2 h-2 bg-[#a6ce39] rounded-full"></div>
+                                        <div className="w-2 h-2 bg-[#a6ce39] rounded-full"></div>
+                                        <div className="w-2 h-2 bg-[#a6ce39] rounded-full"></div>
+                                        {/* <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div> */}
+                                    </div>
+                                </div>
+                            ) : (
+                                <FormatText text={mainDrugInsights?.differentiator || "N/A"} />
+                            )}
+                        </CardContent>
+                    </Card>
+                    <Card className="w-1/2">
+                        <CardHeader>
+                            <CardTitle>Key Insights for {location.state?.mainDrug}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {isLoadingInsights ? (
+                                <div className="flex items-center justify-center">
+                                    <div className="animate-pulse flex space-x-1">
+                                        <div className="w-2 h-2 bg-[#a6ce39] rounded-full"></div>
+                                        <div className="w-2 h-2 bg-[#a6ce39] rounded-full"></div>
+                                        <div className="w-2 h-2 bg-[#a6ce39] rounded-full"></div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <FormatText text={mainDrugInsights?.keyInsights || "N/A"} />
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
 
+
             <Dialog open={aiColumnDialogOpen} onOpenChange={setAiColumnDialogOpen}>
-                <DialogContent className='bg-white'>
+                <DialogContent className="bg-white">
                     <DialogTitle>Add AI Column</DialogTitle>
-                    <DialogDescription>
-                        Enter the name and description for the new AI column to be added.
-                    </DialogDescription>
+                    <DialogDescription>Enter the name and description for the new AI column to be added.</DialogDescription>
                     <div className="space-y-4">
                         <Input
                             value={aiColumnName}
@@ -271,11 +351,24 @@ export function TPPComparison() {
                         />
                     </div>
                     <DialogFooter>
-                        <Button onClick={handleSubmitAiColumn} disabled={isAiColumnLoading} className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]">{isAiColumnLoading ? "Adding..." : "Add Column"}</Button>
-                        <Button onClick={() => setAiColumnDialogOpen(false)} variant="outline" className='bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2'>Cancel</Button>
+                        <Button
+                            onClick={handleSubmitAiColumn}
+                            disabled={isAiColumnLoading}
+                            className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
+                        >
+                            {isAiColumnLoading ? "Adding..." : "Add Column"}
+                        </Button>
+                        <Button
+                            onClick={() => setAiColumnDialogOpen(false)}
+                            variant="outline"
+                            className="bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2"
+                        >
+                            Cancel
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>
-    );
+    )
 }
+

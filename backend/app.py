@@ -16,6 +16,8 @@ from Utilities.query_classifier import (
     es,
     conversation_history
 )
+from TPP.d import format_output, process_drug_comparison
+from TPP.k import key_insights, process_key_insights
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -808,62 +810,62 @@ df = load_tpp_data()
 def search_tpp_by_drug():
     try:
         data = request.json
-        
+        print(data)
+
         # Extract search parameters
         drug_name = data.get('drugName', '').strip()
         disease_name = data.get('diseaseName', '').strip()
-        # country = data.get('country', '').strip()
         modality = data.get('modality', '').strip()
-        
-        # Validate that at least one field is provided
-        # if not any([drug_name, disease_name, modality]):
-        #     return jsonify({
-        #         'error': 'Missing fields',
-        #         'message': 'At least one search field is required'
-        #     }), 400
-        
-        # Create a copy of the dataframe for filtering
-        filtered_df = df.copy()
-        
-        # Create individual masks for each condition
-        masks = []
-        if drug_name:
-            masks.append(filtered_df['Drug'].str.lower() == drug_name.lower())
-        if disease_name:
-            masks.append(filtered_df['Disease'].str.lower() == disease_name.lower())
-        # if country:
-        #     masks.append(filtered_df['Country'].str.lower() == country.lower())
-        if modality:
-            masks.append(filtered_df['Modality'].str.lower() == modality.lower())
-        
-        # Combine all masks with OR condition if there are any masks
-        if masks:
-            final_mask = masks[0]
-            for mask in masks[1:]:
-                final_mask = final_mask | mask
-            filtered_df = filtered_df[final_mask]
-        
-        # Check if we found any matches
-        if filtered_df.empty:
+
+        # First, filter the dataset to find rows for the given drug name
+        drug_df = df[df['Drug'].str.lower() == drug_name.lower()]
+
+        # If no data for the drug, return early
+        if drug_df.empty:
             return jsonify({
-                'message': 'No matching records found',
+                'message': 'No matching records found for the drug',
                 'data': []
             }), 200
-        filtered_df=filtered_df.fillna("")
+
+        # Apply the AND logic for Disease and Modality
+        # First filter for Disease
+        disease_mask = df['Disease'].str.contains(disease_name, case=False, na=False) if disease_name else pd.Series([True] * len(df))
+        # Then filter for Modality
+        modality_mask = df['Modality'].str.contains(modality, case=False, na=False) if modality else pd.Series([True] * len(df))
+
+        # Combine the conditions using AND logic
+        combined_mask = disease_mask & modality_mask
+
+        # Apply the combined filter to the DataFrame
+        filtered_df = df[combined_mask]
+
+        # Now combine drug_df with the filtered results
+        result_df = pd.concat([drug_df, filtered_df]).drop_duplicates()
+
+        # If no combined records found, return a message
+        if result_df.empty:
+            return jsonify({
+                'message': 'No matching records found for the given disease and modality',
+                'data': []
+            }), 200
+
+        # Fill NaN values with empty strings
+        result_df = result_df.fillna("")
+
         # Convert the filtered dataframe to a list of dictionaries
-        results = filtered_df.to_dict('records')
-        
+        results = result_df.to_dict('records')
+
         return jsonify({
             'message': f'Found {len(results)} matching records',
             'data': results
         }), 200
-        
-    except Exception as e:
-        return jsonify({
-            'error': 'Internal server error',
-            'message': str(e)
-        }), 500
 
+    except Exception as e:
+        print(f"Error in processing request: {e}")
+        return jsonify({
+            'error': 'Internal Server Error',
+            'message': 'An error occurred while processing your request.'
+        }), 500
 @app.route('/api/tpp-by-therapies', methods=['POST'])
 def search_tpp_by_therapies():
     try:
@@ -912,6 +914,84 @@ def search_tpp_by_therapies():
             'error': 'Internal server error',
             'message': str(e)
         }), 500
+
+
+def get_disease_and_modality(drug_name):
+    try:
+        # Load the Excel file
+        df = pd.read_excel("tpp_database.xlsx")
+
+        # Check if the drug exists in the 'Drug' column
+        drug_data = df[df['Drug'] == drug_name]
+
+        if drug_data.empty:
+            return None
+
+        # Extract Disease and Modality columns
+        # Split the 'Disease' column values by newline and remove empty values
+        diseases = drug_data['Disease'].dropna().apply(lambda x: [d.strip() for d in x.split('\n')]).explode().unique().tolist()
+
+        # Extract modalities (assuming there are no newlines in the modality column)
+        modalities = drug_data['Modality'].dropna().unique().tolist()
+
+        return {
+            "diseases": diseases,
+            "modalities": modalities
+        }
+    except Exception as e:
+        print(f"Error processing Excel file: {e}")
+        return None
+
+# API endpoint to fetch disease and modality based on drug name
+@app.route('/api/drug-info', methods=['POST'])
+def drug_info():
+    try:
+        data = request.get_json()  # Get the input JSON from frontend
+        drug_name = data.get("drugName")
+
+        if not drug_name:
+            return jsonify({"error": "Drug name is required"}), 400
+
+        # Get the disease and modality for the given drug
+        result = get_disease_and_modality(drug_name)
+
+        if not result:
+            return jsonify({"error": "Drug not found in the database"}), 404
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print(f"Error in API request: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+    
+    
+@app.route('/main-drug-insights', methods=['POST'])
+def main_drug_insights():
+    try:
+        data = request.json
+        main_drug = data.get('drug_name')
+        all_data = data.get('all_data')  # Get all_data from the request
+        
+        if not main_drug:
+            return jsonify({"error": "Main drug not provided"}), 400
+        
+        if all_data is None:
+            return jsonify({"error": "All data not provided"}), 400
+        
+        # Call your existing function to process drug comparison
+        results = process_drug_comparison(all_data, main_drug)  # Pass all_data instead of DRUG_DATA
+        
+        # Format the output
+        formatted_output_result = format_output(main_drug, results["differences"])
+        
+        keyResults = process_key_insights(all_data, main_drug)
+        keyInsights = key_insights(main_drug, keyResults["differences"])
+        
+        return jsonify({"differentiator": formatted_output_result, "keyInsights": keyInsights})
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
