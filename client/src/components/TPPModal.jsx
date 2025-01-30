@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
@@ -6,14 +6,10 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Select from "react-select"
 import { useNavigate } from "react-router-dom"
-import { Lock } from "lucide-react"
 
 import inputData from "../assets/data/drugDiseaseData.json"
 
-
-
-// Add this function before the handleDrugFormChange function
-const fetchDiseaseAndModality = async (drugName) => {
+const fetchDrugInfo = async (drugName) => {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/api/drug-info`, {
       method: "POST",
@@ -33,10 +29,29 @@ const fetchDiseaseAndModality = async (drugName) => {
   }
 }
 
+const fetchDiseaseInfo = async (diseaseName) => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/disease-info`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ diseaseName }),
+    })
+    if (!response.ok) {
+      throw new Error("Network response was not ok")
+    }
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error("Error fetching disease info:", error)
+    return null
+  }
+}
+
 export default function TPPModal({ isOpen, onOpenChange }) {
   const navigate = useNavigate()
   const [isSearching, setIsSearching] = useState(false)
-  // Drug search form state
   const [drugSearchForm, setDrugSearchForm] = useState({
     drugName: null,
     diseaseName: null,
@@ -44,9 +59,8 @@ export default function TPPModal({ isOpen, onOpenChange }) {
     modality: null,
   })
 
-  // Comparator search form state
   const [comparatorForm, setComparatorForm] = useState({
-    drugName: "",
+    drug_Name: "",
     diseaseName: null,
     routeOfAdministration: null,
     modality: null,
@@ -60,22 +74,30 @@ export default function TPPModal({ isOpen, onOpenChange }) {
     country: null,
   })
 
-  // Update the handleDrugFormChange function
-  const handleDrugFormChange = async (field, selectedOption) => {
+  const [drugDiseaseData, setDrugDiseaseData] = useState({
+    drugs: inputData.drugs,
+    diseases: [],
+    modalities: [],
+    countries: inputData.countries,
+    routes_of_administration: [],
+  })
+
+  const handleDrugFormChange = async (field, value) => {
+    console.log("handleDrugFormChange called:", field, value)
+    const inputValue = value && typeof value === "object" ? value.value : value
     setDrugSearchForm((prev) => ({
       ...prev,
-      [field]: selectedOption,
+      [field]: inputValue,
     }))
 
-    if (field === "drugName" && selectedOption) {
-      const data = await fetchDiseaseAndModality(selectedOption.value)
+    if (field === "drugName" && inputValue) {
+      const data = await fetchDrugInfo(inputValue)
       if (data) {
         setDrugSearchForm((prev) => ({
           ...prev,
           diseaseName: null,
           modality: null,
         }))
-        // Update the drugDiseaseData state with the new options
         setDrugDiseaseData((prev) => ({
           ...prev,
           diseases: data.diseases,
@@ -85,38 +107,44 @@ export default function TPPModal({ isOpen, onOpenChange }) {
     }
   }
 
-  const handleComparatorFormChange = (field, value) => {
-    if (typeof value === "object" && value !== null) {
-      // Handle select changes
-      setComparatorForm((prev) => ({
-        ...prev,
-        [field]: value,
-      }))
-    } else {
-      // Handle text input changes
-      setComparatorForm((prev) => ({
-        ...prev,
-        [field]: value,
-      }))
-    }
-  }
+  const handleComparatorFormChange = async (field, value) => {
+    console.log("handleComparatorFormChange called:", field, value)
 
-  // Add this state for dynamic drugDiseaseData
-  const [drugDiseaseData, setDrugDiseaseData] = useState({
-    drugs: inputData.drugs, // You might want to fetch this initially or keep it as is
-    diseases: [],
-    modalities: [],
-    countries: inputData.countries, // Keep this as is
-  })
+    // Handle both object (Select) and string (Input) values
+    const inputValue = value && typeof value === "object" ? value.value : value
+
+    setComparatorForm((prev) => {
+      const newState = { ...prev, [field]: inputValue }
+      console.log("New comparatorForm state:", newState)
+      return newState
+    })
+
+    // // Fetch disease info if the disease name changes
+    // if (field === "diseaseName" && value) {
+    //   const data = await fetchDiseaseInfo(inputValue)
+    //   if (data) {
+    //     setDrugDiseaseData((prev) => ({
+    //       ...prev,
+    //       routes_of_administration: data.routes_of_administration,
+    //       modalities: data.modalities,
+    //     }))
+    //     setComparatorForm((prev) => ({
+    //       ...prev,
+    //       routeOfAdministration: null,
+    //       modality: null,
+    //     }))
+    //   }
+    // }
+  }
 
   const handleSubmitDrug = async () => {
     setIsSearching(true)
     try {
       const submitData = {
-        drugName: drugSearchForm.drugName?.value || "",
-        diseaseName: drugSearchForm.diseaseName?.value || "",
-        country: drugSearchForm.country?.value || "",
-        modality: drugSearchForm.modality?.value || "",
+        drugName: drugSearchForm.drugName || "",
+        diseaseName: drugSearchForm.diseaseName || "",
+        country: drugSearchForm.country|| "",
+        modality: drugSearchForm.modality || "",
       }
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tpp-by-drug`, {
@@ -132,50 +160,84 @@ export default function TPPModal({ isOpen, onOpenChange }) {
       const data = await response.json()
       setIsSearching(false)
       navigate("/tpp-by-drug", {
-        state: { searchResults: data.data, drug: drugSearchForm.drugName?.value  },
+        state: { searchResults: data.data, drug: drugSearchForm.drugName },
       })
       onOpenChange(false)
     } catch (error) {
       console.error("Error submitting drug search:", error)
+      setIsSearching(false)
     }
   }
 
   const handleSubmitComparator = async () => {
-    setIsSearching(true)
+    setIsSearching(true);
     try {
       const submitData = {
-        drugName: comparatorForm.drugName,
-        diseaseName: comparatorForm.diseaseName?.value || "",
-        routeOfAdministration: comparatorForm.routeOfAdministration?.value || "",
-        modality: comparatorForm.modality?.value || "",
-        safety: comparatorForm.safety,
-        efficacy: comparatorForm.efficacy,
-        dosageForm: comparatorForm.dosageForm,
-        dosageRegime: comparatorForm.dosageRegime,
-        dosageSize: comparatorForm.dosageSize,
-        specialWarnings: comparatorForm.specialWarnings,
-        patientEligibility: comparatorForm.patientEligibility,
-        country: comparatorForm.country?.value || "",
-      }
-
+        drug_Name: comparatorForm.drug_Name || "User's Drug",
+        diseaseName: comparatorForm.diseaseName || "",
+        routeOfAdministration: comparatorForm.routeOfAdministration || "",
+        modality: comparatorForm.modality || "",
+        safety: comparatorForm.safety || "N/A",
+        efficacy: comparatorForm.efficacy || "N/A",
+        dosageForm: comparatorForm.dosageForm || "N/A",
+        dosageRegime: comparatorForm.dosageRegime || "N/A",
+        dosageSize: comparatorForm.dosageSize || "N/A",
+        specialWarnings: comparatorForm.specialWarnings || "N/A",
+        patientEligibility: comparatorForm.patientEligibility || "N/A",
+        country: comparatorForm.country || "N/A",
+      };
+  
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tpp-by-therapies`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(submitData),
-      })
+      });
+  
       if (!response.ok) {
-        throw new Error("Network response was not ok")
+        throw new Error("Network response was not ok");
       }
-      const data = await response.json()
-      setIsSearching(false)
-      console.log("API Response:", data)
-      onOpenChange(false)
+  
+      const data = await response.json();
+      
+      // Extract all possible keys from API response to ensure consistency
+      const allKeys = new Set(data.data.flatMap(Object.keys));
+  
+      // Transform submitData into the required format with missing fields set to "N/A"
+      const transformedItem = {};
+      allKeys.forEach((key) => {
+        transformedItem[key] = "N/A"; // Default value
+      });
+  
+      transformedItem["Disease"] = submitData.diseaseName;
+      transformedItem["Route Of Administration"] = submitData.routeOfAdministration;
+      transformedItem["Modality"] = submitData.modality;
+      transformedItem["Safety"] = submitData.safety;
+      transformedItem["Efficacy"] = submitData.efficacy;
+      transformedItem["Dosage Form"] = submitData.dosageForm;
+      transformedItem["Dosage Regime"] = submitData.dosageRegime;
+      transformedItem["Dosage Size"] = submitData.dosageSize;
+      transformedItem["Special Warnings"] = submitData.specialWarnings;
+      transformedItem["Patient Eligibility"] = submitData.patientEligibility;
+      transformedItem["Country"] = submitData.country;
+      transformedItem["Drug"] = submitData.drug_Name;
+  
+      // Append transformed item to existing data
+      const updatedData = [transformedItem, ...data.data];
+  
+      setIsSearching(false);
+      navigate("/tpp-by-drug", {
+        state: { searchResults: updatedData, drug: submitData.drug_Name },
+      });
+  
+      onOpenChange(false);
     } catch (error) {
-      console.error("Error submitting comparator search:", error)
+      console.error("Error submitting comparator search:", error);
+      setIsSearching(false);
     }
-  }
+  };
+  
 
   const selectStyles = {
     control: (base) => ({
@@ -199,8 +261,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
     }),
   }
 
-  // Update the renderSelect function for disease and modality
-  const renderSelect = (id, label, options, value, onChange, placeholder, field) => {
+  const renderSelect = (id, label, options, value, onChange, placeholder, field, isDisabled = false) => {
     const selectOptions = options.map((item) => ({
       value: item,
       label: item,
@@ -213,7 +274,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
         </Label>
         <Select
           id={id}
-          value={value}
+          value={value ? { value: value, label: value } : null}
           options={selectOptions}
           onChange={(selectedOption) => onChange(field, selectedOption)}
           styles={selectStyles}
@@ -222,7 +283,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
           isClearable
           className="react-select-container"
           classNamePrefix="react-select"
-          isDisabled={field === "diseaseName" || field === "modality" ? !drugSearchForm.drugName : false}
+          isDisabled={isDisabled}
         />
       </div>
     )
@@ -236,7 +297,10 @@ export default function TPPModal({ isOpen, onOpenChange }) {
       <Input
         id={id}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          console.log("Input changed:", e.target.value)
+          onChange(id, e.target.value)
+        }}
         className="w-full p-2 border border-gray-200 rounded-[12px] text-gray-800 focus:border-[#a6ce39] focus:ring-[#a6ce39] hover:border-[#a6ce39] transition duration-200 ease-in-out"
       />
     </div>
@@ -274,11 +338,9 @@ export default function TPPModal({ isOpen, onOpenChange }) {
             </TabsTrigger>
             <TabsTrigger
               value="comparator"
-              className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-black rounded-[12px] flex items-center justify-center gap-2 cursor-not-allowed opacity-50"
-              disabled
+              className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-black rounded-[12px] flex items-center justify-center gap-2"
             >
               Search Comparator Therapies
-              <Lock className="h-4 w-4" />
             </TabsTrigger>
           </TabsList>
 
@@ -302,6 +364,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
                   handleDrugFormChange,
                   "Select disease...",
                   "diseaseName",
+                  !drugSearchForm.drugName,
                 )}
                 {renderSelect(
                   "country",
@@ -320,6 +383,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
                   handleDrugFormChange,
                   "Select modality...",
                   "modality",
+                  !drugSearchForm.drugName,
                 )}
                 <Button
                   onClick={handleSubmitDrug}
@@ -333,11 +397,9 @@ export default function TPPModal({ isOpen, onOpenChange }) {
 
             <TabsContent value="comparator">
               <div className="space-y-4">
-                {renderInput("comparator-drug-name", "Drug Name", comparatorForm.drugName, (value) =>
-                  handleComparatorFormChange("drugName", value),
-                )}
+                {renderInput("drug_Name", "Drug Name(User's Drug)", comparatorForm.drug_Name, handleComparatorFormChange)}
                 {renderSelect(
-                  "disease-name",
+                  "diseaseName",
                   "Disease Name",
                   inputData.diseases,
                   comparatorForm.diseaseName,
@@ -346,13 +408,14 @@ export default function TPPModal({ isOpen, onOpenChange }) {
                   "diseaseName",
                 )}
                 {renderSelect(
-                  "route-of-administration",
+                  "routeOfAdministration",
                   "Route of Administration",
                   inputData.routes_of_administration,
                   comparatorForm.routeOfAdministration,
                   handleComparatorFormChange,
                   "Select route...",
                   "routeOfAdministration",
+                  !comparatorForm.diseaseName,
                 )}
                 {renderSelect(
                   "modality",
@@ -362,32 +425,29 @@ export default function TPPModal({ isOpen, onOpenChange }) {
                   handleComparatorFormChange,
                   "Select modality...",
                   "modality",
+                  !comparatorForm.diseaseName,
                 )}
-                {renderInput("safety", "Safety", comparatorForm.safety, (value) =>
-                  handleComparatorFormChange("safety", value),
+                {renderInput("safety", "Safety", comparatorForm.safety, handleComparatorFormChange)}
+                {renderInput("efficacy", "Efficacy", comparatorForm.efficacy, handleComparatorFormChange)}
+                {renderInput("dosageForm", "Dosage Form", comparatorForm.dosageForm, handleComparatorFormChange)}
+                {renderInput("dosageRegime", "Dosage Regime", comparatorForm.dosageRegime, handleComparatorFormChange)}
+                {renderInput("dosageSize", "Dosage Size", comparatorForm.dosageSize, handleComparatorFormChange)}
+                {renderInput(
+                  "specialWarnings",
+                  "Special Warnings",
+                  comparatorForm.specialWarnings,
+                  handleComparatorFormChange,
                 )}
-                {renderInput("efficacy", "Efficacy", comparatorForm.efficacy, (value) =>
-                  handleComparatorFormChange("efficacy", value),
-                )}
-                {renderInput("dosage-form", "Dosage Form", comparatorForm.dosageForm, (value) =>
-                  handleComparatorFormChange("dosageForm", value),
-                )}
-                {renderInput("dosage-regime", "Dosage Regime", comparatorForm.dosageRegime, (value) =>
-                  handleComparatorFormChange("dosageRegime", value),
-                )}
-                {renderInput("dosage-size", "Dosage Size", comparatorForm.dosageSize, (value) =>
-                  handleComparatorFormChange("dosageSize", value),
-                )}
-                {renderInput("special-warnings", "Special Warnings", comparatorForm.specialWarnings, (value) =>
-                  handleComparatorFormChange("specialWarnings", value),
-                )}
-                {renderInput("patient-eligibility", "Patient Eligibility", comparatorForm.patientEligibility, (value) =>
-                  handleComparatorFormChange("patientEligibility", value),
+                {renderInput(
+                  "patientEligibility",
+                  "Patient Eligibility",
+                  comparatorForm.patientEligibility,
+                  handleComparatorFormChange,
                 )}
                 {renderSelect(
-                  "comparator-country",
+                  "country",
                   "Country",
-                  inputData.countries,
+                  drugDiseaseData.countries,
                   comparatorForm.country,
                   handleComparatorFormChange,
                   "Select country...",

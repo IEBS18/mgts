@@ -33,6 +33,13 @@ const TPPDrugPage = () => {
   const uniqueCountries = [...new Set(searchResults?.map((result) => result.Country))]
   const uniqueDrugTypes = [...new Set(searchResults?.map((result) => result.Type_of_Drug))]
 
+  function formatText(inputText) {
+    // Split the input by the dash "-" and remove extra spaces around each word
+    const formattedText = inputText.split('-').map(item => item.trim()).filter(item => item !== '');
+    
+    return formattedText.join(', ');
+  }
+
   // Apply filters whenever filters or searchResults change
   useEffect(() => {
     setFilteredResults(
@@ -298,16 +305,21 @@ const TPPDrugPage = () => {
             <div className="mt-2">
               <p className="text-black font-bold">
                 {" "}
-                {result.Drug} {result["Dosage Size"] && `(${result["Dosage Size"]})`}
+                {result.Drug} {result["Dosage Size"] && `(${formatText(result["Dosage Size"])})`}
               </p>
               {result["Modality"] && (
                 <p>
-                  <strong className="font-semibold">Modality:</strong> {result["Modality"]}
+                  <strong className="font-semibold">Modality:</strong> {formatText(result["Modality"])}
                 </p>
               )}
               {result.Disease && (
                 <p>
-                  <strong className="font-semibold">Disease:</strong> {result.Disease}
+                  <strong className="font-semibold">Disease:</strong> {formatText(result.Disease)}
+                </p>
+              )}
+              {result["Route Of Administration"] && (
+                <p>
+                  <strong className="font-semibold">Route of Administration:</strong> {formatText(result["Route Of Administration"])}
                 </p>
               )}
               {result["Clinical Status"] && (

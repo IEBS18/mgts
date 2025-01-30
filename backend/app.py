@@ -806,6 +806,7 @@ def load_tpp_data():
 # Initialize the dataframe
 df = load_tpp_data()
 
+
 @app.route('/api/tpp-by-drug', methods=['POST'])
 def search_tpp_by_drug():
     try:
@@ -827,10 +828,33 @@ def search_tpp_by_drug():
                 'data': []
             }), 200
 
-        # Apply the AND logic for Disease and Modality
-        # First filter for Disease
-        disease_mask = df['Disease'].str.contains(disease_name, case=False, na=False) if disease_name else pd.Series([True] * len(df))
-        # Then filter for Modality
+        # Extract and clean disease names if empty
+        if not disease_name and not drug_df.empty:
+            raw_disease_text = drug_df['Disease'].dropna().unique().tolist()
+            disease_list = []
+            
+            # Process each disease entry
+            for entry in raw_disease_text:
+                diseases = entry.split("\n")  # Split by newline
+                # diseases = [d.replace("-", "").strip() for d in diseases]  # Clean formatting
+                disease_list.extend(diseases)  # Collect all disease names
+
+            print(f"Extracted and Cleaned Diseases: {disease_list}")
+        else:
+            disease_list = [disease_name.strip()] if disease_name else []
+
+        # Extract modality if empty
+        if not modality and not drug_df.empty:
+            modality = drug_df['Modality'].iloc[0]  # Picking first value
+            print(f"Extracted Modality: {modality}")
+
+        # Apply AND logic for Disease (match any extracted disease)
+        if disease_list:
+            disease_mask = df['Disease'].apply(lambda x: any(d in str(x) for d in disease_list))
+        else:
+            disease_mask = pd.Series([True] * len(df))
+
+        # Apply AND logic for Modality
         modality_mask = df['Modality'].str.contains(modality, case=False, na=False) if modality else pd.Series([True] * len(df))
 
         # Combine the conditions using AND logic
@@ -866,10 +890,13 @@ def search_tpp_by_drug():
             'error': 'Internal Server Error',
             'message': 'An error occurred while processing your request.'
         }), 500
+
+
 @app.route('/api/tpp-by-therapies', methods=['POST'])
 def search_tpp_by_therapies():
     try:
         data = request.json
+        print(data)
         
         # Extract the three main matching criteria
         disease_name = data.get('diseaseName', '').strip()
@@ -877,22 +904,35 @@ def search_tpp_by_therapies():
         modality = data.get('modality', '').strip()
         
         # Validate required fields
-        # if not all([disease_name, route_of_administration, modality]):
-        #     return jsonify({
-        #         'error': 'Missing required fields',
-        #         'message': 'Disease, Route of Administration, and Modality are required'
-        #     }), 400
+        if not any([disease_name, route_of_administration, modality]):
+            return jsonify({
+                'error': 'Missing required fields',
+                'message': 'At least one of Disease, Route of Administration, or Modality is required'
+            }), 400
             
         # Create a copy of the dataframe for filtering
         filtered_df = df.copy()
         
-        # Apply the three main filters - case insensitive matching
-        if disease_name:
-            filtered_df = filtered_df[filtered_df['Disease'].str.lower() == disease_name.lower()]
+        # Apply the filters based on the logic (diseaseName AND Modality) OR routeOfAdministration
+        if disease_name and modality:
+            # Use .str.contains for partial matching (case-insensitive)
+            condition1 = (filtered_df['Disease'].str.contains(disease_name, case=False, na=False)) & \
+                         (filtered_df['Modality'].str.contains(modality, case=False, na=False))
+        else:
+            condition1 = False  # If either diseaseName or Modality is missing, this condition is False
+
         if route_of_administration:
-            filtered_df = filtered_df[filtered_df['Route_of_Administration'].str.lower() == route_of_administration.lower()]
-        if modality:
-            filtered_df = filtered_df[filtered_df['Modality'].str.lower() == modality.lower()]
+            # Use .str.contains for partial matching (case-insensitive)
+            condition2 = filtered_df['Route Of Administration'].str.contains(route_of_administration, case=False, na=False)
+        else:
+            condition2 = False  # If routeOfAdministration is missing, this condition is False
+
+        # Combine the conditions using OR
+        if condition1 is not False or condition2 is not False:
+            filtered_df = filtered_df[condition1 | condition2]
+        else:
+            # If no conditions are applied, return an empty result
+            filtered_df = pd.DataFrame(columns=filtered_df.columns)
             
         # Check if we found any matches
         if filtered_df.empty:
@@ -902,6 +942,7 @@ def search_tpp_by_therapies():
             }), 200
             
         # Convert the filtered dataframe to a list of dictionaries
+        filtered_df = filtered_df.fillna("")
         results = filtered_df.to_dict('records')
         
         return jsonify({
@@ -914,7 +955,6 @@ def search_tpp_by_therapies():
             'error': 'Internal server error',
             'message': str(e)
         }), 500
-
 
 def get_disease_and_modality(drug_name):
     try:
@@ -963,7 +1003,53 @@ def drug_info():
     except Exception as e:
         print(f"Error in API request: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
-    
+
+def get_matched_disease_info(matched_disease):
+    try:
+        # Load the Excel file
+        df = pd.read_excel("tpp_database.xlsx")
+
+        # Check if the disease exists in the 'Disease' column
+        disease_data = df[df['Disease'].str.contains(matched_disease, na=False, case=False)]
+
+        if disease_data.empty:
+            return None
+
+        # Extract unique routes of administration and modalities
+        routes_of_administration = disease_data['Route Of Administration'].dropna().unique().tolist()
+        modalities = disease_data['Modality'].dropna().unique().tolist()
+
+        return {
+            "routes_of_administration": routes_of_administration,
+            "modalities": modalities
+        }
+    except Exception as e:
+        print(f"Error processing Excel file: {e}")
+        return None
+
+
+# API endpoint to fetch routes of administration and modalities for matched disease
+@app.route('/api/disease-info', methods=['POST'])
+def matched_disease_info():
+    try:
+        data = request.get_json()  # Get the input JSON from frontend
+        matched_disease = data.get("diseaseName")
+
+        if not matched_disease:
+            return jsonify({"error": "Matched disease name is required"}), 400
+
+        # Get routes of administration and modalities for the given matched disease
+        result = get_matched_disease_info(matched_disease)
+
+        if not result:
+            return jsonify({"error": "Matched disease not found in the database"}), 404
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print(f"Error in API request: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+   
     
 @app.route('/main-drug-insights', methods=['POST'])
 def main_drug_insights():
