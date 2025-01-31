@@ -898,52 +898,44 @@ def search_tpp_by_therapies():
         data = request.json
         print(data)
         
-        # Extract the three main matching criteria
         disease_name = data.get('diseaseName', '').strip()
         route_of_administration = data.get('routeOfAdministration', '').strip()
         modality = data.get('modality', '').strip()
         
-        # Validate required fields
         if not any([disease_name, route_of_administration, modality]):
             return jsonify({
                 'error': 'Missing required fields',
                 'message': 'At least one of Disease, Route of Administration, or Modality is required'
             }), 400
             
-        # Create a copy of the dataframe for filtering
         filtered_df = df.copy()
         
-        # Apply the filters based on the logic (diseaseName AND Modality) OR routeOfAdministration
-        if disease_name and modality:
-            # Use .str.contains for partial matching (case-insensitive)
-            condition1 = (filtered_df['Disease'].str.contains(disease_name, case=False, na=False)) & \
-                         (filtered_df['Modality'].str.contains(modality, case=False, na=False))
-        else:
-            condition1 = False  # If either diseaseName or Modality is missing, this condition is False
+        condition1 = (filtered_df['Disease'].str.contains(disease_name, case=False, na=False)) & \
+                     (filtered_df['Modality'].str.contains(modality, case=False, na=False)) if disease_name and modality else False
 
-        if route_of_administration:
-            # Use .str.contains for partial matching (case-insensitive)
-            condition2 = filtered_df['Route Of Administration'].str.contains(route_of_administration, case=False, na=False)
-        else:
-            condition2 = False  # If routeOfAdministration is missing, this condition is False
-
-        # Combine the conditions using OR
+        condition2 = filtered_df['Route Of Administration'].str.contains(route_of_administration, case=False, na=False) if route_of_administration else False
+        
         if condition1 is not False or condition2 is not False:
+            filtered_df['match_type'] = 'OR'
+            filtered_df.loc[condition1, 'match_type'] = 'AND'
+            
             filtered_df = filtered_df[condition1 | condition2]
+            
+            # Sort so that AND condition matches appear first
+            filtered_df = filtered_df.sort_values(by='match_type', ascending=True)
+            
         else:
-            # If no conditions are applied, return an empty result
             filtered_df = pd.DataFrame(columns=filtered_df.columns)
             
-        # Check if we found any matches
         if filtered_df.empty:
             return jsonify({
                 'message': 'No matching records found',
                 'data': []
             }), 200
             
-        # Convert the filtered dataframe to a list of dictionaries
         filtered_df = filtered_df.fillna("")
-        results = filtered_df.to_dict('records')
+        results = filtered_df.drop(columns=['match_type']).to_dict('records')
+        print(results)
         
         return jsonify({
             'message': f'Found {len(results)} matching records',
