@@ -15,6 +15,8 @@ import Select from "react-select";
 import outputData from '../assets/data/output.json';
 import { useNavigate } from "react-router-dom";
 
+import DiseaseImg from '../assets/dashboard/diseaseOverview.png'
+
 export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSubmit }) {
   const [selectedCountries, setSelectedCountries] = useState([]);
   const [searchType, setSearchType] = useState("disease");
@@ -155,7 +157,7 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
       backgroundColor: state.isFocused ? "#e0f3c4" : "white",
       color: "#333",
     }),
-    menuPortal: (base) => ({ ...base, zIndex: 1050, pointerEvents: 'auto', WebkitOverflowScrolling: "touch",  touchAction: 'pan-y' }),
+    menuPortal: (base) => ({ ...base, zIndex: 1050, pointerEvents: 'auto', WebkitOverflowScrolling: "touch", touchAction: 'pan-y' }),
   };
 
   return (
@@ -166,7 +168,7 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
         </Button>
       </DialogTrigger> */}
       <DialogContent
-        className="max-w-3xl bg-[#f4f4f4] rounded-[12px] overflow-y-auto"
+        className="max-w-3xl bg-dialog rounded-[12px] overflow-y-auto"
         style={{
           position: 'fixed',
           top: '10%',
@@ -179,13 +181,23 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
         <DialogHeader className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <DialogTitle className="text-gray-900">Disease Overview</DialogTitle>
+              <DialogTitle className="flex flex-row items-center justify-cente text-white rounded-lg">
+                <div className="flex items-center justify-center w-12 h-12 border-2 border-white rounded-full mr-4">
+                  <img
+                    src={DiseaseImg}
+                    alt="Disease icon"
+                    className="w-6 h-6 object-contain"
+                  />
+                </div>
+                <p className="text-lg font-medium">Disease Overview</p>
+              </DialogTitle>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-white">
               A high-level overview of the selected indication, covering disease biology, risk factors, standard treatment
               protocols, and key unmet needs. Ideal for developing a foundational understanding or refining strategic focus.
             </p>
           </div>
+
         </DialogHeader>
         <Tabs
           defaultValue="disease"
@@ -196,30 +208,30 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
           className="w-full"
         >
           {/* Fixed TabsList Container */}
-          <div className="sticky top-0 z-10 bg-white rounded-[12px]">
-            <TabsList className="grid w-full grid-cols-3 bg-white rounded-[12px]">
+          <div className="sticky top-0 z-10 bg-white rounded-[18px]">
+            <TabsList className="grid w-full grid-cols-3 bg-white rounded-[18px]">
               <TabsTrigger
                 value="disease"
-                className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-black rounded-[12px]"
+                className="data-[state=active]:bg-[#54681D] data-[state=active]:text-white rounded-[12px]"
               >
                 Search by Disease
               </TabsTrigger>
               <TabsTrigger
                 value="drug"
-                className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-black rounded-[12px]"
+                className="data-[state=active]:bg-[#54681D] data-[state=active]:text-white rounded-[12px]"
               >
                 Search by Drug
               </TabsTrigger>
               <TabsTrigger
                 value="symptoms"
-                className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-black rounded-[12px]"
+                className="data-[state=active]:bg-[#54681D] data-[state=active]:text-white rounded-[12px]"
               >
                 Search by Symptoms
               </TabsTrigger>
             </TabsList>
           </div>
           {/* Scrollable Content Area */}
-          <div className="overflow-y-auto max-h-[70vh] bg-white p-4 rounded-[12px] mt-4">
+          <div className="overflow-y-auto max-h-[70vh] bg-white p-4 rounded-[20px] mt-4">
             <TabsContent value="disease">
               <div className="space-y-2">
                 <Label htmlFor="disease-select" className="text-gray-700">Disease Name</Label>
@@ -233,13 +245,16 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
                   menuPosition="fixed"
                 />
               </div>
+              <div className="flex justify-center">
+
               <Button
                 onClick={handleSearchSubmitDisease}
                 disabled={isSearching}
-                className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4"
+                className="w-[120px] bg-[#54681D] text-white hover:bg-[#95b833] rounded-[60px] mt-4"
               >
                 {isSearching ? 'Loading...' : 'Submit'}
               </Button>
+              </div>
             </TabsContent>
             <TabsContent value="drug">
               <div className="space-y-2">
@@ -277,13 +292,15 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
                   menuPosition="fixed"
                 />
               </div>
+              <div className="flex justify-center">
               <Button
                 onClick={handleSearchSubmitDrug}
                 disabled={isSearching}
-                className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4"
+                className="w-[120px] bg-[#54681D] text-white hover:bg-[#95b833] rounded-[60px] mt-4"
               >
                 {isSearching ? 'Loading...' : 'Submit'}
               </Button>
+              </div>
             </TabsContent>
             <TabsContent value="symptoms">
               <div className="space-y-2">
@@ -296,13 +313,15 @@ export default function DiseaseOverviewModal({ isOpen, onOpenChange, onSearchSub
                   onChange={(e) => setSearchValue(e.target.value)}
                 />
               </div>
+              <div className='flex justify-center'>
               <Button
                 onClick={handleSearchSubmitSymptoms}
                 disabled={isSearching}
-                className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4"
+                className="w-[120px] bg-[#54681D] text-white hover:bg-[#95b833] rounded-[60px] mt-4"
               >
                 {isSearching ? 'Loading...' : 'Submit'}
               </Button>
+              </div>
             </TabsContent>
           </div>
         </Tabs>

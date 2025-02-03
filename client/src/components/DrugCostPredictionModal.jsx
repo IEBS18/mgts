@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import Select from "react-select";
 import outputData from '../assets/data/priceprediction.json';
 import { useNavigate } from "react-router-dom";
+import PriceImg from '../assets/dashboard/pricePrediction.png'
 
 export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
   const [formData, setFormData] = useState({
@@ -23,7 +24,7 @@ export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
     efficacy: "",
   });
   const [loading, setLoading] = useState(false);
-  const navigate= useNavigate();
+  const navigate = useNavigate();
 
 
   const selectStyles = {
@@ -39,7 +40,7 @@ export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
       backgroundColor: state.isFocused ? "#e0f3c4" : "white",
       color: "#333",
     }),
-    menuPortal: (base) => ({ ...base, zIndex: 1050, pointerEvents: 'auto', WebkitOverflowScrolling: "touch",  touchAction: 'pan-y' }),
+    menuPortal: (base) => ({ ...base, zIndex: 1050, pointerEvents: 'auto', WebkitOverflowScrolling: "touch", touchAction: 'pan-y' }),
   };
 
 
@@ -49,13 +50,13 @@ export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
 
   const handleSubmit = async () => {
     const { disease_name, country, quality_of_life, mortality, modality, morbidity, safety, efficacy } = formData;
-  
+
     // Ensure all fields are filled
     if (!disease_name || !country || !quality_of_life || !mortality || !modality || !morbidity || !safety || !efficacy) {
       alert("Please fill in all fields.");
       return;
     }
-  
+
     // Create the payload with only the required values
     const payload = {
       disease_name: disease_name.value,
@@ -67,7 +68,7 @@ export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
       safety,
       efficacy,
     };
-  
+
     setLoading(true);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/price-prediction`, {
@@ -75,12 +76,12 @@ export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-  
+
       if (!response.ok) throw new Error("Failed to predict cost");
-  
+
       const data = await response.json();
       console.log(data);
-      navigate('/price-prediction', {state: { data, payload }});
+      navigate('/price-prediction', { state: { data, payload } });
       // alert(`Predicted cost: ${(data.result["average_price"]).toFixed(2)}`);
     } catch (error) {
       console.error(error);
@@ -89,21 +90,37 @@ export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
       setLoading(false);
     }
   };
-  
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl bg-[#f4f4f4] rounded-[12px] overflow-y-auto"
-      style={{
-        position: 'fixed',
-        top: '10%',          
-        left: '50%',          
-        transform: 'translateX(-50%)',
-        maxHeight: '80vh',    
-        width: '100%',
-      }}>
+      <DialogContent className="max-w-3xl bg-dialog rounded-[12px] overflow-y-auto"
+        style={{
+          position: 'fixed',
+          top: '10%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          maxHeight: '80vh',
+          width: '100%',
+        }}>
         <DialogHeader className="space-y-4">
-          <DialogTitle className="text-gray-900">Predict Drug Cost</DialogTitle>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <DialogTitle className="flex flex-row items-center justify-cente text-white rounded-lg">
+                <div className="flex items-center justify-center w-12 h-12 border-2 border-white rounded-full mr-4">
+                  <img
+                    src={PriceImg}
+                    alt="Disease icon"
+                    className="w-6 h-6 object-contain"
+                  />
+                </div>
+                <p className="text-lg font-medium">Predict Drug Cost</p>
+              </DialogTitle>
+            </div>
+            <p className="text-sm text-white">
+               Predicts drug prices based on disease factors, treatment type, quality of life, mortality data and other factors.
+            </p>
+
+          </div>
         </DialogHeader>
 
         <div className="sticky top-0 z-10 bg-white rounded-[12px] p-4">
@@ -222,10 +239,11 @@ export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
               className="w-full px-4 py-2 border rounded"
             />
           </div>
-
-          <Button onClick={handleSubmit} className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4" disabled={loading}>
-            {loading ? "Predicting..." : "Predict Cost"}
-          </Button>
+          <div className="flex justify-center">
+            <Button onClick={handleSubmit} className="w-[120px] bg-[#54681D] text-white hover:bg-[#95b833] rounded-[60px] mt-4" disabled={loading}>
+              {loading ? "Predicting..." : "Predict Cost"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Select from "react-select"
 import { useNavigate } from "react-router-dom"
+import TPPImg from '../assets/dashboard/Epidemiology.png'
 
 import inputData from "../assets/data/drugDiseaseData.json"
 
@@ -143,7 +144,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
       const submitData = {
         drugName: drugSearchForm.drugName || "",
         diseaseName: drugSearchForm.diseaseName || "",
-        country: drugSearchForm.country|| "",
+        country: drugSearchForm.country || "",
         modality: drugSearchForm.modality || "",
       }
 
@@ -186,7 +187,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
         patientEligibility: comparatorForm.patientEligibility || "N/A",
         country: comparatorForm.country || "N/A",
       };
-  
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tpp-by-therapies`, {
         method: "POST",
         headers: {
@@ -194,22 +195,22 @@ export default function TPPModal({ isOpen, onOpenChange }) {
         },
         body: JSON.stringify(submitData),
       });
-  
+
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-  
+
       const data = await response.json();
-      
+
       // Extract all possible keys from API response to ensure consistency
       const allKeys = new Set(data.data.flatMap(Object.keys));
-  
+
       // Transform submitData into the required format with missing fields set to "N/A"
       const transformedItem = {};
       allKeys.forEach((key) => {
         transformedItem[key] = "N/A"; // Default value
       });
-  
+
       transformedItem["Disease"] = submitData.diseaseName;
       transformedItem["Route Of Administration"] = submitData.routeOfAdministration;
       transformedItem["Modality"] = submitData.modality;
@@ -222,22 +223,22 @@ export default function TPPModal({ isOpen, onOpenChange }) {
       transformedItem["Patient Eligibility"] = submitData.patientEligibility;
       transformedItem["Country"] = submitData.country;
       transformedItem["Drug"] = submitData.drug_Name;
-  
+
       // Append transformed item to existing data
       const updatedData = [transformedItem, ...data.data];
-  
+
       setIsSearching(false);
       navigate("/tpp-by-drug", {
         state: { searchResults: updatedData, drug: submitData.drug_Name },
       });
-  
+
       onOpenChange(false);
     } catch (error) {
       console.error("Error submitting comparator search:", error);
       setIsSearching(false);
     }
   };
-  
+
 
   const selectStyles = {
     control: (base) => ({
@@ -309,7 +310,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-3xl bg-[#f4f4f4] rounded-[12px] overflow-y-auto"
+        className="max-w-3xl bg-dialog rounded-[12px] overflow-y-auto"
         style={{
           position: "fixed",
           top: "10%",
@@ -321,30 +322,41 @@ export default function TPPModal({ isOpen, onOpenChange }) {
       >
         <DialogHeader className="space-y-4">
           <div className="space-y-2">
-            <DialogTitle className="text-gray-900">TPP Search</DialogTitle>
-            <p className="text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <DialogTitle className="flex flex-row items-center justify-cente text-white rounded-lg">
+                <div className="flex items-center justify-center w-12 h-12 border-2 border-white rounded-full mr-4">
+                  <img
+                    src={TPPImg}
+                    alt="Disease icon"
+                    className="w-6 h-6 object-contain"
+                  />
+                </div>
+                <p className="text-lg font-medium">Target Product Profile</p>
+              </DialogTitle>
+            </div>
+            <p className="text-sm text-white">
               Search for Target Product Profile (TPP) information by drug or comparator therapies.
             </p>
           </div>
         </DialogHeader>
 
         <Tabs defaultValue="drug" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-white rounded-[12px]">
+          <TabsList className="grid w-full grid-cols-2 bg-white rounded-[18px]">
             <TabsTrigger
               value="drug"
-              className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-black rounded-[12px]"
+              className="data-[state=active]:bg-[#54681D] data-[state=active]:text-white rounded-[12px]"
             >
               Search by Drug
             </TabsTrigger>
             <TabsTrigger
               value="comparator"
-              className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-black rounded-[12px] flex items-center justify-center gap-2"
+              className="data-[state=active]:bg-[#54681D] data-[state=active]:text-white rounded-[12px]"
             >
               Search Comparator Therapies
             </TabsTrigger>
           </TabsList>
 
-          <div className="overflow-y-auto max-h-[70vh] bg-white p-4 rounded-[12px] mt-4">
+          <div className="overflow-y-auto max-h-[70vh] bg-white p-4 rounded-[20px] mt-4">
             <TabsContent value="drug">
               <div className="space-y-4">
                 {renderSelect(
@@ -385,13 +397,15 @@ export default function TPPModal({ isOpen, onOpenChange }) {
                   "modality",
                   !drugSearchForm.drugName,
                 )}
+                <div className="flex justify-center">
                 <Button
                   onClick={handleSubmitDrug}
                   disabled={isSearching}
-                  className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4"
+                  className="w-[120px] bg-[#54681D] text-white hover:bg-[#95b833] rounded-[60px] mt-4"
                 >
                   {isSearching ? "Loading..." : "Submit"}
                 </Button>
+                </div>
               </div>
             </TabsContent>
 
@@ -453,13 +467,15 @@ export default function TPPModal({ isOpen, onOpenChange }) {
                   "Select country...",
                   "country",
                 )}
+                <div className="flex justify-center">
                 <Button
                   onClick={handleSubmitComparator}
                   disabled={isSearching}
-                  className="w-full bg-[#a6ce39] text-black hover:bg-[#95b833] rounded-[12px] mt-4"
+                  className="w-[120px] bg-[#54681D] text-white hover:bg-[#95b833] rounded-[60px] mt-4"
                 >
                   {isSearching ? "Loading..." : "Submit"}
                 </Button>
+                </div>
               </div>
             </TabsContent>
           </div>

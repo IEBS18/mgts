@@ -126,6 +126,7 @@ module.exports = {
 		  'custom-gradient': 'linear-gradient(157.85deg, #95D524 8.43%, #2AC4F7 46.59%)',
 		  'custom-gradient-card': 'linear-gradient(36.59deg, #A6CE39 2.62%, #40530C 92.34%)',
 	      'gradient-alt-ego': 'linear-gradient(36.59deg, #40530C 2.62%, #A6CE39 92.34%)',
+		  'dialog': 'linear-gradient(180deg, #54681D 0%, #A6CE39 100%)'
 		},
 		boxShadow: {
 		  'custom': '0 4px 6px rgba(0, 0, 0, 0.35)',

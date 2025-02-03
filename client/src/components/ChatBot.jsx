@@ -6,6 +6,7 @@ import { Send, Minimize, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Input } from './ui/input';
 import ReactMarkdown from 'react-markdown'; // Import react-markdown
+import BotIcon from '../assets/BotIcon.png'
 
 export default function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggle }) {
   const [newMessage, setNewMessage] = useState("");
@@ -54,17 +55,18 @@ export default function ChatBot({ chatMessages, setChatMessages, fulldata, isMin
       >
         <Button
           variant="ghost"
-          className="bg-lightBlue hover:bg-darkBlue hover:text-white text-black rounded-full p-4 shadow-lg h-12 w-12 flex justify-center items-center"
+          className=""
           onClick={onToggle}
         >
-          <MessageCircle className="h-6 w-6" />
+          {/* <MessageCircle className="h-6 w-6" /> */}
+          <img src={BotIcon} alt="Bot Icon" className="w-12 h-12" />
         </Button>
       </motion.div>
     );
   }
 
   return (
-    
+
     <motion.div
       initial={{ height: '100px' }}
       animate={{ height: '75vh' }}
@@ -72,10 +74,10 @@ export default function ChatBot({ chatMessages, setChatMessages, fulldata, isMin
       className="fixed right-0 w-1/3 bg-white border-l border-gray-300 flex flex-col shadow-lg z-50"
       style={{ borderRadius: '16px', backdropFilter: 'blur(10px)', top: 'calc(25vh)' }}
     >
-      <div className="p-4 flex justify-between items-center border-b border-gray-300">
-        <h2 className="text-lg font-semibold">Chat with Copilot</h2>
+      <div className="p-4 flex justify-between bg-[#4B6601] rounded-t-[16px] items-center border-b border-gray-300">
+        <h2 className="text-lg font-semibold text-white">PharmaX Bot</h2>
         <Button variant="ghost" onClick={onToggle}>
-          <Minimize className="h-6 w-6" />
+          <Minimize className="h-6 w-6 text-white" />
         </Button>
       </div>
 
@@ -89,20 +91,20 @@ export default function ChatBot({ chatMessages, setChatMessages, fulldata, isMin
             className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div className={`flex items-start space-x-2 ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-              <Avatar className={`w-8 h-8 ${message.type === 'user' ? 'bg-blue-500' : 'bg-gray-200'}`}>
-                <AvatarImage
-                  src={message.type === 'user' ? '/path-to-user-avatar.' : '../assets/Insimine.svg'}
-                  alt={message.type === 'user' ? 'User' : 'Bot'}
-                />
-                <AvatarFallback>{message.type === 'user' ? 'U' : 'B'}</AvatarFallback>
-              </Avatar>
+              {message.type === 'bot' && (
+                <div className="w-8 h-8 flex justify-center items-center">
+                  <img src={BotIcon} alt="Bot Icon" className="w-8 h-8" />
+                </div>
+              )}
 
-              <div className={`p-2 rounded-xl shadow-md ${message.type === 'bot' ? 'bg-blue-500 text-white' : 'bg-[#95D524] text-white'}`}>
-                <p className="text-sm">
-                  {message.content}
-                </p>
+              <div
+                className={`p-2 shadow-md ${message.type === 'bot' ? 'bg-[#F1F7FF] rounded-b-[12px] rounded-tr-[12px] text-black' : 'bg-[#688C05] rounded-b-[12px] rounded-tl-[12px] text-white'
+                  }`}
+              >
+                <p className="text-sm font-medium">{message.content}</p>
               </div>
             </div>
+
           </motion.div>
         ))}
       </div>

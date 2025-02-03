@@ -811,28 +811,28 @@ const DiseaseTab = ({
                 <div className="flex items-center mb-4 gap-4 justify-between">
             <div className="flex justify-between items-center">
               <h1 className="text-2xl w-1/2 font-bold text-gray-800">
-                Disease Overview: <span className="text-[#a6ce39]">{diseaseInfo.Disease || "Unknown Disease"}</span>
+                Disease Overview: <span className="text-[#54681D]">{diseaseInfo.Disease || "Unknown Disease"}</span>
               </h1>
               <div className="flex w-1/2 justify-end ml-[300px]">
                 <div className="flex gap-x-4 ml-auto">
                   <Button
                     onClick={handleRelevantDrugsSearch}
                     disabled={isSearching}
-                    className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] w-[200px]"
+                    className="bg-[#54681D] text-white hover:bg-[#95b833] rounded-[12px] w-[200px]"
                   >
                     {isSearching ? 'Loading...' : 'Show Relevant Drugs'}
                   </Button>
                   <Button
                     onClick={handleMarketEstimation}
                     disabled={isSearchingCP}
-                    className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] w-[200px]"
+                    className="bg-[#54681D] text-white hover:bg-[#95b833] rounded-[12px] w-[200px]"
                   >
                     {isSearchingCP ? 'Loading...' : 'Market Estimation'}
                   </Button>
                   <Button
                     onClick={handleTherapyCost}
                     disabled={isSearchingCT}
-                    className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px] w-[200px]"
+                    className="bg-[#54681D] text-white hover:bg-[#95b833] rounded-[12px] w-[200px]"
                   >
                     {isSearchingCT ? 'Loading...' : 'Therapy Cost Estimation'}
                   </Button>
@@ -853,7 +853,7 @@ const DiseaseTab = ({
           {/* Filter Topics Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="rounded-lg bg-green hover:bg-darkBlue text-white">
+              <Button className="rounded-lg bg-[#54681D] hover:bg-darkBlue text-white">
                 Filter Topics <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -895,7 +895,7 @@ const DiseaseTab = ({
 
           {/* Export Button */}
           <Button
-            className='bg-green rounded-lg hover:bg-darkBlue text-white'
+            className='bg-[#54681D] rounded-lg hover:bg-darkBlue text-white'
             disabled={isDiseaseExporting}
             onClick={handleExportClick}
           >
