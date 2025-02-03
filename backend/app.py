@@ -6,7 +6,8 @@ from flask_cors import CORS
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
-
+from openai import OpenAI
+import os
 from PricePrediction.pp import display_competitor_details, fetch_competitor_data, parse_data, predict_price
 from PlayerLandscape.dm import get_bubble_chart_data, get_donut_chart_data
 # , get_heatmap_data
@@ -14,7 +15,8 @@ from Calculations.ATC import adverse_effect_score, calculate_safety_efficacy_sco
 from Utilities.query_classifier import (
     route_to_chatbot,
     es,
-    conversation_history
+    conversation_history,
+    es_exceptions
 )
 from TPP.d import format_output, process_drug_comparison
 from TPP.k import key_insights, process_key_insights
@@ -328,6 +330,8 @@ def drug_search_by_disease():
     except Exception as e:
         return jsonify({"error": str(e)}), 500    
     
+    
+
 @app.route('/download-excel', methods=['POST'])
 def download_excel():
     # Step 1: Get JSON data from the POST request
@@ -621,92 +625,186 @@ def safety_efficacy_score_calculator():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/formularyResult', methods=['POST'])
-def formulary_result():
-    data = request.json
-    index = "reimbursement"
 
-    # Extract filters from payload
-    selected_diseases = data.get('selectedDiseases', [])
-    selected_drugs = data.get('selectedDrugs', [])
-    selected_plans = data.get('selectedPlans', [])
-    selected_state = data.get('selectedState', None)
 
-    # Start building the Elasticsearch multi-search query
-    es_query = [
-        {"index": index}
-    ]
+# @app.route('/formularyResult', methods=['POST'])
+# def formulary_result():
+#     data = request.json
+#     index = "reimbursementfinal"
 
-    # Construct the bool query with must clauses
-    bool_query = {"must": []}
+#     # Extract filters from payload
+#     selected_diseases = data.get('selectedDiseases', [])
+#     selected_drugs = data.get('selectedDrugs', [])
+#     selected_plans = data.get('selectedPlans', [])
+#     selected_state = data.get('selectedState', None)
 
-    if selected_diseases:
-        bool_query["must"].append({
-            "terms": {
-                "Disease Name.keyword": selected_diseases
-            }
-        })
+#     # Start building the Elasticsearch multi-search query
+#     es_query = [
+#         {"index": index}
+#     ]
 
-    if selected_drugs:
-        # Extract drug names if the items are objects
-        drug_names = [drug['name'] if isinstance(drug, dict) else drug for drug in selected_drugs]
-        bool_query["must"].append({
-            "terms": {
-                "Drug Name.keyword": drug_names
-            }
-        })
+#     # Construct the bool query with must clauses
+#     bool_query = {"must": []}
 
-    if selected_plans:
-        # Extract plan names if the items are objects
-        plan_names = [plan['name'] if isinstance(plan, dict) else plan for plan in selected_plans]
-        bool_query["must"].append({
-            "terms": {
-                "Health Plan Name.keyword": plan_names
-            }
-        })
+#     if selected_diseases:
+#         bool_query["must"].append({
+#             "terms": {
+#                 "Disease Name.keyword": selected_diseases
+#             }
+#         })
 
-    if selected_state and selected_state != "All States":
-        bool_query["must"].append({
-            "term": {
-                "State Name.keyword": selected_state
-            }
-        })
+#     if selected_drugs:
+#         # Extract drug names if the items are objects
+#         drug_names = [drug['name'] if isinstance(drug, dict) else drug for drug in selected_drugs]
+#         bool_query["must"].append({
+#             "terms": {
+#                 "Drug Name.keyword": drug_names
+#             }
+#         })
 
-    # If no filters provided, default to match all to avoid errors
-    if not bool_query["must"]:
-        bool_query["must"].append({"match_all": {}})
+#     if selected_plans:
+#         # Extract plan names if the items are objects
+#         plan_names = [plan['name'] if isinstance(plan, dict) else plan for plan in selected_plans]
+#         bool_query["must"].append({
+#             "terms": {
+#                 "Plan Name.keyword": plan_names
+#             }
+#         })
 
-    es_query.append({
-        "query": {
-            "bool": bool_query
-        },
-        "size": 10000  # Adjust size as needed for performance
-    })
+#     if selected_state and selected_state != "All States":
+#         bool_query["must"].append({
+#             "term": {
+#                 "State Name.keyword": selected_state
+#             }
+#         })
 
-    try:
-        # Perform multi-search query
-        response = es.msearch(body=es_query)
+#     # If no filters provided, default to match all to avoid errors
+#     if not bool_query["must"]:
+#         bool_query["must"].append({"match_all": {}})
 
-        # Extract matching documents from the response
-        documents = [
-            hit['_source']
-            for res in response['responses']
-            for hit in res['hits']['hits']
-        ]
+#     es_query.append({
+#         "query": {
+#             "bool": bool_query
+#         },
+#         "size": 10000  # Adjust size as needed for performance
+#     })
 
-        return jsonify({"status": "success", "data": documents})
+#     try:
+#         # Perform multi-search query
+#         response = es.msearch(body=es_query)
 
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+#         # Extract matching documents from the response
+#         documents = [
+#             hit['_source']
+#             for res in response['responses']
+#             for hit in res['hits']['hits']
+#         ]
 
+#         return jsonify({"status": "success", "data": documents})
+
+#     except Exception as e:
+#         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# @app.route('/formularyData', methods=['GET'])
+# def formulary_data():
+#     try:
+#         index = "reimbursementfinal"
+
+#         aggregation_query = {
+#             "size": 0,
+#             "aggs": {
+#                 "unique_diseases": {
+#                     "terms": {
+#                         "field": "Disease Name.keyword",
+#                         "size": 10000
+#                     }
+#                 },
+#                 "unique_drugs": {
+#                     "terms": {
+#                         "field": "Drug Name.keyword",
+#                         "size": 10000
+#                     }
+#                 },
+#                 "unique_states": {
+#                     "terms": {
+#                         "field": "State Name.keyword",
+#                         "size": 10000
+#                     }
+#                 },
+#                 "unique_plans": {
+#                     "terms": {
+#                         "field": "Plan Name.keyword",
+#                         "size": 10000
+#                     }
+#                 },
+#                 "unique_drug_tiers": {
+#                     "terms": {
+#                         "field": "Drug Tier.keyword",
+#                         "size": 10000
+#                     }
+#                 },
+#                 "unique_plan_types": {  # New aggregation for Plan Types
+#                     "terms": {
+#                         "field": "Plan Type.keyword",
+#                         "size": 10000
+#                     }
+#                 },
+#                 "disease_to_drugs": {  # New aggregation for Disease to Drugs mapping
+#                     "terms": {
+#                         "field": "Disease Name.keyword",
+#                         "size": 10000
+#                     },
+#                     "aggs": {
+#                         "associated_drugs": {
+#                             "terms": {
+#                                 "field": "Drug Name.keyword",
+#                                 "size": 10000
+#                             }
+#                         }
+#                     }
+#                 }
+#             }
+#         }
+
+#         response = es.search(index=index, body=aggregation_query)
+
+#         diseases = [bucket['key'] for bucket in response['aggregations']['unique_diseases']['buckets']]
+#         drugs = [bucket['key'] for bucket in response['aggregations']['unique_drugs']['buckets']]
+#         states = [bucket['key'] for bucket in response['aggregations']['unique_states']['buckets']]
+#         plans = [bucket['key'] for bucket in response['aggregations']['unique_plans']['buckets']]
+#         drug_tiers = [bucket['key'] for bucket in response['aggregations']['unique_drug_tiers']['buckets']]
+#         plan_types = [bucket['key'] for bucket in response['aggregations']['unique_plan_types']['buckets']]
+
+#         # Build disease to drugs mapping
+#         disease_to_drugs = {}
+#         for disease_bucket in response['aggregations']['disease_to_drugs']['buckets']:
+#             disease_name = disease_bucket['key']
+#             associated_drugs = [drug['key'] for drug in disease_bucket['associated_drugs']['buckets']]
+#             disease_to_drugs[disease_name] = associated_drugs
+
+#         return jsonify({
+#             "status": "success",
+#             "diseases": diseases,
+#             "drugs": drugs,
+#             "states": states,
+#             "plans": plans,
+#             "drugTiers": drug_tiers,
+#             "planTypes": plan_types,  # Include Plan Types
+#             "diseaseToDrugs": disease_to_drugs  # Include Disease to Drugs mapping
+#         })
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
 @app.route('/formularyData', methods=['GET'])
 def formulary_data():
     try:
-        # Specify the reimbursement index containing the data
-        index = "reimbursement"
+        index = "reimbursementfinal"
 
-        # Define aggregation queries for each field
+        # Get state from query parameters if provided
+        selected_state = request.args.get('state', None)
+
         aggregation_query = {
             "size": 0,
             "aggs": {
@@ -728,10 +826,49 @@ def formulary_data():
                         "size": 10000
                     }
                 },
-                "unique_plans": {
+                "filtered_unique_plans": {  # Plans within the filtered query
                     "terms": {
-                        "field": "Health Plan Name.keyword",
+                        "field": "Plan Name.keyword",
                         "size": 10000
+                    },
+                    "aggs": {
+                        "plan_type": {
+                            "terms": {
+                                "field": "Plan Type.keyword",
+                                "size": 1
+                            }
+                        },
+                        "available_states": {
+                            "terms": {
+                                "field": "State Name.keyword",
+                                "size": 10000
+                            }
+                        }
+                    }
+                },
+                "global_unique_plans": {  # All plans, regardless of state
+                    "global": {},  # Define a global aggregation scope
+                    "aggs": {
+                        "unique_plans": {
+                            "terms": {
+                                "field": "Plan Name.keyword",
+                                "size": 10000
+                            },
+                            "aggs": {
+                                "plan_type": {
+                                    "terms": {
+                                        "field": "Plan Type.keyword",
+                                        "size": 1
+                                    }
+                                },
+                                "available_states": {
+                                    "terms": {
+                                        "field": "State Name.keyword",
+                                        "size": 10000
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 "unique_drug_tiers": {
@@ -739,19 +876,89 @@ def formulary_data():
                         "field": "Drug Tier.keyword",
                         "size": 10000
                     }
+                },
+                "unique_plan_types": {  # Aggregation for Plan Types
+                    "terms": {
+                        "field": "Plan Type.keyword",
+                        "size": 10000
+                    }
+                },
+                "disease_to_drugs": {  # Aggregation for Disease to Drugs mapping
+                    "terms": {
+                        "field": "Disease Name.keyword",
+                        "size": 10000
+                    },
+                    "aggs": {
+                        "associated_drugs": {
+                            "terms": {
+                                "field": "Drug Name.keyword",
+                                "size": 10000
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        # Execute the aggregation query on the reimbursement index
+        # Apply state filter if selected
+        if selected_state and selected_state != "All States":
+            aggregation_query["query"] = {
+                "term": {
+                    "State Name.keyword": selected_state
+                }
+            }
+
         response = es.search(index=index, body=aggregation_query)
 
         # Extract unique values from aggregation buckets
         diseases = [bucket['key'] for bucket in response['aggregations']['unique_diseases']['buckets']]
         drugs = [bucket['key'] for bucket in response['aggregations']['unique_drugs']['buckets']]
         states = [bucket['key'] for bucket in response['aggregations']['unique_states']['buckets']]
-        plans = [bucket['key'] for bucket in response['aggregations']['unique_plans']['buckets']]
         drug_tiers = [bucket['key'] for bucket in response['aggregations']['unique_drug_tiers']['buckets']]
+        plan_types = [bucket['key'] for bucket in response['aggregations']['unique_plan_types']['buckets']]
+
+        # Build plans from filtered_unique_plans (associated with the selected state)
+        filtered_plans = []
+        for plan_bucket in response['aggregations']['filtered_unique_plans']['buckets']:
+            plan_name = plan_bucket['key']
+            # Extract the most common plan type for each plan
+            plan_type_buckets = plan_bucket['plan_type']['buckets']
+            if plan_type_buckets:
+                plan_type = plan_type_buckets[0]['key']
+            else:
+                plan_type = "Unknown"
+            # Extract available states for each plan
+            available_states = [state_bucket['key'] for state_bucket in plan_bucket['available_states']['buckets']]
+            filtered_plans.append({"name": plan_name, "type": plan_type, "states": available_states})
+
+        # Build plans from global_unique_plans (all plans)
+        all_plans = []
+        for plan_bucket in response['aggregations']['global_unique_plans']['unique_plans']['buckets']:
+            plan_name = plan_bucket['key']
+            # Extract the most common plan type for each plan
+            plan_type_buckets = plan_bucket['plan_type']['buckets']
+            if plan_type_buckets:
+                plan_type = plan_type_buckets[0]['key']
+            else:
+                plan_type = "Unknown"
+            # Extract available states for each plan
+            available_states = [state_bucket['key'] for state_bucket in plan_bucket['available_states']['buckets']]
+            all_plans.append({"name": plan_name, "type": plan_type, "states": available_states})
+
+        # Decide which plans to return based on selected_state
+        if selected_state and selected_state != "All States":
+            # Return only plans associated with the selected state
+            plans = filtered_plans
+        else:
+            # Return all plans
+            plans = all_plans
+
+        # Build disease to drugs mapping
+        disease_to_drugs = {}
+        for disease_bucket in response['aggregations']['disease_to_drugs']['buckets']:
+            disease_name = disease_bucket['key']
+            associated_drugs = [drug['key'] for drug in disease_bucket['associated_drugs']['buckets']]
+            disease_to_drugs[disease_name] = associated_drugs
 
         # Return aggregated data as JSON
         return jsonify({
@@ -759,12 +966,113 @@ def formulary_data():
             "diseases": diseases,
             "drugs": drugs,
             "states": states,
-            "plans": plans,
-            "drugTiers": drug_tiers
+            "plans": plans,  # Now includes 'states' field
+            "drugTiers": drug_tiers,
+            "planTypes": plan_types,  # Include Plan Types
+            "diseaseToDrugs": disease_to_drugs  # Include Disease to Drugs mapping
         })
 
     except Exception as e:
+        # Enhanced error logging for debugging
+        app.logger.error(f"Error in /formularyData: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/formularyResult', methods=['POST'])
+def formulary_result():
+    data = request.json
+    index = "reimbursementfinal"
+
+    # Extract filters from payload
+    selected_diseases = data.get('selectedDiseases', [])
+    selected_drugs = data.get('selectedDrugs', [])
+    selected_plans = data.get('selectedPlans', [])
+    selected_state = data.get('selectedState', None)
+    selected_plan_type = data.get('selectedPlanType', None)  # New field for Plan Type
+
+    # Construct the bool query with must clauses
+    bool_query = {"must": []}
+
+    if selected_diseases:
+        bool_query["must"].append({
+            "terms": {
+                "Disease Name.keyword": selected_diseases
+            }
+        })
+
+    if selected_drugs:
+        # Extract drug names ensuring they are non-empty strings
+        drug_names = [drug['name'].strip() for drug in selected_drugs if 'name' in drug and drug['name'].strip()]
+        if drug_names:
+            bool_query["must"].append({
+                "terms": {
+                    "Drug Name.keyword": drug_names
+                }
+            })
+
+    if selected_plans:
+        # Extract plan names ensuring they are non-empty strings
+        plan_names = [plan['name'].strip() for plan in selected_plans if 'name' in plan and plan['name'].strip()]
+        if plan_names:
+            bool_query["must"].append({
+                "terms": {
+                    "Plan Name.keyword": plan_names
+                }
+            })
+
+    if selected_state and selected_state != "All States":
+        bool_query["must"].append({
+            "term": {
+                "State Name.keyword": selected_state
+            }
+        })
+
+    if selected_plan_type and selected_plan_type != "All Plan Types":
+        bool_query["must"].append({
+            "term": {
+                "Plan Type.keyword": selected_plan_type
+            }
+        })
+
+    # If no filters provided, default to match all to avoid errors
+    if not bool_query["must"]:
+        bool_query["must"].append({"match_all": {}})
+        
+    # Add pagination parameters
+    page = data.get('page', 1)
+    per_page = data.get('per_page', 50)
+    from_record = (page - 1) * per_page
+
+    search_body = {
+        "query": {
+            "bool": bool_query
+        },
+        "from": from_record,
+        "size": per_page
+    }
+
+
+    # For debugging: Log the constructed query
+    app.logger.debug(f"Elasticsearch Query: {search_body}")
+
+    try:
+        # Perform search query
+        response = es.search(index=index, body=search_body)
+
+        # For debugging: Log the raw response
+        app.logger.debug(f"Elasticsearch Response: {response}")
+
+        # Extract matching documents from the response
+        documents = [
+            hit['_source']
+            for hit in response['hits']['hits']
+        ]
+
+        return jsonify({"status": "success", "data": documents})
+
+    except Exception as e:
+        app.logger.error(f"Elasticsearch query failed: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/downloadExcelFormulary', methods=['POST'])
 def download_excel_formulary():
@@ -1072,5 +1380,331 @@ def main_drug_insights():
         return jsonify({"error": str(e)}), 500
 
 
+def fetch_drug_data(drug_names):
+    """
+    Fetch efficacy, safety, modality, and submodality for given drug names from Elasticsearch.
+   
+    Parameters:
+        drug_names (list): List of drug names to search for.
+       
+    Returns:
+        dict: Drug data mapped with efficacy, safety, modality, and submodality.
+    """
+ 
+    index_name = "tpp_data_refine"  # Use the environment variable
+    results = {}
+ 
+    for drug in drug_names:
+        query = {
+            "query": {
+                "match": {
+                    "Drug": {
+                        "query": drug,
+                        "fuzziness": "AUTO"  # Enables fuzzy search for approximate matches
+                    }
+                }
+            }
+        }
+ 
+        try:
+            result = es.search(index=index_name, body=query)
+        except es_exceptions.ConnectionError:
+            return {"error": "Failed to connect to Elasticsearch."}, 500
+        except es_exceptions.AuthenticationException:
+            return {"error": "Authentication with Elasticsearch failed."}, 401
+        except Exception as e:
+            return {"error": f"An error occurred: {str(e)}"}, 500
+ 
+        hits = [hit['_source'] for hit in result['hits']['hits']]
+        print(f"Found {len(hits)} hits for drug: {drug}")
+       
+        if hits:
+            hits = hits[0]
+            results[drug] = {
+                    "Efficacy": hits.get("Efficacy", "Not Available"),
+                    "Safety": hits.get("Safety", "Not Available"),
+                    "Modality": hits.get("Modality", "Not Available"),
+                    "SubModality": hits.get("SubModality", "Not Available")
+                }
+        else:
+            results[drug] = "No matching data found"
+ 
+    return results
+
+@app.route('/get_safety_efficacy', methods=['POST'])
+def get_safety_efficacy():
+    """
+    Endpoint to fetch Safety, Efficacy, Modality, and SubModality data from Elasticsearch based on drug names.
+    Expects a JSON payload:
+    {
+        "drug_names": ["Drug1", "Drug2", ...]
+    }
+    """
+    data = request.get_json()
+    drug_names = data.get('drug_names')
+
+    if not drug_names:
+        return jsonify({"error": "List of drug names is required."}), 400
+
+    if not isinstance(drug_names, list) or not all(isinstance(name, str) for name in drug_names):
+        return jsonify({"error": "'drug_names' must be a list of strings."}), 400
+
+    # Fetch drug data using the helper function
+    safety_efficacy_data = fetch_drug_data(drug_names)
+
+    # Check if fetch_drug_data returned an error
+    if isinstance(safety_efficacy_data, tuple):
+        # It's an error response
+        return jsonify(safety_efficacy_data[0]), safety_efficacy_data[1]
+
+    return jsonify(safety_efficacy_data), 200
+
+
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+MODEL = "gpt-4o-mini"
+ 
+def predict_tier_and_requirement(new_plan: dict, competitor_data: dict):
+    """
+    Predicts the Tier and Requirement for a new drug plan based on competitor data.
+ 
+    Args:
+        new_plan (dict): Dictionary containing new plan details:
+            - drug_name (str)
+            - diseasesname (str)
+            - efficacy (str)
+            - safety (str)
+            - modality (str)
+        competitor_data (dict): Dictionary containing competitor data in the format:
+            {
+                "Disease Name": {
+                    "Drug Name": [
+                        {
+                            "Efficacy": "...",
+                            "Safety": "...",
+                            "Modality": "...",
+                            "Tier": "...",
+                            "Requirement": "..."
+                        },
+                        ...
+                    ],
+                    ...
+                },
+                ...
+            }
+ 
+    Returns:
+        dict: Parsed response containing "Tier" and "Requirement", or error.
+    """
+    drug_name = new_plan.get("drug_name")
+    diseasesname = new_plan.get("diseasesname")
+    efficacy = new_plan.get("efficacy")
+    safety = new_plan.get("safety")
+    modality = new_plan.get("modality")
+ 
+    app.logger.info(f"Predicting Tier and Requirement for Drug: {drug_name} under Disease: {diseasesname}")
+ 
+    # Fetch competitor data for the given disease
+    disease_competitors = competitor_data.get(diseasesname, {})
+ 
+    if not disease_competitors:
+        app.logger.error(f"No competitor data found for disease: {diseasesname}")
+        return {
+            "error": "No competitor data found for this disease.",
+            "message": "No competitor data found for this disease."
+        }
+ 
+    # Construct the competitor data section of the prompt
+    competitor_section = f"Disease: {diseasesname}\n"
+    for competitor_drug, details_list in disease_competitors.items():
+        for detail in details_list:
+            competitor_section += (
+                f"Drug: {competitor_drug}\n"
+                f"Efficacy: {detail.get('Efficacy', 'N/A')}\n"
+                f"Safety: {detail.get('Safety', 'N/A')}\n"
+                f"Modality: {detail.get('Modality', 'N/A')}\n"
+                f"Tier: {detail.get('Tier', 'N/A')}\n"
+                f"Requirement: {detail.get('Requirement', 'N/A')}\n\n"
+            )
+ 
+    app.logger.debug(f"Constructed Competitor Section:\n{competitor_section}")
+ 
+    # Prepare prompt for OpenAI API
+    system_prompt = (
+        "You are an expert in formulary management. "
+        "Your task is to analyze the formulary tier placement and associated limitations for a new drug based on existing competitor data."
+    )
+    user_prompt = (
+        f"{competitor_section}"
+        f"New Drug Details:\n"
+        f"Drug Name: {drug_name}\n"
+        f"Efficacy: {efficacy}\n"
+        f"Safety: {safety}\n"
+        f"Modality: {modality}\n\n"
+        f"Based on the above information, determine the appropriate Tier and any Requirements/Limits for the new drug."
+    )
+ 
+    app.logger.debug(f"Constructed User Prompt:\n{user_prompt}")
+ 
+    try:
+        # Call OpenAI for predictions using the new interface
+        response = openai_client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ]
+        )
+ 
+        app.logger.info("Received response from OpenAI.")
+ 
+        # Parse the response from OpenAI
+        reply = response.choices[0].message.content.strip()
+        app.logger.debug(f"OpenAI Reply:\n{reply}")
+ 
+        # Initialize response dictionary with defaults
+        parsed_response = {
+            "Tier": "N/A",
+            "Requirement": "Fully Reimbursed"
+        }
+ 
+        # Extract Tier and Requirement from the reply
+        for line in reply.split("\n"):
+            if line.lower().startswith("tier:"):
+                parsed_response["Tier"] = line.split(":", 1)[1].strip() or "N/A"
+            elif line.lower().startswith("requirement:"):
+                parsed_response["Requirement"] = line.split(":", 1)[1].strip() or "Fully Reimbursed"
+ 
+        app.logger.info(f"Parsed Response: {parsed_response}")
+ 
+        return parsed_response
+ 
+    except Exception as e:
+        app.logger.exception("Exception occurred while processing OpenAI response.")
+        return {
+            "error": "Failed to parse OpenAI response",
+            "message": str(e)
+        }
+ 
+# Route for predicting tier and requirement
+@app.route('/predict_tier_and_requirement', methods=['POST'])
+def predict_tier_and_requirement_route():
+    """
+    Endpoint to predict the Tier and Requirement for a new drug plan.
+ 
+    Expects a JSON payload:
+    {
+        "drug_name": "Aspirin",
+        "diseasesname": "Hypertension",
+        "efficacy": "Effective in reducing blood clot formation",
+        "safety": "Generally safe with minor gastrointestinal side effects",
+        "modality": "Small Molecule",
+        "competitor_data": {
+            "Hypertension": {
+                "Amlodipine": [
+                    {
+                        "Efficacy": "Effective in lowering blood pressure",
+                        "Safety": "Generally well tolerated, mild headaches reported",
+                        "Modality": "Small Molecule",
+                        "Tier": "Tier 1",
+                        "Requirement": "No prior authorization required"
+                    },
+                    {
+                        "Efficacy": "Moderate effectiveness in elderly patients",
+                        "Safety": "Mild dizziness and occasional swelling",
+                        "Modality": "Small Molecule",
+                        "Tier": "Tier 2",
+                        "Requirement": "Prior authorization required for patients over 65"
+                    }
+                ],
+                "Losartan": [
+                    {
+                        "Efficacy": "Strong efficacy in preventing strokes and heart failure",
+                        "Safety": "Mild fatigue and occasional dry cough",
+                        "Modality": "Small Molecule",
+                        "Tier": "Tier 2",
+                        "Requirement": "Step therapy required"
+                    }
+                ]
+            }
+        }
+    }
+    """
+    data = request.json
+ 
+    # Extract fields from the request
+    drug_name = data.get('drug_name')
+    diseasesname = data.get('diseasesname')
+    efficacy = data.get('efficacy')
+    safety = data.get('safety')
+    modality = data.get('modality')
+    competitor_data = data.get('competitor_data')  # Expecting this in the request
+ 
+    # Validate input
+    missing_fields = []
+    for field in ['drug_name', 'diseasesname', 'efficacy', 'safety', 'modality', 'competitor_data']:
+        if not data.get(field):
+            missing_fields.append(field)
+ 
+    if missing_fields:
+        message = f"The following fields are required: {', '.join(missing_fields)}."
+        app.logger.error(message)
+        return jsonify({
+            "status": "error",
+            "message": message
+        }), 400
+ 
+    # Validate competitor_data structure
+    if not isinstance(competitor_data, dict):
+        message = "Invalid format for competitor_data. It should be a dictionary."
+        app.logger.error(message)
+        return jsonify({
+            "status": "error",
+            "message": message
+        }), 400
+ 
+    # Further validation: Ensure diseasesname exists in competitor_data
+    if diseasesname not in competitor_data:
+        message = f"Disease '{diseasesname}' not found in competitor_data."
+        app.logger.error(message)
+        return jsonify({
+            "status": "error",
+            "message": message
+        }), 400
+ 
+    try:
+        # Construct new_plan dictionary
+        new_plan = {
+            "drug_name": drug_name,
+            "diseasesname": diseasesname,
+            "efficacy": efficacy,
+            "safety": safety,
+            "modality": modality
+        }
+ 
+        app.logger.info(f"Processing new plan: {new_plan}")
+ 
+        # Call the prediction function
+        prediction = predict_tier_and_requirement(new_plan, competitor_data)
+ 
+        # Check if the result is an error or a valid prediction
+        if "error" in prediction:
+            app.logger.error(f"Prediction Error: {prediction['message']}")
+            return jsonify({"status": "error", "message": prediction["message"]}), 500
+ 
+        # Return successful prediction response
+        response_payload = {
+            "status": "success",
+            "tier": prediction["Tier"],  # Return Tier
+            "requirement": prediction["Requirement"]  # Return Requirement
+        }
+ 
+        app.logger.info(f"Prediction Successful: {response_payload}")
+ 
+        return jsonify(response_payload), 200
+ 
+    except Exception as e:
+        app.logger.exception("Unexpected error during prediction.")
+        return jsonify({"status": "error", "message": str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True)

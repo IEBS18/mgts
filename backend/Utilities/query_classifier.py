@@ -1,7 +1,7 @@
 import os
 import torch
 import pickle
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch,  exceptions as es_exceptions
 from openai import OpenAI
 from transformers import BertTokenizer
 from dotenv import load_dotenv

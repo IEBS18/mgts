@@ -47,13 +47,13 @@ export function DrugList({ drugs, onSelect, selectedDrugs }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {paginatedDrugs.map((drug) => (
               <div
-                key={drug}
+                key={drug} // Use drug name as key for uniqueness
                 className={`border rounded-[12px] p-4 cursor-pointer transition-colors duration-200 ${
                   selectedDrugs.some(d => d.id === drug)
                     ? "border-green-600 bg-green-100"
                     : "border-gray-300 hover:bg-green-50"
                 }`}
-                onClick={() => onSelect(drug)}
+                onClick={() => onSelect({ name: drug })}
               >
                 <p className="text-sm font-medium text-center">{drug}</p>
               </div>
