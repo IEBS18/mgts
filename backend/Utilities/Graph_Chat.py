@@ -12,51 +12,95 @@ import spacy
 from dotenv import load_dotenv
 from neo4j import GraphDatabase
 from elasticsearch import Elasticsearch
-from openai import OpenAI
+# from openai import AzureOpenAI
+# from openai import OpenAI
 from transformers import BertTokenizer
-from Utilities.train_query_classifier import QueryClassifierModel
-from Utilities.utils import preprocess, create_prompt
+from langchain_community.graphs import Neo4jGraph
+from langchain.chains.graph_qa.cypher import GraphCypherQAChain
+# from langchain_community.chat_models import ChatOpenAI
+from langchain.chat_models import AzureChatOpenAI
+# from langchain.llms.openai import AzureOpenAI
 
-# Load environment variables
-load_dotenv()
-
-# Neo4j connection details
-neo4j_uri = os.getenv("NEO4J_URI")
-neo4j_user = os.getenv("NEO4J_USER")
-neo4j_password = os.getenv("NEO4J_PASSWORD")
-
+from dotenv import load_dotenv
+# from Utilities.train_query_classifier import QueryClassifierModel
+# from Utilities.utils import preprocess, create_prompt
+from train_query_classifier import QueryClassifierModel
+# from utils import preprocess, create_prompt
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
-#Load spacy langugae model
-nlp=spacy.load("en_core_web_sm")
+
+# import nltk
+# from nltk.tokenize import word_tokenize
+# from nltk.corpus import stopwords
+# from nltk.tag import pos_tag
+# from nltk.chunk import ne_chunk
+
+# # Download required resources
+# nltk.download('punkt')
+# nltk.download('averaged_perceptron_tagger')
+# nltk.download('stopwords')
+# nltk.download('maxent_ne_chunker')
+# nltk.download('words')
+
+
+# Load environment variables
+load_dotenv()
 
 es = Elasticsearch(
     os.getenv('elasticsearchendpoint'),
     api_key=os.getenv('elasticapikey')
 )
-
-# from diseasechatbot import generate_openai_completion
-from Utilities.train_query_classifier import QueryClassifierModel
-# from train_query_classifier import QueryClassifierModel
-from Utilities.utils import(
-    preprocess,
-    create_prompt
-)  
+  
 MODEL = "gpt-4o-mini"
 
-openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+neo4j_uri = os.getenv("NEO4J_URI")
+neo4j_user = os.getenv("NEO4J_USER")
+neo4j_password = os.getenv("NEO4J_PASSWORD")
 
-with open(r"Utilities/query_router.pkl", "rb") as f:
+graph = Neo4jGraph(
+    neo4j_uri,
+    neo4j_user,
+    neo4j_password,
+)
+
+# Configure Azure OpenAI client using environment variables
+client = AzureChatOpenAI(
+
+    api_key=os.getenv("AZURE_API"),
+    api_version= os.getenv("AZURE_API_VERSION"),
+    model= MODEL,
+    deployment_name="gpt-4o-mini-2",
+    azure_endpoint=os.getenv("AZURE_BASE_URL")
+)
+
+# #initiate the langchain openai via azure openai client
+# lang_client = ChatOpenAI(
+#     model=MODEL,
+#     temperature=0.2,
+#     openai_api_key=os.getenv("AZURE_API")
+#     )
+
+cypher_chain = GraphCypherQAChain.from_llm(
+    llm=client,
+    graph=graph,
+    allow_dangerous_queries=True,
+    allow_dangerous_requests=True,
+    verbose=True
+)
+
+
+with open(r"query_router.pkl", "rb") as f:
     model = QueryClassifierModel()
     state_dict = pickle.load(f)
     model.load_state_dict(state_dict)
     
+#Load spacy langugae model
+nlp=spacy.load("en_core_web_sm")
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 model.eval()
-
 
 # Initialize Neo4j driver
 driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_user, neo4j_password))
@@ -114,52 +158,165 @@ def extract_keywords(user_query):
 
     return unique_keywords
 
-def generate_dynamic_cypher_query(keywords):
+
+# def extract_keywords_nltk(user_query):
+#     """
+#     Extracts keywords and named entities using NLTK.
+#     """
+#     words = word_tokenize(user_query)
+#     words = [word for word in words if word.isalnum()]  # Remove punctuations
+#     words = [word.lower() for word in words if word.lower() not in stopwords.words('english')]
+
+#     # Extract Named Entities
+#     named_entities = ne_chunk(pos_tag(words), binary=True)
+#     entities = [ " ".join(w for w, t in subtree) for subtree in named_entities if hasattr(subtree, 'label') and subtree.label() == 'NE']
+    
+#     keywords = list(set(words + entities))
+#     return keywords
+
+# def extract_keywords(user_query):
+#     """
+#     Extracts Named Entities using Flair.
+#     """
+#     sentence = Sentence(user_query)
+#     tagger.predict(sentence)
+#     return [entity.text for entity in sentence.get_spans('ner')]
+
+# def generate_dynamic_cypher_query(keywords):
+#     """
+#     Dynamically generate a Cypher query based on extracted keywords.
+#     """
+#     # Define searchable properties in Neo4j nodes
+#     searchable_fields = ["Conditions", "TradeName", "Disease", "Product_Name", "ActiveIngredient"]
+
+#     # Construct WHERE clause using extracted keywords
+#     where_clauses = " OR ".join(
+#         [f"toLower(n.{prop}) CONTAINS $keyword OR toLower(m.{prop}) CONTAINS $keyword"
+#          for prop in searchable_fields]
+#     )
+
+#     # Generate the Cypher query
+#     cypher_query = f"""
+#     MATCH (n)-[r]-(m)
+#     WHERE ({where_clauses})
+#     RETURN n, r, m
+#     LIMIT 20
+#     """
+
+#     logger.info(f"Generated Cypher Query: {cypher_query}")
+#     return cypher_query
+
+# def generate_cypher_query(user_query, keywords):
+#     """
+#     Use OpenAI to generate a Cypher query dynamically based on extracted keywords and query intent.
+#     """
+#     searchable_fields = ["Conditions", "TradeName", "Disease", "Product_Name", "ActiveIngredient"]
+
+#     # Create a prompt for OpenAI to generate an optimized Cypher query
+#     prompt = f"""
+#     You are an expert in Neo4j graph databases. 
+#     Generate an optimized Cypher query based on the user's request.
+
+#     - User Query: "{user_query}"
+#     - Extracted Keywords: {keywords}
+#     - Available Fields in the Graph: {searchable_fields}
+#     - Ensure the query retrieves relevant documents.
+#     - Match nodes and relationships meaningfully.
+
+#     Example Neo4j schema:
+#     (Drug)-[:TREATS]->(Disease)
+#     (Drug)-[:CONTAINS]->(ActiveIngredient)
+#     (ClinicalTrial)-[:STUDIES]->(Disease)
+#     (PubMedArticle)-[:MENTIONS]->(Disease)
+
+#     Generate a precise Cypher query that retrieves the most relevant structured data.
+#     """
+
+#     try:
+#         # Use OpenAI API to generate Cypher query
+#         response = client.chat.completions.create(
+#             model=MODEL,
+#             messages=[
+#                 {"role": "system", "content": "You are an expert in querying Neo4j databases."},
+#                 {"role": "user", "content": prompt}
+#             ],
+#             max_tokens=300,
+#             temperature=0.5
+#         )
+
+#         cypher_query = response.choices[0].message.content.strip()
+
+#         logger.info(f"Generated Cypher Query from OpenAI: {cypher_query}")
+#         return cypher_query
+
+#     except Exception as e:
+#         logger.error(f"Error generating Cypher query with OpenAI: {e}")
+#         return None
+
+# USING LANGCHAIN
+def generate_cypher_query(user_query):
     """
-    Dynamically generate a Cypher query based on extracted keywords.
+    Uses LangChain’s GraphCypherQAChain to generate a Cypher query and execute it in Neo4j.
     """
-    # Define searchable properties in Neo4j nodes
-    searchable_fields = ["Conditions", "TradeName", "Disease", "Product_Name", "ActiveIngredient"]
+    try:
+        response_query = cypher_chain.run(user_query)
+        print("cypher query",response_query)
+        return response_query  # This directly executes the query and fetches results
+    except Exception as e:
+        logger.error(f"Error generating Cypher query with LangChain: {e}")
+        return None
+    
 
-    # Construct WHERE clause using extracted keywords
-    where_clauses = " OR ".join(
-        [f"toLower(n.{prop}) CONTAINS $keyword OR toLower(m.{prop}) CONTAINS $keyword"
-         for prop in searchable_fields]
-    )
-
-    # Generate the Cypher query
-    cypher_query = f"""
-    MATCH (n)-[r]-(m)
-    WHERE ({where_clauses})
-    RETURN n, r, m
-    LIMIT 20
+# def query_neo4j(cypher_query, keywords):
+#     """
+#     Query Neo4j using the dynamically generated Cypher query.
+#     """
+#     try:
+#         with driver.session() as session:
+#             result = session.run(cypher_query, keyword=keywords[0].lower())
+#             data = [
+#                 {
+#                     "node1": record["n"],
+#                     "relationship": record["r"].type,
+#                     "node2": record["m"]
+#                 }
+#                 for record in result
+#             ]
+#             logger.info(f"Retrieved {len(data)} records from Neo4j.")
+#             return data
+#     except Exception as e:
+#         logger.error(f"Error querying Neo4j: {e}")
+#         return []
+    
+## LANGCHAIN BASED FUNCTION
+def query_neo4j(cypher_query):
     """
-
-    logger.info(f"Generated Cypher Query: {cypher_query}")
-    return cypher_query
-
-
-def query_neo4j(cypher_query, keywords):
-    """
-    Query Neo4j using the dynamically generated Cypher query.
+    Executes a Cypher query using LangChain's Neo4jGraph connection.
     """
     try:
         with driver.session() as session:
-            result = session.run(cypher_query, keyword=keywords[0].lower())
-            data = [
+            logger.info(f"Executing Cypher Query: {cypher_query}")
+
+            # Run query and fetch results
+            result = session.run(cypher_query)
+            records = result.data()
+
+            # Format results for AI processing
+            structured_data = [
                 {
-                    "node1": record["n"],
-                    "relationship": record["r"].type,
-                    "node2": record["m"]
+                    "TradeName": record.get("TradeName", "N/A"),
+                    "ActiveIngredient": record.get("ActiveIngredient", "N/A"),
+                    "Condition": record.get("Condition", "N/A")
                 }
-                for record in result
+                for record in records
             ]
-            logger.info(f"Retrieved {len(data)} records from Neo4j.")
-            return data
+
+            return structured_data
+
     except Exception as e:
         logger.error(f"Error querying Neo4j: {e}")
         return []
-    
+
 
 def get_elasticsearch_results(index, query, fields, operator="OR"):
     """
@@ -207,17 +364,34 @@ def update_conversation_history(role, content):
     if len(conversation_history) > 50:
         conversation_history.pop(0)
 
+def format_data_for_llm(data):
+    """
+    Format Neo4j data into a concise string for LLM input.
+    """
+    formatted_records = []
+    for record in data[:5]:  # Limit to 5 records for brevity
+        node1 = record["node1"]
+        node2 = record["node2"]
+        relationship = record["relationship"]
+
+        # Extract key fields from nodes
+        node1_summary = ", ".join([f"{key}: {value}" for key, value in node1.items()])
+        node2_summary = ", ".join([f"{key}: {value}" for key, value in node2.items()])
+
+        formatted_records.append(f"{node1_summary} --[{relationship}]--> {node2_summary}")
+
+    formatted_output = "\n".join(formatted_records)
+    logger.info(f"Formatted Data for LLM:\n{formatted_output}")
+    return formatted_output
 
 def generate_response(user_query, data):
     """
-    Generate a user-friendly response based on retrieved data using OpenAI.
+    Generates an AI-enhanced response based on retrieved Neo4j or Elasticsearch data.
     """
     if not data:
         return "No relevant information was found in the database for your query."
 
-    formatted_data = "\n".join(
-        [f"{record['node1']} --[{record['relationship']}]--> {record['node2']}" for record in data[:5]]
-    )
+    formatted_data = format_data_for_llm(data)
 
     prompt = f"""
     User Query: {user_query}
@@ -225,13 +399,13 @@ def generate_response(user_query, data):
     Retrieved Data:
     {formatted_data}
 
-    Generate a precise and insightful response based on this information.
+    Generate a precise and structured response based strictly on this data.
     """
 
-    response = openai_client.chat.completions.create(
+    response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant that provides accurate answers based on database results."},
+            {"role": "system", "content": "You are a medical knowledge assistant providing structured responses."},
             {"role": "user", "content": prompt}
         ],
         max_tokens=500,
@@ -243,26 +417,18 @@ def generate_response(user_query, data):
 
 def route_to_chatbot(user_query):
     """
-    Routes query to Neo4j first, falls back to Elasticsearch if needed, and generates a response.
+    Routes user queries to the appropriate retrieval method (Neo4j or Elasticsearch).
     """
     predicted_labels = predict_query(user_query, model, tokenizer)
-
-    # Extract keywords from user query
     keywords = extract_keywords(user_query)
 
-    if not keywords:
-        return "I couldn't identify any relevant keywords in your query."
-
-    # Generate dynamic Cypher query
-    cypher_query = generate_dynamic_cypher_query(keywords)
-
-    # Attempt Neo4j search
-    neo4j_results = query_neo4j(cypher_query, keywords)
+    # Step 1: Use LangChain to generate and execute a Cypher query in Neo4j
+    neo4j_results = generate_cypher_query(user_query)
 
     if neo4j_results:
         return generate_response(user_query, neo4j_results)
 
-    # If Neo4j has no results, fallback to Elasticsearch
+    # Step 2: If no Neo4j results, fallback to Elasticsearch
     if "PubMed" in predicted_labels:
         search_results = get_elasticsearch_results(
             index="pubmed",
@@ -279,8 +445,9 @@ def route_to_chatbot(user_query):
     return generate_response(user_query, search_results)
 
 
+
 def main():
-    user_query = "Pubmed for Malaria"
+    user_query = "Drugs for treatment of Depression"
     final_response = route_to_chatbot(user_query)
     print("\nFinal Aggregated Response from Dynamic Chatbot:")
     print("BOT:", final_response)
