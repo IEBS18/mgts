@@ -1,41 +1,46 @@
-// Chatbot.jsx
-import React, { useState, useEffect } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Send, Minimize, MessageCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { Input } from './ui/input';
-import ReactMarkdown from 'react-markdown'; // Import react-markdown
-import BotIcon from '../assets/BotIcon.png'
+"use client";
 
-export default function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggle }) {
+import { useState } from "react";
+import PropTypes from "prop-types";
+import { X, Send, XCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar } from "@/components/ui/avatar";
+import ReactMarkdown from "react-markdown";
+import BotIcon from "../assets/BotIcon.png";
+
+function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggle }) {
   const [newMessage, setNewMessage] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === "") return;
 
-    setChatMessages((prev) => [...prev, { type: 'user', content: newMessage }]);
-    setChatMessages((prev) => [...prev, { type: 'bot', content: 'Analyzing...' }]);
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    setChatMessages((prev) => [...prev, { type: "user", content: newMessage, timestamp }]);
+    setChatMessages((prev) => [...prev, { type: "bot", content: "Analyzing...", timestamp }]);
 
     setIsAnalyzing(true);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: newMessage, results: fulldata })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: newMessage, results: fulldata }),
       });
 
       const result = await response.json();
       setChatMessages((prev) => [
         ...prev.slice(0, -1),
-        { type: 'bot', content: <ReactMarkdown>{result.results}</ReactMarkdown> }
+        { type: "bot", content: <ReactMarkdown>{result.results}</ReactMarkdown>, timestamp },
       ]);
     } catch (error) {
       setChatMessages((prev) => [
         ...prev.slice(0, -1),
-        { type: 'bot', content: 'Error fetching response' }
+        { type: "bot", content: "Error fetching response", timestamp },
       ]);
     } finally {
       setIsAnalyzing(false);
@@ -44,90 +49,102 @@ export default function ChatBot({ chatMessages, setChatMessages, fulldata, isMin
     setNewMessage("");
   };
 
-  // Only display the floating icon when minimized
-  if (isMinimized) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="fixed bottom-6 right-6 z-50"
-        style={{ height: 'auto' }}
-      >
-        <Button
-          variant="ghost"
-          className=""
-          onClick={onToggle}
-        >
-          {/* <MessageCircle className="h-6 w-6" /> */}
-          <img src={BotIcon} alt="Bot Icon" className="w-12 h-12" />
-        </Button>
-      </motion.div>
-    );
-  }
-
   return (
-
-    <motion.div
-      initial={{ height: '100px' }}
-      animate={{ height: '75vh' }}
-      exit={{ height: 0 }}
-      className="fixed right-0 w-1/3 bg-white border-l border-gray-300 flex flex-col shadow-lg z-50"
-      style={{ borderRadius: '16px', backdropFilter: 'blur(10px)', top: 'calc(25vh)' }}
-    >
-      <div className="p-4 flex justify-between bg-[#4B6601] rounded-t-[16px] items-center border-b border-gray-300">
-        <h2 className="text-lg font-semibold text-white">PharmaX Bot</h2>
-        <Button variant="ghost" onClick={onToggle}>
-          <Minimize className="h-6 w-6 text-white" />
-        </Button>
-      </div>
-
-      <div className="flex-1 overflow-auto p-4 space-y-4">
-        {chatMessages.map((message, index) => (
+    <div className="fixed bottom-8 right-8 z-50">
+      <Button
+        size="icon"
+        className="w-14 h-14 rounded-full bg-[#688C05] hover:bg-[#4B6601] shadow-lg"
+        onClick={onToggle}
+      >
+        <img src={BotIcon} alt="Bot Icon" className="w-12 h-12" />
+      </Button>
+      <AnimatePresence>
+        {!isMinimized && (
           <motion.div
-            key={index}
-            initial={{ opacity: 0, x: message.type === 'user' ? 50 : -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="absolute bottom-20 right-0"
           >
-            <div className={`flex items-start space-x-2 ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-              {message.type === 'bot' && (
-                <div className="w-8 h-8 flex justify-center items-center">
-                  <img src={BotIcon} alt="Bot Icon" className="w-8 h-8" />
+            {/* Bump Behind Chat Window */}
+            <div className="absolute -bottom-2 right-3 -translate-x-1/2 w-0 h-0 
+  border-l-[10px] border-l-transparent 
+  border-r-[10px] border-r-transparent 
+  border-t-[10px] border-t-white
+  z-[20]"></div>
+            
+            <div className="w-[380px] bg-white rounded-lg shadow-lg overflow-hidden relative z-10">
+              
+              <div className="bg-[#4B6601] py-3 px-4">  
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-white font-semibold">PharmaX Bot</h2>
+                    <p className="text-xs text-white/80">powered by Copilot</p>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-white hover:text-white/80 hover:bg-white/10"
+                    onClick={onToggle}
+                  >
+                    <XCircle className="h-5 w-5" />
+                  </Button>
                 </div>
-              )}
+              </div>
 
-              <div
-                className={`p-2 shadow-md ${message.type === 'bot' ? 'bg-[#F1F7FF] rounded-b-[12px] rounded-tr-[12px] text-black' : 'bg-[#688C05] rounded-b-[12px] rounded-tl-[12px] text-white'
-                  }`}
-              >
-                <p className="text-sm font-medium">{message.content}</p>
+              <div className="h-[200px] overflow-y-auto p-4 space-y-4">
+                {chatMessages.map((message, index) => (
+                  <div key={index} className={`flex flex-col ${message.type === "user" ? "items-end" : "items-start"}`}>
+                    {message.type === "bot" && (
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-8 h-8 rounded-full bg-[#688C05] flex items-center justify-center">
+                          <img src={BotIcon} alt="Bot Icon" className="w-8 h-8" />
+                        </div>
+                        <span className="text-xs font-medium">Assistant</span>
+                      </div>
+                    )}
+                    <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${message.type === "user" ? "bg-[#688C05] text-white rounded-br-none" : "bg-[#F1F7FF] text-gray-800 rounded-tl-none"}`}>
+                      {typeof message.content === "string" ? message.content : message.content}
+                    </div>
+                    <span className="text-xs text-gray-500 mt-1">{message.timestamp}</span>
+                  </div>
+                ))}
+              </div>
+
+
+              <div className="p-4 border-t">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }}
+                  className="flex gap-2"
+                >
+                  <Input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    disabled={isAnalyzing}
+                    className="flex-1 bg-gray-100 border-0 focus-visible:ring-1 focus-visible:ring-[#688C05]"
+                  />
+                  <Button
+                    type="submit"
+                    size="icon"
+                    disabled={isAnalyzing}
+                    className="bg-[#688C05] hover:bg-[#4B6601] text-white rounded-full"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </form>
               </div>
             </div>
-
           </motion.div>
-        ))}
-      </div>
+        )}
+      </AnimatePresence>
+    </div>
 
-      <div className="p-4 border-t border-gray-300">
-        <div className="flex items-center space-x-2">
-          <Input
-            placeholder="Type your message..."
-            className="flex-1 rounded-lg border-2 border-[#95D524] focus:border-[#95D524] focus:ring-[#95D524] hover:border-[#95D524] transition duration-200 ease-in-out"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            disabled={isAnalyzing}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleSendMessage();
-              }
-            }}
-          />
-          <Button size="icon" onClick={handleSendMessage} disabled={isAnalyzing}>
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </motion.div>
+
   );
 }
+
+export default ChatBot;
