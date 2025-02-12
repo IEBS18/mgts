@@ -20,7 +20,7 @@ import TabHeader from "./TabHeader";
 import { cn } from "@/utils/cn";
 
 // Import the DiseaseOverviewModal at the top
-import DiseaseOverviewModal from "./DiseaseOverview"; // Ensure the correct import path
+import DiseaseOverviewModal from "./DiseaseOverviewModal"; // Ensure the correct import path
 
 const DiseaseSearchPage = () => {
   const location = useLocation();

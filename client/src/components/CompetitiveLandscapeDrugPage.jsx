@@ -15,7 +15,7 @@ const DonutChart = ({ data }) => {
     const total = data.reduce((sum, entry) => sum + entry.value, 0); // Compute total dynamically
 
     return (
-        <Card className="w-full h-full p-3">
+        <Card className="w-full h-full p-3 bg-white border-[#a6ce39] rounded-[12px]">
             <CardHeader>
                 <CardTitle>Top Diseases</CardTitle>
                 <CardDescription>Distribution of top diseases treated</CardDescription>
@@ -77,7 +77,7 @@ const BubbleChart = ({ data }) => {
     };
 
     return (
-        <Card className="w-full h-full p-3">
+        <Card className="w-full h-full p-3 bg-white border-[#a6ce39] rounded-[12px]">
             <CardHeader>
                 <CardTitle>Annual Therapy Costs</CardTitle>
                 <CardDescription>Therapy Costs vs Disease</CardDescription>

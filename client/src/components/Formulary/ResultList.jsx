@@ -30,7 +30,7 @@ export function ResultList({ results, selectedResultRows, toggleRowSelection }) 
             >
               <td className="px-4 py-2 border">{result["Disease Name"] || "N/A"}</td>
               <td className="px-4 py-2 border">{result["Drug Name"] || "N/A"}</td>
-              <td className="px-4 py-2 border">{result["Tier"] || "N/A"}</td> {/* Updated Field */}
+              <td className="px-4 py-2 border">{result["Tier"] || "-"}</td> {/* Updated Field */}
               <td className="px-4 py-2 border">{result["Plan Name"] || "N/A"}</td> {/* Updated Field */}
               <td className="px-4 py-2 border">
                 {result["Requirements/Limits"] !== "" ? result["Requirements/Limits"] : "Fully Reimbursed"}

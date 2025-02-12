@@ -16,10 +16,11 @@ import CompetitorAnalysis from "./components/PricePrediction";
 import DrugAnalysis from "./components/CompetitiveLandscapeDrugPage";
 import CompetitiveLandscapeDrugPage from "./components/CompetitiveLandscapeDrugPage";
 // import { Formulary } from "./components/Formulary";
-import { Dashboard } from "./components/Formulary/Dashboard";
+import { FormularyDashboard } from "./components/Formulary/FormularyDashboard";
 import TPPDrugPage from "./components/TPPDrugPage";
 import { TPPComparison } from "./components/TPPComparison";
 import { ComparePlans } from "./components/Formulary/ComparePlans";
+import RNDFormulation from "./components/Rnd/RNDFormulation";
 
 function App() {
   return (
@@ -54,11 +55,12 @@ function App() {
         <Route path="/competitive-landscape-by-disease" element={<PrivateRoute><Layout><DiseaseAnalysis /></Layout></PrivateRoute>} />
         <Route path="/competitive-landscape-by-drug" element={<PrivateRoute><Layout><CompetitiveLandscapeDrugPage /></Layout></PrivateRoute>} />
         <Route path="/drug-comparison" element={<PrivateRoute><Layout><DrugComparisonTable /></Layout></PrivateRoute>} />
-        <Route path="/tpp-comparison" element={<PrivateRoute><Layout><TPPComparison /></Layout></PrivateRoute>} />
         <Route path="/price-prediction" element={<PrivateRoute><Layout><CompetitorAnalysis /></Layout></PrivateRoute>} />
-        <Route path="/formulary" element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
+        <Route path="/formulary" element={<PrivateRoute><Layout><FormularyDashboard /></Layout></PrivateRoute>} />
         <Route path="/tpp-by-drug" element={<PrivateRoute><Layout><TPPDrugPage/></Layout></PrivateRoute>} />
+        <Route path="/tpp-comparison" element={<PrivateRoute><Layout><TPPComparison /></Layout></PrivateRoute>} />
         <Route path="/compare-plans" element={<PrivateRoute><Layout><ComparePlans/></Layout></PrivateRoute>} />
+        <Route path="/rnd-formulation" element={<PrivateRoute><Layout><RNDFormulation/></Layout></PrivateRoute>} />
       </Routes>
     </Router>
   );

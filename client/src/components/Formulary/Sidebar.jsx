@@ -3,6 +3,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import "../../index.css";
 
 export function Sidebar({
   selectedDrugs,
@@ -12,7 +13,6 @@ export function Sidebar({
   onRemoveDrug,
   onRemoveDisease,
   onRemovePlan,
-  onViewResults,
   clearAllDrugs,
   clearAllDiseases,
   clearAllPlans,
@@ -40,7 +40,7 @@ export function Sidebar({
             </Button>
           )}
         </div>
-        <div className="space-y-2 max-h-40 overflow-y-auto">
+        <div className="space-y-2 max-h-40 overflow-y-auto dropdown-scroll">
           {selectedDrugs.length === 0 ? (
             <p className="text-sm text-gray-500">No drugs selected.</p>
           ) : (
@@ -73,7 +73,7 @@ export function Sidebar({
             </Button>
           )}
         </div>
-        <div className="space-y-2 max-h-40 overflow-y-auto">
+        <div className="space-y-2 max-h-40 overflow-y-auto dropdown-scroll">
           {selectedDiseases.length === 0 ? (
             <p className="text-sm text-gray-500">No diseases selected.</p>
           ) : (
@@ -106,7 +106,7 @@ export function Sidebar({
             </Button>
           )}
         </div>
-        <div className="space-y-2 max-h-40 overflow-y-auto">
+        <div className="space-y-2 max-h-40 overflow-y-auto dropdown-scroll">
           {selectedPlans.length === 0 ? (
             <p className="text-sm text-gray-500">No plans selected.</p>
           ) : (
@@ -127,15 +127,7 @@ export function Sidebar({
         </div>
       </div>
 
-      <Button
-        onClick={onViewResults}
-        disabled={loading}
-        className={`text-md font-semibold text-black bg-[#a6ce39] hover:bg-[#95b833] rounded-[12px] w-full ${
-          loading ? "opacity-50 cursor-not-allowed" : ""
-        }`}
-      >
-        {loading ? "Loading..." : "View Results"}
-      </Button>
+      {/* "View Results" button removed because it's now in the Tabs header */}
     </div>
   );
 }

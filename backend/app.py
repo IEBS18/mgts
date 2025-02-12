@@ -20,7 +20,7 @@ from Utilities.query_classifier import (
 )
 from TPP.d import format_output, process_drug_comparison
 from TPP.k import key_insights, process_key_insights
-
+from openpyxl import Workbook
 sys.stdout.reconfigure(encoding='utf-8')
 
 from PlayerLandscape.player import get_disease_data
@@ -626,176 +626,6 @@ def safety_efficacy_score_calculator():
         return jsonify({'error': str(e)}), 500
 
 
-
-# @app.route('/formularyResult', methods=['POST'])
-# def formulary_result():
-#     data = request.json
-#     index = "reimbursementfinal"
-
-#     # Extract filters from payload
-#     selected_diseases = data.get('selectedDiseases', [])
-#     selected_drugs = data.get('selectedDrugs', [])
-#     selected_plans = data.get('selectedPlans', [])
-#     selected_state = data.get('selectedState', None)
-
-#     # Start building the Elasticsearch multi-search query
-#     es_query = [
-#         {"index": index}
-#     ]
-
-#     # Construct the bool query with must clauses
-#     bool_query = {"must": []}
-
-#     if selected_diseases:
-#         bool_query["must"].append({
-#             "terms": {
-#                 "Disease Name.keyword": selected_diseases
-#             }
-#         })
-
-#     if selected_drugs:
-#         # Extract drug names if the items are objects
-#         drug_names = [drug['name'] if isinstance(drug, dict) else drug for drug in selected_drugs]
-#         bool_query["must"].append({
-#             "terms": {
-#                 "Drug Name.keyword": drug_names
-#             }
-#         })
-
-#     if selected_plans:
-#         # Extract plan names if the items are objects
-#         plan_names = [plan['name'] if isinstance(plan, dict) else plan for plan in selected_plans]
-#         bool_query["must"].append({
-#             "terms": {
-#                 "Plan Name.keyword": plan_names
-#             }
-#         })
-
-#     if selected_state and selected_state != "All States":
-#         bool_query["must"].append({
-#             "term": {
-#                 "State Name.keyword": selected_state
-#             }
-#         })
-
-#     # If no filters provided, default to match all to avoid errors
-#     if not bool_query["must"]:
-#         bool_query["must"].append({"match_all": {}})
-
-#     es_query.append({
-#         "query": {
-#             "bool": bool_query
-#         },
-#         "size": 10000  # Adjust size as needed for performance
-#     })
-
-#     try:
-#         # Perform multi-search query
-#         response = es.msearch(body=es_query)
-
-#         # Extract matching documents from the response
-#         documents = [
-#             hit['_source']
-#             for res in response['responses']
-#             for hit in res['hits']['hits']
-#         ]
-
-#         return jsonify({"status": "success", "data": documents})
-
-#     except Exception as e:
-#         return jsonify({"status": "error", "message": str(e)}), 500
-
-
-# @app.route('/formularyData', methods=['GET'])
-# def formulary_data():
-#     try:
-#         index = "reimbursementfinal"
-
-#         aggregation_query = {
-#             "size": 0,
-#             "aggs": {
-#                 "unique_diseases": {
-#                     "terms": {
-#                         "field": "Disease Name.keyword",
-#                         "size": 10000
-#                     }
-#                 },
-#                 "unique_drugs": {
-#                     "terms": {
-#                         "field": "Drug Name.keyword",
-#                         "size": 10000
-#                     }
-#                 },
-#                 "unique_states": {
-#                     "terms": {
-#                         "field": "State Name.keyword",
-#                         "size": 10000
-#                     }
-#                 },
-#                 "unique_plans": {
-#                     "terms": {
-#                         "field": "Plan Name.keyword",
-#                         "size": 10000
-#                     }
-#                 },
-#                 "unique_drug_tiers": {
-#                     "terms": {
-#                         "field": "Drug Tier.keyword",
-#                         "size": 10000
-#                     }
-#                 },
-#                 "unique_plan_types": {  # New aggregation for Plan Types
-#                     "terms": {
-#                         "field": "Plan Type.keyword",
-#                         "size": 10000
-#                     }
-#                 },
-#                 "disease_to_drugs": {  # New aggregation for Disease to Drugs mapping
-#                     "terms": {
-#                         "field": "Disease Name.keyword",
-#                         "size": 10000
-#                     },
-#                     "aggs": {
-#                         "associated_drugs": {
-#                             "terms": {
-#                                 "field": "Drug Name.keyword",
-#                                 "size": 10000
-#                             }
-#                         }
-#                     }
-#                 }
-#             }
-#         }
-
-#         response = es.search(index=index, body=aggregation_query)
-
-#         diseases = [bucket['key'] for bucket in response['aggregations']['unique_diseases']['buckets']]
-#         drugs = [bucket['key'] for bucket in response['aggregations']['unique_drugs']['buckets']]
-#         states = [bucket['key'] for bucket in response['aggregations']['unique_states']['buckets']]
-#         plans = [bucket['key'] for bucket in response['aggregations']['unique_plans']['buckets']]
-#         drug_tiers = [bucket['key'] for bucket in response['aggregations']['unique_drug_tiers']['buckets']]
-#         plan_types = [bucket['key'] for bucket in response['aggregations']['unique_plan_types']['buckets']]
-
-#         # Build disease to drugs mapping
-#         disease_to_drugs = {}
-#         for disease_bucket in response['aggregations']['disease_to_drugs']['buckets']:
-#             disease_name = disease_bucket['key']
-#             associated_drugs = [drug['key'] for drug in disease_bucket['associated_drugs']['buckets']]
-#             disease_to_drugs[disease_name] = associated_drugs
-
-#         return jsonify({
-#             "status": "success",
-#             "diseases": diseases,
-#             "drugs": drugs,
-#             "states": states,
-#             "plans": plans,
-#             "drugTiers": drug_tiers,
-#             "planTypes": plan_types,  # Include Plan Types
-#             "diseaseToDrugs": disease_to_drugs  # Include Disease to Drugs mapping
-#         })
-
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
 
 @app.route('/formularyData', methods=['GET'])
 def formulary_data():
@@ -1706,5 +1536,178 @@ def predict_tier_and_requirement_route():
         app.logger.exception("Unexpected error during prediction.")
         return jsonify({"status": "error", "message": str(e)}), 500
     
+   
+   
+   
+   
+   
+  
+  ########## RND FORMUALTION #####################
+
+
+# Define the fields to search within each index
+index_fields = {
+    "test": ["Title", "Full Paper"],
+    "granted_updated_final": ["Title", "Abstract", "Claim"],
+    "pregranted": ["Title", "Claim", "Abstract"]
+}
+
+# Define post-processing fields to return from each index
+post_processing_fields = {
+    "granted_updated_final": [
+        "Display_Key", "Title", "Abstract", "Claim", "Publication_Date",
+        "Assignee_Applicant", "Inventor", "IPC_Classifications", "CPC_Classifications"
+    ],
+    "pregranted": [
+        "Display_Key", "Title", "Abstract", "Claim", "Publication_Date",
+        "Assignee_Applicant", "Inventor", "IPC_Classifications", "CPC_Classifications"
+    ],
+    "test": ["PMC_ID", "Title", "Abstract", "Full Paper"]
+}
+
+def search_index(index_name, user_query, fields, size=10):
+    """
+    Searches a given Elasticsearch index using a multi-match query with fuzziness.
+    """
+    query_body = {
+        "query": {
+            "multi_match": {
+                "query": user_query,
+                "fields": fields,
+                "fuzziness": "AUTO"
+            }
+        },
+        "size": size
+    }
+    response = es.search(index=index_name, body=query_body)
+    hits = response.get("hits", {}).get("hits", [])
+    return [
+        {"index": index_name, "score": hit["_score"], "source": hit["_source"]}
+        for hit in hits
+    ]
+
+def fuzzy_search(user_query, size=10):
+    """
+    Performs the fuzzy search across all specified indexes and returns merged raw results.
+    """
+    all_results = []
+    for index_name, fields in index_fields.items():
+        results = search_index(index_name, user_query, fields, size)
+        all_results.extend(results)
+    return all_results
+
+def process_results(all_results):
+    """
+    Processes the raw search results by filtering out only the desired fields for each index.
+    """
+    processed_results = []
+    for result in all_results:
+        index_name = result["index"]
+        source_data = result["source"]
+        if index_name in post_processing_fields:
+            # Keep only the post-processing fields defined for this index
+            filtered_data = {key: source_data.get(key) for key in post_processing_fields[index_name]}
+        else:
+            filtered_data = source_data
+        processed_results.append(filtered_data)
+    return processed_results
+
+@app.route('/api/rnd-formulation', methods=['POST'])
+def rnd_formulation():
+    """
+    Expects a JSON payload like:
+      { "user_query": "lamivudine", "size": 10 }
+    
+    It returns a JSON response with the processed search results.
+    """
+    data = request.get_json()
+    if not data or 'user_query' not in data:
+        return jsonify({"error": "Missing 'user_query' in request body"}), 400
+
+    user_query = data['user_query']
+    # Allow a size parameter for limiting results (default to 10 if not provided)
+    size = int(data.get("size", 10))
+
+    # Perform fuzzy search across the defined indexes
+    raw_results = fuzzy_search(user_query, size=size)
+    processed_results = process_results(raw_results)
+    
+    # Return the processed results as JSON
+    return jsonify({"results": processed_results}), 200  
+    
+    
+@app.route('/rnd-excel-export', methods=['POST'])
+def rnd_excel_export():
+    """
+    Expects JSON in the format:
+    {
+      "data": [ ... array of objects ... ]
+    }
+    Returns an Excel file with two sheets:
+      - "pub_med" for items that have "PMC_ID"
+      - "patent" for items that have "Publication_Date"
+    """
+    # Retrieve the JSON payload from the request
+    payload = request.get_json(silent=True) or {}
+    data = payload.get("data", [])
+
+    if not isinstance(data, list):
+        return jsonify({"error": "Invalid data. 'data' should be a list."}), 400
+
+    # Separate pub_med vs. patent data
+    pmc_data = [item for item in data if "PMC_ID" in item]
+    patent_data = [item for item in data if "Publication_Date" in item]
+
+    # Create an Excel workbook with openpyxl
+    wb = Workbook()
+
+    # 1) Create the 'pub_med' sheet
+    ws_pubmed = wb.active
+    ws_pubmed.title = "pub_med"
+
+    # Gather all distinct keys from pmc_data for column headers
+    pmc_keys = set()
+    for row in pmc_data:
+        pmc_keys.update(row.keys())
+    pmc_columns = list(pmc_keys)
+
+    # Write column headers for pub_med
+    ws_pubmed.append(pmc_columns)
+
+    # Write rows for pub_med
+    for row in pmc_data:
+        values = [row.get(key, "") for key in pmc_columns]
+        ws_pubmed.append(values)
+
+    # 2) Create the 'patent' sheet
+    ws_patent = wb.create_sheet(title="patent")
+
+    patent_keys = set()
+    for row in patent_data:
+        patent_keys.update(row.keys())
+    patent_columns = list(patent_keys)
+
+    # Write column headers for patent
+    ws_patent.append(patent_columns)
+
+    # Write rows for patent
+    for row in patent_data:
+        values = [row.get(key, "") for key in patent_columns]
+        ws_patent.append(values)
+
+    # Save the workbook to an in-memory buffer
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    # Return the Excel file as an attachment
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="exported_data.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )    
+
+ 
 if __name__ == '__main__':
     app.run(debug=True)

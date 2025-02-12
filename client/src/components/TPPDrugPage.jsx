@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox"
 import { Download, Filter, PlusCircle, X } from "lucide-react" // Adjust imports based on your setup
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog"
-
+import FormatText from "./FormatText"
 import { Input } from "./ui/input"
 import { toast, ToastContainer } from "react-toastify"
 

@@ -320,7 +320,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
           width: "100%",
         }}
       >
-        <DialogHeader className="space-y-4">
+        {/* <DialogHeader className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <DialogTitle className="flex flex-row items-center justify-cente text-white rounded-lg">
@@ -338,7 +338,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
               Search for Target Product Profile (TPP) information by drug or comparator therapies.
             </p>
           </div>
-        </DialogHeader>
+        </DialogHeader> */}
 
         <Tabs defaultValue="drug" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-white rounded-[18px]">

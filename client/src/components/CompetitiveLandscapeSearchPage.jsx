@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d']
 
 const DrugCountsChart = ({ data, diseaseName }) => (
-  <Card className="w-full h-full p-3">
+  <Card className="w-full h-full p-3 bg-white border-[#a6ce39] rounded-[12px]">
     <CardHeader>
       <CardTitle>Drug Counts by Manufacturer for {diseaseName}</CardTitle>
       <CardDescription>Number of drugs produced by each manufacturer</CardDescription>
@@ -62,7 +62,7 @@ const MarketShareChart = ({ data, diseaseName }) => {
   const pieData = Object.entries(data).map(([name, value]) => ({ name, value }))
 
   return (
-    <Card className="w-full">
+    <Card className="w-full  bg-white border-[#a6ce39] rounded-[12px]">
       <CardHeader>
         <CardTitle>Market Share for Manufacturers in {diseaseName}</CardTitle>
         <CardDescription>Distribution of market share among manufacturers</CardDescription>
@@ -127,7 +127,7 @@ const RevenueOverYearsChart = ({ data, diseaseName }) => {
   const chartData = Object.values(processedData);
 
   return (
-    <Card className="w-full">
+    <Card className="w-full  bg-white border-[#a6ce39] rounded-[12px]">
       <CardHeader>
         <CardTitle>Revenue vs Year for Manufacturers in {diseaseName}</CardTitle>
         <CardDescription>Revenue trends over the years for each manufacturer</CardDescription>
@@ -165,7 +165,7 @@ const DrugTypeDistributionChart = ({ data, diseaseName }) => {
   const pieData = Object.entries(data).map(([name, value]) => ({ name, value }))
 
   return (
-    <Card className="w-full">
+    <Card className="w-full  bg-white border-[#a6ce39] rounded-[12px]">
       <CardHeader>
         <CardTitle>Drug Type Distribution for Treatment of {diseaseName}</CardTitle>
         <CardDescription>Distribution of different types of drugs used for treatment</CardDescription>
