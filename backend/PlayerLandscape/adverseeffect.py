@@ -1,4 +1,4 @@
-from openai import OpenAI
+from openai import AzureOpenAI
 import pandas as pd
 from dotenv import load_dotenv
 import os
@@ -15,7 +15,11 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 load_dotenv()
  
 # Initialize the OpenAI client
-openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+openai_client = AzureOpenAI(
+    api_key=os.getenv("AZURE_API"),
+    api_version=os.getenv("AZURE_API_VERSION"),
+    azure_endpoint=os.getenv("AZURE_BASE_URL")
+)
  
 # Function to extract adverse events from the statement
 def extract_adverse_events(statement):

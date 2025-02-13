@@ -7,6 +7,7 @@ import sys
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 from openai import OpenAI
+from openai import AzureOpenAI
 import os
 from PricePrediction.pp import display_competitor_details, fetch_competitor_data, parse_data, predict_price
 from PlayerLandscape.dm import get_bubble_chart_data, get_donut_chart_data
@@ -1291,7 +1292,11 @@ def get_safety_efficacy():
     return jsonify(safety_efficacy_data), 200
 
 
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+openai_client = AzureOpenAI(
+    api_key=os.getenv("AZURE_API"),
+    api_version=os.getenv("AZURE_API_VERSION"),
+    azure_endpoint=os.getenv("AZURE_BASE_URL")
+)
 MODEL = "gpt-4o-mini"
  
 def predict_tier_and_requirement(new_plan: dict, competitor_data: dict):

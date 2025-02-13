@@ -1,6 +1,6 @@
 import nltk
 import os
-from openai import OpenAI
+from openai import AzureOpenAI
 from elasticsearch import Elasticsearch
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -17,8 +17,10 @@ nltk.download('punkt', download_dir=nltk_data_path)
 nltk.download('stopwords', download_dir=nltk_data_path)
 nltk.download('punkt_tab', download_dir=nltk_data_path)
 
-openai_client = OpenAI(
-    api_key=os.environ["OPENAI_API_KEY"],
+openai_client = AzureOpenAI(
+    api_key=os.getenv("AZURE_API"),
+    api_version=os.getenv("AZURE_API_VERSION"),
+    azure_endpoint=os.getenv("AZURE_BASE_URL")
 )
 
 es = Elasticsearch(

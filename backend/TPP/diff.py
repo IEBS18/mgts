@@ -4,7 +4,7 @@ import sys
 
 from dotenv import load_dotenv
 
-from openai import OpenAI
+from openai import AzureOpenAI
  
 # Ensure UTF-8 output (especially on Windows)
 
@@ -16,7 +16,11 @@ load_dotenv()
  
 # Set up OpenAI
 
-openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+openai_client = AzureOpenAI(
+    api_key=os.getenv("AZURE_API"),
+    api_version=os.getenv("AZURE_API_VERSION"),
+    azure_endpoint=os.getenv("AZURE_BASE_URL")
+)
 
 MODEL = "gpt-4o-mini"  # Replace with a model that your org has access to
  
