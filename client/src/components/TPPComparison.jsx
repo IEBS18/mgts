@@ -120,9 +120,9 @@ export function TPPComparison() {
                 setIsAiColumnLoading(false)
 
                 setAiColumns((prevAiColumns) => [...prevAiColumns, aiColumnName])
-
+                const mainDrug = location.state?.mainDrug
                 navigate(location.pathname, {
-                    state: { comparisonData: updatedResults, aiColumns: [...aiColumns, aiColumnName] },
+                    state: { comparisonData: updatedResults, aiColumns: [...aiColumns, aiColumnName], mainDrug: mainDrug },
                 })
 
                 toast.success("AI column added successfully!")
