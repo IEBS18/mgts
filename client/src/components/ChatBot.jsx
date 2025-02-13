@@ -1,18 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import { X, Send, XCircle } from "lucide-react";
+import { XCircle, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar } from "@/components/ui/avatar";
 import ReactMarkdown from "react-markdown";
 import BotIcon from "../assets/BotIcon.png";
 
 function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggle }) {
   const [newMessage, setNewMessage] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const lastMessageRef = useRef(null); // Reference to last message
+
+  // Scroll to the start of the last message
+  useEffect(() => {
+    lastMessageRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [chatMessages]);
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === "") return;
@@ -58,6 +63,7 @@ function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggl
       >
         <img src={BotIcon} alt="Bot Icon" className="w-12 h-12" />
       </Button>
+
       <AnimatePresence>
         {!isMinimized && (
           <motion.div
@@ -66,21 +72,20 @@ function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggl
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             className="absolute bottom-20 right-0"
           >
-            {/* Bump Behind Chat Window */}
+            {/* Chat Bubble Pointer */}
             <div className="absolute -bottom-2 right-3 -translate-x-1/2 w-0 h-0 
-  border-l-[10px] border-l-transparent 
-  border-r-[10px] border-r-transparent 
-  border-t-[10px] border-t-white
-  z-[20]"></div>
+              border-l-[10px] border-l-transparent 
+              border-r-[10px] border-r-transparent 
+              border-t-[10px] border-t-white
+              z-[20]"
+            ></div>
             
             <div className="w-[380px] bg-white rounded-lg shadow-lg overflow-hidden relative z-10">
               
+              {/* Chat Header */}
               <div className="bg-[#4B6601] py-3 px-4">  
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-white font-semibold">PharmaX Bot</h2>
-                    {/* <p className="text-xs text-white/80">powered by Copilot</p> */}
-                  </div>
+                  <h2 className="text-white font-semibold">PharmaX Bot</h2>
                   <Button
                     size="icon"
                     variant="ghost"
@@ -92,9 +97,14 @@ function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggl
                 </div>
               </div>
 
+              {/* Chat Messages */}
               <div className="h-[200px] overflow-y-auto p-4 space-y-4">
                 {chatMessages.map((message, index) => (
-                  <div key={index} className={`flex flex-col ${message.type === "user" ? "items-end" : "items-start"}`}>
+                  <div
+                    key={index}
+                    ref={index === chatMessages.length - 1 ? lastMessageRef : null} // Attach ref to last message
+                    className={`flex flex-col ${message.type === "user" ? "items-end" : "items-start"}`}
+                  >
                     {message.type === "bot" && (
                       <div className="flex items-center gap-2 mb-1">
                         <div className="w-8 h-8 rounded-full bg-[#688C05] flex items-center justify-center">
@@ -111,7 +121,7 @@ function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggl
                 ))}
               </div>
 
-
+              {/* Input Field */}
               <div className="p-4 border-t">
                 <form
                   onSubmit={(e) => {
@@ -137,14 +147,14 @@ function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggl
                   </Button>
                 </form>
               </div>
+
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
-
-
   );
 }
+
 
 export default ChatBot;
