@@ -101,7 +101,7 @@ const Header = () => {
   };
 
   return (
-    <header className="flex items-center justify-between bg-gradient-alt-ego px-6 py-4 shadow-md z-50">
+    <header className="flex items-center justify-between bg-gradient-alt-ego px-6 py-2 shadow-md z-50">
       {/* Logo Section */}
       <div className="flex items-center">
         <a href="/dashboard">

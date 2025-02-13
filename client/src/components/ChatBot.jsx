@@ -79,7 +79,7 @@ function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggl
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-white font-semibold">PharmaX Bot</h2>
-                    <p className="text-xs text-white/80">powered by Copilot</p>
+                    {/* <p className="text-xs text-white/80">powered by Copilot</p> */}
                   </div>
                   <Button
                     size="icon"
