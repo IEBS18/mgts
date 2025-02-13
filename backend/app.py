@@ -17,7 +17,6 @@ from Utilities.query_classifier import (
     route_to_chatbot,
     es,
     conversation_history,
-    es_exceptions
 )
 from TPP.d import format_output, process_drug_comparison
 from TPP.k import key_insights, process_key_insights

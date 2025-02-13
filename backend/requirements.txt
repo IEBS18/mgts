@@ -1,6 +1,5 @@
 flask
 flask-cors
-llama_index
 nltk
 openpyxl
 pandas
@@ -19,3 +18,5 @@ mplcursors
 transformers
 torch
 dill
+azure-ai-inference
+azure-ai-resources

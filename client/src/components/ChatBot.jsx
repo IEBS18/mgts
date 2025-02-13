@@ -98,7 +98,7 @@ function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggl
               </div>
 
               {/* Chat Messages */}
-              <div className="h-[200px] overflow-y-auto p-4 space-y-4">
+              <div className="h-[250px] overflow-y-auto p-4 space-y-4">
                 {chatMessages.map((message, index) => (
                   <div
                     key={index}
