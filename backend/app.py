@@ -492,9 +492,10 @@ def price_prediction():
         safety = data.get("safety")
         efficacy = data.get("efficacy")
         modality=data.get("modality")
+        subModality=data.get("subModality")
 
         # Fetch competitor data from Elasticsearch
-        competitor_data_raw = fetch_competitor_data(disease, country, modality)
+        competitor_data_raw = fetch_competitor_data(disease, country, modality, subModality)
         competitor_df = parse_data(competitor_data_raw)
 
         # Predict price based on the input and competitor data
