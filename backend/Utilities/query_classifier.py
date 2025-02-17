@@ -18,16 +18,16 @@ es = Elasticsearch(
 )
 
 # from diseasechatbot import generate_openai_completion
-# from Utilities.train_query_classifier import QueryClassifierModel
-from train_query_classifier import QueryClassifierModel
-# from Utilities.utils import(
-#     preprocess,
-#     create_prompt
-# )  
-from utils import(
+from Utilities.train_query_classifier import QueryClassifierModel
+# from train_query_classifier import QueryClassifierModel
+from Utilities.utils import(
     preprocess,
     create_prompt
-)
+)  
+# from utils import(
+#     preprocess,
+#     create_prompt
+# )
 #openai response  
 MODEL = "gpt-4o-mini"
 chatclient = AzureOpenAI(
@@ -36,7 +36,7 @@ chatclient = AzureOpenAI(
     azure_endpoint=os.getenv("AZURE_BASE_URL")
 )
 
-with open(r"chatbot.pkl", "rb") as f:
+with open(r"Utilities\chatbot.pkl", "rb") as f:
     model = QueryClassifierModel()
     state_dict = pickle.load(f)
     model.load_state_dict(state_dict)
