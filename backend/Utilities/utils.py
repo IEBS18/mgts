@@ -99,9 +99,13 @@ def preprocess(text, dn):
         'outcome', 'outcomes', 'effect', 'effects',
     ]
    
+    # Remove unwanted words
     filtered = [word for word in filtered if word not in toremove]
-    filtered.append(dn)
-   
+
+    # If a valid disease name (`dn`) exists, append it
+    if dn and isinstance(dn, str) and dn.strip():
+        filtered.append(dn.lower())
+
     return set(filtered)
  
 
@@ -153,6 +157,10 @@ def create_prompt(search_results, keys):
     if 'clinicalData' in search_results:
         clinical_context = str(createclinicalcontext(search_results['clinicalData']))
         final_prompt += f"## RELEVANT CLINICAL TRIALS INFORMATION:\n\n{clinical_context}\n\n"
+    
+    if 'patentData' in search_results:
+        patent_context = str(createpatentcontext(search_results['patentData']))
+        final_prompt += f"## RELEVANT CLINICAL TRIALS INFORMATION:\n\n{patent_context}\n\n"
 
     final_prompt += (
         "Please use the above data to ANSWER THE USER'S QUERY accurately and factually. "
@@ -327,6 +335,79 @@ def createclinicalcontext(clinical_data):
     # )
     # print(clinical_context_prompt)
     return clinical_context_prompt
+
+def createpatentcontext(patent_data):
+    """
+    Create an OpenAI prompt using PubMed article data.
+
+    Parameters:
+        pubmed_data: A list of PubMed articles retrieved from Elasticsearch.
+
+    Returns:
+        str: A formatted string that explains the PubMed data and attributes for OpenAI.
+    """
+    if not patent_data:
+        return "No PubMed data available for this query."
+
+    patent_context_prompt = (
+    # """"You are a highly knowledgeable assistant specializing in biomedical literature. Below is the context data regarding scientific publications from PubMed. Use this data to answer user queries effectively.\n\n"
+    """Explanation of PubMed Data Attributes:\n
+    -**Abstract**: A summary of the patent, providing a high-level description of the invention, its purpose, and key aspects. It helps readers quickly understand the nature of the invention.
+    -**Application_Date**: The date on which the patent application was officially filed with the patent office. This marks the formal request for patent protection.
+    -**Application_Year**: The year in which the patent application was filed, extracted from the Application_Date. It helps to quickly identify the time frame of the patent filing.
+    -**Assignee_Applicant**: The entity (company, university, or individual) that owns the patent rights or has filed for the patent. This shows the owner or applicant seeking the patent.
+    -**Broad_Industry**: The high-level industry category relevant to the patent, such as pharmaceuticals, biotechnology, or consumer electronics. This helps to classify the patent by its general field.
+    -**CPC_Classification**: A classification code from the Cooperative Patent Classification (CPC) system, which helps categorize patents based on technology fields, aiding in patent searches and organization.
+    -**CPC_Classifications**: A collection of CPC codes assigned to the patent, providing detailed classification in multiple categories, offering a more specific technical categorization of the invention.
+    -**Claim**: The specific legal claims of the patent, which define the scope of protection and novelty of the invention. This is the legally enforceable aspect of the patent.
+    -**Display_Key**: A unique identifier or key used to reference the patent record in the database, helping to quickly locate and retrieve a specific patent.
+    -**Earliest_Priority_Date**: The earliest date claimed by the applicant as the priority filing date, often from a related earlier patent application. This is important for determining the novelty of the invention.
+    -**English_Description**: A detailed description of the invention in English, explaining how it works and how it differs from existing technologies. It provides further insights into the technical aspects of the patent.
+    -**IPC_Classifications**: Codes from the International Patent Classification (IPC) system, which categorize patents based on technological domains, helping to classify and retrieve patents within specific technological sectors.
+    -**Industry**: The specific industry sector related to the patent, such as pharmaceuticals, chemicals, engineering, or technology, to help categorize the patent in a more focused manner.
+    -**Inventor**: The individual(s) credited with creating the invention described in the patent. This field acknowledges the contributors to the patented innovation.
+    -**Jurisdiction**: The country or region where the patent was filed or granted. This is useful for understanding the geographical scope of the patent protection.
+    -**Patent_Legal_Status**: The current legal status of the patent, such as granted, pending, expired, or revoked. It indicates the active status of the patent and its enforceability.
+    -**Publication_Date**: The date when the patent was officially published, making its details publicly available. This is crucial for referencing and understanding the timeliness of the patent.
+    -**Publication_Year**: The year in which the patent was published, extracted from the Publication_Date, which provides a quick reference to the year of publication.
+    -**Technology**: The technological domain or field to which the patent belongs, such as nanotechnology, bioengineering, or artificial intelligence. This helps to categorize the patent by its technical area.
+    -**Title**: The official title of the patent, summarizing the invention. It serves as the first point of reference for identifying the patent."""
+    )
+
+    patent_context_prompt += f"\n\nPATENT ARTICLES:\n\n {patent_data}"
+    # for idx, article in enumerate(pubmed_data, start=1):
+        
+    #     print(article)
+    #     source = article.get('_source', {})
+    #     pmid = source.get('PMID', 'No PMID provided.')
+    #     title = source.get('Title', 'No title available.')
+    #     abstract = source.get('AbstractText', 'No abstract available.')
+    #     authors = source.get('Author Name', 'No authors listed.')
+    #     country = source.get('Country', 'Country not specified.')
+    #     journal_issue = source.get('Journal Issue', 'Journal issue not specified.')
+    #     pub_date = source.get('PubDate', 'Publication date not provided.')
+    #     issn = source.get('ISSN', 'No ISSN provided.')
+    #     issn_type = source.get('ISSN Type', 'ISSN type not specified.')
+    #     article_type = source.get('type', 'Not classified.')
+
+    #     pubmed_context_prompt += (
+    #         f"{idx}. Title: {title}\n"
+    #         f"   - PMID: {pmid}\n"
+    #         f"   - AbstractText: {abstract}\n"
+    #         f"   - Author Name: {authors}\n"
+    #         f"   - Country: {country}\n"
+    #         f"   - Journal Issue: {journal_issue}\n"
+    #         f"   - PubDate: {pub_date}\n"
+    #         f"   - ISSN: {issn} (Type: {issn_type})\n"
+    #         f"   - type: {article_type}\n\n"
+    #     )
+
+    # Final instructions to OpenAI
+    # pubmed_context_prompt += (
+    #     "Please use the above data to answer user queries factually and concisely. Do not hallucinate information or provide responses outside the context of the data provided.\n"
+    # )
+    # print(pubmed_context_prompt)
+    return patent_context_prompt
 
 
 

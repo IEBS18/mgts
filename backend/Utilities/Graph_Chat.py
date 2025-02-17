@@ -261,87 +261,94 @@ def extract_keywords(user_query):
 # USING LANGCHAIN
 def generate_cypher_query(user_query):
     """
-    Uses LangChain’s GraphCypherQAChain to generate a Cypher query.
+    Uses LangChain’s GraphCypherQAChain to generate a Cypher query and extract structured context.
     """
     try:
-        response_query = cypher_chain.invoke(user_query) 
-        # print("response_query:", response_query) # Use invoke instead of run
-        logger.info(f"Raw LangChain Response: {response_query}")
+        response = cypher_chain.invoke(user_query)  # Get structured response as dict
 
-        # Validate response type and structure
-        if isinstance(response_query, dict) and 'query' in response_query:
-            response_query = response_query['query']
-        elif isinstance(response_query, str):
-            response_query = response_query.strip()
-        
-        if not response_query.startswith("MATCH"):
-            logger.error(f"Invalid Cypher Query Generated: {response_query}")
-            return None  # Prevents execution of bad queries
+        # Debugging: Print the full response structure
+        logger.info(f"Raw LangChain Response: {response}")
 
-        logger.info(f"Valid Cypher Query: {response_query}")
-        return response_query
+        if isinstance(response, dict):  
+            cypher_query = response.get("query", "").strip()  # Extract Cypher Query
+            full_context = response.get("full_context", "")  # Extract Full Context
+
+            if not cypher_query.startswith("MATCH"):
+                logger.error(f"Invalid Cypher Query Generated: {cypher_query}")
+                return None, None  # Return None if the query is invalid
+
+            logger.info(f"Extracted Cypher Query: {cypher_query}")
+            logger.info(f"Extracted Full Context: {full_context}")
+
+            return cypher_query, full_context  # Return both
+
+        else:
+            logger.error("Unexpected LangChain response format")
+            return None, None
 
     except Exception as e:
         logger.error(f"Error generating Cypher query with LangChain: {e}")
-        return None
+        return None, None
 
-def query_neo4j(response_query, keywords):
-    """
-    Query Neo4j using the dynamically generated Cypher query.
-    """
-    try:
-        with driver.session() as session:
-            result = session.run(response_query, keyword=keywords[0].lower())
-            data = [
-                {
-                    "node1": record["n"].id,  # Node ID of first node
-                    "node1_properties": record["n"]._properties,  # Properties of first node
-                    "relationship": record["r"].type,  # Relationship type
-                    "node2": record["m"].id,  # Node ID of second node
-                    "node2_properties": record["m"]._properties  # Properties of second node
-                }
-                for record in result
-            ]
-            logger.info(f"Retrieved {len(data)} records from Neo4j.")
-            return data
-    except Exception as e:
-        logger.error(f"Error querying Neo4j: {e}")
-        return []
-    
-## LANGCHAIN BASED FUNCTION--> ithe error ahe 
-# def query_neo4j(cypher_query):
+
+
+# def query_neo4j(response_query, keywords):
 #     """
-#     Executes a Cypher query using Neo4j and ensures it returns structured data.
+#     Query Neo4j using the dynamically generated Cypher query.
 #     """
 #     try:
 #         with driver.session() as session:
-#             logger.info(f"Executing Cypher Query: {cypher_query}")
-
-#             result = session.run(cypher_query)
-#             records = result.data()
-
-#             if not records:
-#                 logger.warning("No records found in Neo4j.")
-#                 return []  # Return empty list instead of None
-
-#             structured_data = []
-#             for record in records:
-#                 n = record.get("n") if "n" in record else None
-#                 r = record.get("r") if "r" in record else None
-#                 m = record.get("m") if "m" in record else None
-
-#                 structured_data.append({
-#                     "node1": dict(n) if isinstance(n, dict) else {"name": "Unknown Node"},
-#                     "relationship": r["type"] if isinstance(r, dict) and "type" in r else "Unknown Relationship",
-#                     "node2": dict(m) if isinstance(m, dict) else {"name": "Unknown Node"}
-#                 })
-
-#             logger.info(f"Retrieved {len(structured_data)} records from Neo4j.")
-#             return structured_data
-
+#             result = session.run(response_query, keyword=keywords[0].lower())
+#             data = [
+#                 {
+#                     "node1": record["n"].id,  # Node ID of first node
+#                     "node1_properties": record["n"]._properties,  # Properties of first node
+#                     "relationship": record["r"].type,  # Relationship type
+#                     "node2": record["m"].id,  # Node ID of second node
+#                     "node2_properties": record["m"]._properties  # Properties of second node
+#                 }
+#                 for record in result
+#             ]
+#             logger.info(f"Retrieved {len(data)} records from Neo4j.")
+#             return data
 #     except Exception as e:
 #         logger.error(f"Error querying Neo4j: {e}")
 #         return []
+    
+## LANGCHAIN BASED FUNCTION--> ithe error ahe 
+def query_neo4j(cypher_query):
+    """
+    Executes a Cypher query using Neo4j and ensures it returns structured data.
+    """
+    try:
+        with driver.session() as session:
+            logger.info(f"Executing Cypher Query: {cypher_query}")
+
+            result = session.run(cypher_query)
+            records = result.data()
+
+            if not records:
+                logger.warning("No records found in Neo4j.")
+                return []  # Return empty list instead of None
+
+            structured_data = []
+            for record in records:
+                n = record.get("n") if "n" in record else None
+                r = record.get("r") if "r" in record else None
+                m = record.get("m") if "m" in record else None
+
+                structured_data.append({
+                    "node1": dict(n) if isinstance(n, dict) else {"name": "Unknown Node"},
+                    "relationship": r["type"] if isinstance(r, dict) and "type" in r else "Unknown Relationship",
+                    "node2": dict(m) if isinstance(m, dict) else {"name": "Unknown Node"}
+                })
+
+            logger.info(f"Retrieved {len(structured_data)} records from Neo4j.")
+            return structured_data
+
+    except Exception as e:
+        logger.error(f"Error querying Neo4j: {e}")
+        return []
 
 
 def get_elasticsearch_results(index, query, fields, operator="OR"):
@@ -417,72 +424,63 @@ def format_data_for_llm(data):
     logger.info(f"Formatted Data for LLM:\n{formatted_output}")
     return formatted_output
 
-def generate_response(user_query, data):
-    """
-    Generates an AI-enhanced response based on retrieved Neo4j or Elasticsearch data.
-    """
-    if not data:
-        return "No relevant information was found in the database for your query."
 
-    # formatted_data = format_data_for_llm(data)
-    response_query = cypher_chain.invoke(user_query)
-    prompt = f"""
-    User Query: {user_query}
+#benchod ithe pn hyana vegla vegla prompt pahije 
+#mala kay kam nhiye kay
+#baghel teva prompt prompt 
+#ek prompt neo4j la 
+#ek prompt elastic la 
+##bhai bas zalay openai la call karaycha sodun kahi karta yeil ki nhi hech nhiye mahiti
 
-    Retrieved Data:
-    {response_query}
-
-    Generate a precise and structured response based strictly on this data.
-    """
-
-    response = chatclient.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are a medical knowledge assistant providing structured responses."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=500,
-        temperature=0.9
-    )
-
-    return response.choices[0].message.content.strip()
+#KNOWLEDGE GRAPH RINGA RINGA ROSES 
+#kiti te khot bolaycha bas ki bas nusta tepa maraychya. 
+def generate_response(user_query, context, source):
+    if not context:
+        return "No relevant information found."
+    
+    if source == "neo4j":
+        prompt = f"User Query: {user_query}\n\nRetrieved structured data from Neo4j:\n{context}\n\nGenerate a precise and structured response based on this structured data."
+    else:
+        prompt = f"User Query: {user_query}\n\nRetrieved data from Elasticsearch:\n{context}\n\nProvide an insightful response based on this unstructured search data."
+    
+    try:
+        response = chatclient.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "system", "content": "Provide structured responses based on query data."},
+                      {"role": "user", "content": prompt}],
+            max_tokens=800,
+            temperature=0.5
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error(f"Error generating response: {e}")
+        return "An error occurred while generating the response."
 
 
 def route_to_chatbot(user_query):
     """
-    Routes user queries to the appropriate retrieval method (Neo4j or Elasticsearch).
+    Routes user queries to Neo4j or Elasticsearch.
     """
     predicted_labels = predict_query(user_query, model, tokenizer)
     keywords = extract_keywords(user_query)
 
-    # Step 1: Use LangChain to generate and execute a Cypher query in Neo4j
-    cypher_query = generate_cypher_query(user_query)
+    # Step 1: Generate and execute Cypher query in Neo4j
+    cypher_query, full_context = generate_cypher_query(user_query)
 
     if cypher_query:
         neo4j_results = query_neo4j(cypher_query)
         if neo4j_results:
-            return generate_response(user_query, neo4j_results)
+            return generate_response(user_query, full_context)  # Send Full Context to OpenAI
 
     # Step 2: If no Neo4j results, fallback to Elasticsearch
     logger.warning("No relevant data found in Neo4j. Querying Elasticsearch instead.")
+#chumtiye thingssss
+    index = "pubmed" if "PubMed" in predicted_labels else "clinicaltrial"
+    fields = ["Title", "AbstractText", "PMID"] if index == "pubmed" else ["Study Title", "Conditions"]
 
-    # Step 2: If no Neo4j results, fallback to Elasticsearch
-    if "PubMed" in predicted_labels:
-        search_results = get_elasticsearch_results(
-            index="pubmed",
-            query=user_query,
-            fields=["Title", "AbstractText", "PMID"]
-        )
-    else:
-        search_results = get_elasticsearch_results(
-            index="clinicaltrial",
-            query=user_query,
-            fields=["Study Title", "Conditions"]
-        )
+    search_results = get_elasticsearch_results(index=index, query=user_query, fields=fields)
 
     return generate_response(user_query, search_results)
-
-
 
 def main():
     user_query = "Treatment for Depression"

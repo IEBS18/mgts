@@ -1,24 +1,26 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
-from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import AutoTokenizer, BertForSequenceClassification, AdamW
 import pickle
 from sklearn.preprocessing import MultiLabelBinarizer
- 
+import numpy as np
+
+# Define Dataset Class
 class QueryDataset(Dataset):
     def __init__(self, queries, labels, tokenizer, max_len=64):
         self.queries = queries
         self.labels = labels
         self.tokenizer = tokenizer
         self.max_len = max_len
- 
+
     def __len__(self):
         return len(self.queries)
- 
+
     def __getitem__(self, index):
         query = self.queries[index]
         label = self.labels[index]
- 
+
         encoding = self.tokenizer.encode_plus(
             query,
             add_special_tokens=True,
@@ -27,19 +29,20 @@ class QueryDataset(Dataset):
             truncation=True,
             return_tensors="pt"
         )
- 
+
         return {
             'input_ids': encoding['input_ids'].squeeze(),
             'attention_mask': encoding['attention_mask'].squeeze(),
             'labels': torch.tensor(label, dtype=torch.float32)
         }
- 
+
+# Define Model Class
 class QueryClassifierModel(nn.Module):
     def __init__(self, num_labels=3):
         super(QueryClassifierModel, self).__init__()
         self.num_labels = num_labels
-        self.bert = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=self.num_labels)
-   
+        self.bert = BertForSequenceClassification.from_pretrained('dmis-lab/biobert-v1.1', num_labels=self.num_labels)
+
     def forward(self, input_ids, attention_mask):
         outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
         return outputs.logits
@@ -49,7 +52,20 @@ data = [
 ("Give me the PubMed articles for the drug and clinical trial information for the disease.", [0, 1]),
 ("Tell me the PubMed details for the drug and the drug-disease association.", [0, 2]),
 ("Tell me the relationship between the drug and disease.", [2]),
+("What is the novel aspect of this patent compared to existing technologies or formulations?", [2]),  
+("Does the claim structure cover multiple variations of the drug/formulation/process, or is it narrowly focused?", [2]),  
+("Are there any prior art references that could limit the enforceability or novelty of this patent?", [2]),  
+("What are the active pharmaceutical ingredients (APIs) or key biologic components covered in this patent?", [2]),  
+("Are there any new excipients or adjuvants included, and what role do they play in drug performance?", [2]),  
+("Are there any chemical or biological process optimizations mentioned to improve yield, purity, or cost-effectiveness?", [2]),  
+("What are the key safety or environmental considerations in the synthesis method?", [2]),  
+("How does this patented innovation compare to competitor patents and marketed products?", [2]),  
+("Are there any freedom-to-operate (FTO) concerns that could restrict commercialization?", [2]),  
 ("Give me the PubMed details for the drug and correlation with the disease.", [0, 2]),
+("Are there Supplementary Protection Certificates (SPCs) or Patent Term Extensions (PTEs) that extend exclusivity?", [2]),  
+("Are the key excipients, coatings, or stabilizers covered under separate patents?", [2]),  
+("Does the patent protect a specific polymorphic form of the drug, restricting generic formulations?", [2]),  
+("Can an alternative manufacturing route be used to avoid patent infringement?", [2]), 
 ("What are the clinical trials for the disease and the relationship with the drug?", [1, 2]),
 ("Give me the clinical trials for the disease and the drug-disease correlation.", [1, 2]),
 ("Tell me the clinical trials for the disease and its association with the drug.", [1, 2]),
@@ -64,6 +80,12 @@ data = [
 ("What is the connection between MS and vitamin D levels, and how does this affect treatment outcomes?", [0, 2]),
 ("How does the market for oral MS therapies compare with injectable treatments in terms of patient preference?", [1, 2]),
 ("What is the effect of socioeconomic status on MS treatment choices and clinical trial outcomes?", [1, 0]),
+("Is the patent owned by a university, startup, or major pharmaceutical company, and is it available for licensing?", [2]),  
+("Are there any associated patent families or divisional applications covering different aspects of the technology?", [2]),  
+("Has the patent been filed in key jurisdictions (US, EU, China, Japan, India, etc.) for global market protection?", [2]),  
+("What is the current legal status of the patent (granted, pending, expired) in key markets?", [2]),  
+("What is the expected patent exclusivity by country and expiration year (including SPCs, PTEs, or extensions)?", [2]),  
+("Are there Supplementary Protection Certificates (SPCs) or Patent Term Extensions (PTEs) that extend exclusivity?", [2]),  
 ("What are the latest clinical trials on MS and how do they evaluate the efficacy of new drugs?", [1]),
 ("How do recent PubMed studies on MS help inform current clinical trial designs?", [0, 1]),
 ("What impact do lifestyle interventions (e.g., diet, exercise) have on MS disease progression?", [2]),
@@ -71,6 +93,9 @@ data = [
 ("How does the frequency of MS relapse impact the choice of therapeutic strategies?", [1, 2]),
 ("What role do inflammatory markers play in predicting the effectiveness of MS treatments?", [0, 2]),
 ("Can MS patients with progressive forms benefit from clinical trials on new biologic therapies?", [1, 2]),
+("Does the patent specify a particular method of administration (oral, IV, subcutaneous, etc.)?", [2]),  
+("Are there specific pH or solubility-enhancing modifications claimed in the formulation?", [2]),  
+("How does the claimed composition affect drug bioavailability?", [2]),  
 ("What are the long-term effects of MS drugs on fertility, and how are they addressed in clinical trials?", [1, 2]),
 ("How do clinical trials evaluate the potential of stem cell therapy in MS treatment?", [1]),
 ("What are the top PubMed studies on the efficacy of interferon beta for treating MS?", [0]),
@@ -82,6 +107,12 @@ data = [
 ("What are the major clinical trials investigating MS drug efficacy in pediatric patients?", [1]),
 ("How does MS treatment adherence vary by country, and how is this linked to disease outcomes?", [1, 2]),
 ("What are the key PubMed studies on MS relapse prevention strategies?", [0]),
+("Does the Orange Book (US FDA) or European Medicines Agency (EMA) database list this patent?", [2]),  
+("Has the patent owner obtained orphan drug exclusivity or other regulatory protections?", [2]),  
+("Does this patent cover a novel drug delivery system (e.g., nanoparticle, liposome, micelle)?", [2]),  
+("Are there any claims related to controlled or extended-release formulations?", [2]),  
+("Does the patent describe a prodrug or metabolite variation of an existing molecule?", [2]),  
+("Are there any process patents that could limit manufacturing alternatives?", [2]),  
 ("What is the relationship between MS and comorbid conditions like depression, and how does it affect treatment?", [2, 0]),
 ("How do different forms of MS influence treatment decisions and the selection of clinical trial participants?", [2]),
 ("What role do biomarkers play in predicting the efficacy of MS therapies?", [0, 1, 2]),
@@ -93,22 +124,22 @@ data = [
 ("What is the relationship between MS disease progression and the need for combination therapy?", [2]),
 ("How are MS drugs monitored for safety post-market, and what role does pharmacovigilance play?", [2]),
 ("How do clinical trials influence MS treatment guidelines?", [1]),
-("What is the impact of socioeconomic disparities on the access to MS treatments?", [1, 2]),
-("How do new MS therapies compare to older therapies in terms of long-term safety?", [1, 2]),
+("What is the impact of socioeconomic disparities on the access to MS treatments?", [1,0]),
+("How do new MS therapies compare to older therapies in terms of long-term safety?", [1]),
 ("What are the challenges in diagnosing MS in women, and how does this affect treatment strategies?", [0]),
-("How do MS treatments affect quality of life, and what do recent studies say?", [1, 2]),
+("How do MS treatments affect quality of life, and what do recent studies say?", [1,0]),
 ("What role does insurance coverage play in the adoption of new MS treatments?", [2]),
 ("What are the potential implications of MS drug patents expiring for the treatment market?", [2]),
 ("How do clinical trials account for comorbidities in MS patients?", [1]),
 ("What is the connection between smoking and MS progression, and how does this impact treatment choices?", [2]),
 ("How does the prevalence of MS vary between different ethnic groups, and what does this imply for treatment?", [0, 2]),
 ("What clinical trials are exploring combination therapies for MS?", [1]),
-("How does the availability of new MS therapies impact the long-term prognosis for patients?", [1, 2]),
+("How does the availability of new MS therapies impact the long-term prognosis for patients?", [1]),
 ("How do public health policies impact the availability of MS treatments?", [1]),
-("What are the factors influencing drug discontinuation in MS treatment?", [2]),
+("What are the factors influencing drug discontinuation in MS treatment?", [0]),
 ("How do patient perceptions of MS therapies impact treatment adherence?", [1]),
 ("What is the role of clinical trials in establishing the effectiveness of newer MS therapies?", [1]),
-("How do MS treatments affect the mental health of patients?", [1, 2]),
+("How do MS treatments affect the mental health of patients?", [1]),
 ("What are the key findings from clinical trials about the long-term effects of MS therapies?", [1]),
 ("How does early intervention impact the effectiveness of MS treatments?", [2]),
 ("How does the type of MS (relapsing vs. progressive) influence the drug-disease relationship?", [1, 2]),
@@ -177,6 +208,18 @@ data = [
 ("What is the age distribution of Multiple Sclerosis patients, and how does this influence the demand for various treatment options?", [2]),
 ("How does early diagnosis and improved diagnostic techniques affect the reported prevalence of MS in recent years?", [0, 2]),
 ("How does the prevalence of MS in rural vs. urban areas differ, and what impact does this have on healthcare access and treatment patterns?", [2, 1]),
+("Are there novel emulsifiers or stabilizers covered in the formulation?", [2]),  
+("Does the patent involve a novel 3D printing or microencapsulation technique?", [2]),  
+("Has this patent undergone an expedited review process?", [2]),  
+("Are there cross-licensing agreements affecting this patent’s commercialization?", [2]),  
+("Does the patent define an optimal dosage range for clinical use?", [2]),  
+("Are there new adjuvants included that enhance vaccine efficacy?", [2]),  
+("Has this patent been used as prior art to reject subsequent filings?", [2]),  
+("Are there specific claim limitations that restrict its applicability to new indications?", [2]),  
+("Does this patent protect a specific method of drug conjugation?", [2]),  
+("Are there claims that could trigger a Paragraph IV challenge from generic firms?", [2]),  
+("Has this patent been linked to any market exclusivity extensions?", [2]),  
+("Does the patent provide additional protection beyond regulatory exclusivities?", [2]),  
 ("Are there significant racial or ethnic differences in the prevalence of MS, and how should treatment strategies differ in these populations?", [1, 2, 0]),
 ("How do lifestyle factors (e.g., smoking, vitamin D deficiency) contribute to the incidence and prevalence of MS in different regions?", [0, 2]),
 ("What are the long-term safety concerns associated with the use of DMTs (disease-modifying therapies) for MS, and how do these concerns affect patient adherence?", [1, 2]),
@@ -191,6 +234,9 @@ data = [
 ("How do media, advocacy organizations, and patient education affect the public's awareness and preference for specific MS treatments?", [0]),
 ("How does disease progression (e.g., from relapsing-remitting to secondary progressive MS) influence treatment decisions and forecasting models?", [1, 0]),
 ("How do new therapies targeting progressive MS impact long-term treatment strategies, and what forecasting challenges do they present?", [1]),
+("Are there legal disclaimers affecting claim breadth?", [2]),  
+("Has this patent been fast-tracked for approval due to unmet medical need?", [2]),  
+("Are there potential licensing opportunities due to underutilized claims?", [2]),  
 ("How does the effectiveness of first-line MS therapies influence the switch to second-line treatments, and what is the impact on drug adoption trends?", [1]),
 ("What is the role of combination therapies (e.g., combining DMTs with symptom management drugs) in treating MS, and how does this affect treatment outcomes and market growth?", [1]),
 ("How does the availability of new biomarkers for MS impact the prediction of disease progression and the identification of patients who might benefit from specific treatments?", [0, 1, 2]),
@@ -199,6 +245,9 @@ data = [
 ("What is the impact of changes in treatment guidelines (e.g., the introduction of new MS treatment classes) on physician prescribing patterns?", [1]),
 ("How does competition between drug manufacturers (e.g., between oral therapies and injectables) affect market dynamics and treatment adoption?", [2]),
 ("How do global events (e.g., COVID-19 pandemic, economic recessions) impact the accessibility and demand for MS treatments?", [0, 1]),
+("Are there major litigation cases where this patent was a key argument?", [2]),  
+("Does the patent claim a proprietary cell line for biologic production?", [2]),  
+("Has this patent been referenced in patent thickets for competitive blocking?", [2]),
 ("How do patient preferences for treatment convenience (e.g., oral vs. injectable therapies) influence the demand for specific MS medications?", [0, 2]),
 ("What role does patient-reported quality of life (e.g., fatigue, mobility issues) play in determining the choice of MS treatments?", [1, 2]),
 ("How do factors like treatment costs, insurance coverage, and patient access to therapy affect adherence and patient outcomes in MS treatment?", [2]),
@@ -228,6 +277,9 @@ data = [
 ("Tell me the clinical trials for the disease.", [1]),
 ("Give me the PubMed articles for the drug and relationship with the disease.", [0, 2]),
 ("Show me the PubMed results for the drug.", [0]),
+("Does the patent include a novel route of synthesis that reduces impurities?", [2]),  
+("Are there regulatory concerns that could limit enforcement of this patent?", [2]),  
+("Does this patent describe a novel antibody-drug conjugate (ADC) technology?", [2]), 
 ("Give me the clinical trials for the disease and PubMed details for the drug.", [0, 1]),
 ("Tell me the PubMed details for the drug and correlation with the disease.", [0, 2]),
 ("Give me the PubMed articles for the drug.", [0]),
@@ -246,6 +298,10 @@ data = [
 ("Give me the clinical trials for the disease and PubMed details for the drug.", [0, 1]),
 ("Tell me the clinical trials for the disease and its association with the drug.", [1, 2]),
 ("Give me the clinical trials for the disease.", [1]),
+("Is this patent referenced in international drug approval filings?", [2]),  
+("Does this patent claim a novel use for an existing compound?", [2]),  
+("Are there claims related to personalized medicine approaches?", [2]),  
+("What specific diseases or conditions does this patent claim to treat?", [2]),  
 ("Give me the clinical trials for the disease and the drug-disease correlation.", [1, 2]),
 ("Give me the clinical trials for the disease.", [1]),
 ("Give me the clinical trials for the disease and the drug-disease correlation.", [1, 2]),
@@ -255,47 +311,60 @@ data = [
 ("Give me the clinical trials for the disease.", [1]),
 ("Give me the clinical trials for the disease and PubMed articles for the drug.", [0, 1]),
 ]
- 
+
+# Preprocess Labels
 queries = [item[0] for item in data]
 labels = [item[1] for item in data]
- 
 mlb = MultiLabelBinarizer()
 labels_bin = mlb.fit_transform(labels)
- 
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+# Debugging: Print shape of labels_bin
+print(f"Labels Shape: {labels_bin.shape}")
+
+# Handle case where there's only one class present
+if labels_bin.ndim == 1:
+    labels_bin = labels_bin.reshape(-1, 1)
+
+# Set num_labels dynamically
+num_labels = labels_bin.shape[1] if labels_bin.ndim > 1 else 1
+print(f"Number of Labels: {num_labels}")
+
+# Load BioBERT Tokenizer
+tokenizer = AutoTokenizer.from_pretrained('dmis-lab/biobert-v1.1')
+
+# Prepare DataLoader
 dataset = QueryDataset(queries, labels_bin, tokenizer)
 dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
- 
-num_labels = labels_bin.shape[1]
+
+# Initialize Model
 model = QueryClassifierModel(num_labels)
-optimizer = torch.optim.AdamW(model.parameters(), lr=2e-5)
+optimizer = AdamW(model.parameters(), lr=2e-5)
 loss_fn = nn.BCEWithLogitsLoss()
- 
-epochs = 20
- 
+
+# Train Model
+epochs = 15
+
 if __name__=="__main__":
- 
     for epoch in range(epochs):
         model.train()
         for batch in dataloader:
             optimizer.zero_grad()
- 
             input_ids = batch['input_ids']
             attention_mask = batch['attention_mask']
             labels = batch['labels']
- 
+
             outputs = model(input_ids, attention_mask)
             loss = loss_fn(outputs, labels)
             loss.backward()
             optimizer.step()
- 
+
         print(f"Epoch {epoch + 1}/{epochs} - Loss: {loss.item()}")
- 
-    with open(r'query_router.pkl', 'wb') as f:
-        state = model.state_dict()
-        pickle.dump(state, f)
- 
-    # with open('tokenizer.pkl', 'wb') as f:
-    #     state = tokenizer.
-    #     pickle.dump(tokenizer, f)
- 
+    
+        with open(r'chatbot.pkl', 'wb') as f:
+            state = model.state_dict()
+            pickle.dump(state, f)
+    
+        # with open('tokenizer.pkl', 'wb') as f:
+        #     state = tokenizer.
+        #     pickle.dump(tokenizer, f)
+    
