@@ -444,25 +444,25 @@ export function PlanList({
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <Button
                 onClick={() => onSelectAllPlans()}
-                className="bg-green-600 text-white hover:bg-green-700 rounded-[12px] px-3 py-1 text-sm"
+                className="bg-[#CDCDCD] text-white hover:bg-green-700 rounded-[12px] px-3 py-1 text-sm"
               >
                 Select All Plans
               </Button>
               <Button
                 onClick={() => onSelectCurrentPagePlans(paginatedPlans)}
-                className="bg-blue-600 text-white hover:bg-blue-700 rounded-[12px] px-3 py-1 text-sm"
+                className="bg-[#CDCDCD] text-white hover:bg-blue-700 rounded-[12px] px-3 py-1 text-sm"
               >
                 Select Current Page
               </Button>
               <Button
                 onClick={() => onDeselectAllPlans()}
-                className="bg-red-600 text-white hover:bg-red-700 rounded-[12px] px-3 py-1 text-sm"
+                className="bg-[#CDCDCD] text-white hover:bg-red-700 rounded-[12px] px-3 py-1 text-sm"
               >
                 Deselect All Plans
               </Button>
               <Button
                 onClick={() => onDeselectCurrentPagePlans(paginatedPlans)}
-                className="bg-gray-600 text-white hover:bg-gray-700 rounded-[12px] px-3 py-1 text-sm"
+                className="bg-[#CDCDCD] text-white hover:bg-gray-700 rounded-[12px] px-3 py-1 text-sm"
               >
                 Deselect Current Page
               </Button>

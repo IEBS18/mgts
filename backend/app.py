@@ -1,5 +1,5 @@
 from pathlib import Path
-from flask import Flask, request, jsonify, send_file, make_response
+from flask import Flask, request, jsonify, send_file, make_response, Response
 import pandas as pd
 from io import BytesIO
 from flask_cors import CORS
@@ -1541,106 +1541,44 @@ def predict_tier_and_requirement_route():
         app.logger.exception("Unexpected error during prediction.")
         return jsonify({"status": "error", "message": str(e)}), 500
     
-   
-   
-   
-   
-   
-  
-  ########## RND FORMUALTION #####################
-
-
-# Define the fields to search within each index
-index_fields = {
-    "test": ["Title", "Full Paper"],
-    "granted_updated_final": ["Title", "Abstract", "Claim"],
-    "pregranted": ["Title", "Claim", "Abstract"]
-}
-
-# Define post-processing fields to return from each index
-post_processing_fields = {
-    "granted_updated_final": [
-        "Display_Key", "Title", "Abstract", "Claim", "Publication_Date",
-        "Assignee_Applicant", "Inventor", "IPC_Classifications", "CPC_Classifications"
-    ],
-    "pregranted": [
-        "Display_Key", "Title", "Abstract", "Claim", "Publication_Date",
-        "Assignee_Applicant", "Inventor", "IPC_Classifications", "CPC_Classifications"
-    ],
-    "test": ["PMC_ID", "Title", "Abstract", "Full Paper"]
-}
-
-def search_index(index_name, user_query, fields, size=10):
-    """
-    Searches a given Elasticsearch index using a multi-match query with fuzziness.
-    """
-    query_body = {
-        "query": {
-            "multi_match": {
-                "query": user_query,
-                "fields": fields,
-                "fuzziness": "AUTO"
-            }
-        },
-        "size": size
-    }
-    response = es.search(index=index_name, body=query_body)
-    hits = response.get("hits", {}).get("hits", [])
-    return [
-        {"index": index_name, "score": hit["_score"], "source": hit["_source"]}
-        for hit in hits
-    ]
-
-def fuzzy_search(user_query, size=10):
-    """
-    Performs the fuzzy search across all specified indexes and returns merged raw results.
-    """
-    all_results = []
-    for index_name, fields in index_fields.items():
-        results = search_index(index_name, user_query, fields, size)
-        all_results.extend(results)
-    return all_results
-
-def process_results(all_results):
-    """
-    Processes the raw search results by filtering out only the desired fields for each index.
-    """
-    processed_results = []
-    for result in all_results:
-        index_name = result["index"]
-        source_data = result["source"]
-        if index_name in post_processing_fields:
-            # Keep only the post-processing fields defined for this index
-            filtered_data = {key: source_data.get(key) for key in post_processing_fields[index_name]}
-        else:
-            filtered_data = source_data
-        processed_results.append(filtered_data)
-    return processed_results
-
-@app.route('/api/rnd-formulation', methods=['POST'])
-def rnd_formulation():
-    """
-    Expects a JSON payload like:
-      { "user_query": "lamivudine", "size": 10 }
-    
-    It returns a JSON response with the processed search results.
-    """
-    data = request.get_json()
-    if not data or 'user_query' not in data:
-        return jsonify({"error": "Missing 'user_query' in request body"}), 400
-
-    user_query = data['user_query']
-    # Allow a size parameter for limiting results (default to 10 if not provided)
-    size = int(data.get("size", 10))
-
-    # Perform fuzzy search across the defined indexes
-    raw_results = fuzzy_search(user_query, size=size)
-    processed_results = process_results(raw_results)
-    
-    # Return the processed results as JSON
-    return jsonify({"results": processed_results}), 200  
     
     
+from RnD.rnd import fetch_raw_results, stream_llm_results, processed_data_cache
+# ------------------------------
+# API Routes
+# ------------------------------
+
+@app.route('/api/rnd-formulation-llama', methods=['GET'])
+def rnd_formulation_llama():
+    """
+    SSE endpoint that streams LLaMA results for R&D Formulations.
+    """
+    user_query = request.args.get('user_query')
+    size = request.args.get('size', default=2, type=int)
+
+    if not user_query:
+        return jsonify({"error": "Missing 'user_query'"}), 400
+
+    # 1) Fetch Elasticsearch results
+    raw_results = fetch_raw_results(user_query, size=size)
+
+    # 2) Stream results as SSE
+    return Response(
+        stream_llm_results(raw_results),
+        content_type="text/event-stream",
+        status=200
+    )
+
+@app.route('/api/rnd-formulation-llama-results', methods=['GET'])
+def get_processed_results():
+    """Endpoint to fetch processed LLaMA-3.3 results."""
+    user_query = request.args.get("user_query")
+    if not user_query or user_query not in processed_data_cache:
+        return jsonify({"error": "Results not ready yet"}), 404
+
+    return jsonify({"results": processed_data_cache[user_query]}), 200
+    
+
 @app.route('/rnd-excel-export', methods=['POST'])
 def rnd_excel_export():
     """
@@ -1713,6 +1651,5 @@ def rnd_excel_export():
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )    
 
- 
 if __name__ == '__main__':
     app.run(debug=True)

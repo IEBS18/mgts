@@ -13,42 +13,14 @@ import RnD from "../../assets/dashboard/research-and-development.png";
 
 export default function RNDFormulationModal({ isOpen, onOpenChange }) {
   const [ingredientName, setIngredientName] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
 
-  const handleSearchSubmit = async () => {
-    setIsSearching(true);
-    try {
-      // Replace with your backend route
-      const endpoint = `${import.meta.env.VITE_API_URL}/api/rnd-formulation`;
-
-      // IMPORTANT: The backend expects the search term under the key "user_query".
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // Updated payload key from "ingredientName" to "user_query"
-        body: JSON.stringify({ user_query: ingredientName }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log("Search Results:", data);
-
-      // Navigate to a results page (update the route as needed)
-      navigate("/rnd-formulation", {
-        state: { searchResults: data, ingredientName },
-      });
-    } catch (error) {
-      console.error("Error submitting search:", error);
-    } finally {
-      setIsSearching(false);
-    }
+  const handleSearchSubmit = () => {
+    if (!ingredientName.trim()) return;
+    // Immediately redirect to the RNDFormulation page with the user query
+    navigate("/rnd-formulation", {
+      state: { userQuery: ingredientName },
+    });
   };
 
   return (
@@ -84,7 +56,6 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
           </div>
         </DialogHeader>
 
-        {/* Body content without Tabs */}
         <div className="bg-white p-4 rounded-[20px] mt-4">
           <div className="space-y-2">
             <Label htmlFor="ingredient-name" className="text-gray-700">
@@ -103,10 +74,9 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
           <div className="flex justify-center">
             <Button
               onClick={handleSearchSubmit}
-              disabled={isSearching}
               className="w-[120px] bg-[#54681D] text-white hover:bg-[#95b833] rounded-[60px] mt-4"
             >
-              {isSearching ? "Loading..." : "Submit"}
+              Submit
             </Button>
           </div>
         </div>
