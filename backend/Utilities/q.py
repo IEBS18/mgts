@@ -40,7 +40,7 @@ def load_model():
         print("Loading Model and Tokenizer...")
         model = QueryClassifierModel()
         tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        with open(r"Utilities/query_router.pkl", "rb") as f:
+        with open(r"Utilities/chatbot.pkl", "rb") as f:
             state_dict = pickle.load(f)
             model.load_state_dict(state_dict)
         model.eval()

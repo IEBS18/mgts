@@ -33,5 +33,5 @@ backend/PricePrediction/__pycache__/*
 backend/Calculations/__pycache__/*
 backend/users.json
 */nltk_data
-backend/Utilities/query_router.pkl
+backend/Utilities/chatbot.pkl
 ensure.txt

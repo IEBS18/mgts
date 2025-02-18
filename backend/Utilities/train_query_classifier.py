@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
-from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import AutoTokenizer, BertForSequenceClassification, AdamW
 import pickle
 from sklearn.preprocessing import MultiLabelBinarizer
  
@@ -38,7 +38,7 @@ class QueryClassifierModel(nn.Module):
     def __init__(self, num_labels=3):
         super(QueryClassifierModel, self).__init__()
         self.num_labels = num_labels
-        self.bert = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=self.num_labels)
+        self.bert = BertForSequenceClassification.from_pretrained('dmis-lab/biobert-v1.1', num_labels=self.num_labels)
    
     def forward(self, input_ids, attention_mask):
         outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
@@ -262,13 +262,13 @@ labels = [item[1] for item in data]
 mlb = MultiLabelBinarizer()
 labels_bin = mlb.fit_transform(labels)
  
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+tokenizer = AutoTokenizer.from_pretrained('dmis-lab/biobert-v1.1')
 dataset = QueryDataset(queries, labels_bin, tokenizer)
 dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
  
 num_labels = labels_bin.shape[1]
 model = QueryClassifierModel(num_labels)
-optimizer = torch.optim.AdamW(model.parameters(), lr=2e-5)
+optimizer = AdamW(model.parameters(), lr=2e-5)
 loss_fn = nn.BCEWithLogitsLoss()
  
 epochs = 20
@@ -291,7 +291,7 @@ if __name__=="__main__":
  
         print(f"Epoch {epoch + 1}/{epochs} - Loss: {loss.item()}")
  
-    with open(r'query_router.pkl', 'wb') as f:
+    with open(r'chatbot.pkl', 'wb') as f:
         state = model.state_dict()
         pickle.dump(state, f)
  
