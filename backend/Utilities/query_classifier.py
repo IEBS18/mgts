@@ -3,7 +3,7 @@ import torch
 import pickle
 from elasticsearch import Elasticsearch
 from openai import AzureOpenAI
-from transformers import BertTokenizer
+from transformers import AutoTokenizer
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -20,6 +20,11 @@ from Utilities.utils import(
     preprocess,
     create_prompt
 )  
+# from train_query_classifier import QueryClassifierModel
+# from utils import(
+#     preprocess,
+#     create_prompt
+# )  
 MODEL = "gpt-4o-mini"
 
 openai_client = AzureOpenAI(
@@ -28,7 +33,7 @@ openai_client = AzureOpenAI(
     azure_endpoint=os.getenv("AZURE_BASE_URL")
 )
 
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+tokenizer = AutoTokenizer.from_pretrained('dmis-lab/biobert-v1.1') 
 
 # Lazy loading for the model
 _model = None
@@ -36,7 +41,8 @@ _model = None
 def get_model():
     global _model
     if _model is None:
-        with open(r"Utilities/query_router.pkl", "rb") as f:
+        with open(r"Utilities/chatbot.pkl", "rb") as f:
+        # with open(r"chatbot.pkl", "rb") as f:
             _model = QueryClassifierModel()
             state_dict = pickle.load(f)
             _model.load_state_dict(state_dict)
@@ -109,7 +115,7 @@ def predict_query(query, model=None, tokenizer=tokenizer, max_len=64, threshold=
     
     return predicted_indices
 
-label_map = {0: "PubMed", 1: "Clinical Trials", 2: "Drug-Disease Association"}  
+label_map = {0: "PubMed", 1: "Clinical Trials", 2: "Patent"}  
 
 def generate_openai_completion(question):
     if not isinstance(question, str):
@@ -128,32 +134,65 @@ def generate_openai_completion(question):
     return assistant_response
 
 def route_to_chatbot(user_query, search_results, conversation_history):
-    predicted_labels = predict_query(user_query)
+    model = get_model()
+    predicted_labels = predict_query(user_query, model, tokenizer, label_map=label_map)
     print("Predicted Labels:", predicted_labels)
-    
-    diseasename = search_results['diseaseData'][0]['Disease']
+
+    # Safe check for diseaseData
+    diseasename = None
+    if 'diseaseData' in search_results and search_results['diseaseData']:
+        diseasename = search_results['diseaseData'][0].get('Disease', None)
 
     for label in predicted_labels:
         if label == 'PubMed':
-            pubmed_query = preprocess(user_query, diseasename)
-            pubmedresults = get_elasticsearch_results(
-                index="pubmed",
+            pubmed_query = preprocess(user_query, diseasename if diseasename else "")
+            raw_pubmed_results = get_elasticsearch_results(
+                index="test",
                 query=pubmed_query,
-                fields=["Title", "AbstractText", "PMID"],
+                fields=["PMC_ID", "Title", "Full Paper"],
                 operator="OR"
             )
-            search_results['pubmedData'] = pubmedresults
+            filtered_pubmed_results = []
+            required_fields = [
+        "PMC_ID", "Title", "Full Paper","Active Pharmaceutical Ingredient (API)", "Biomarkers","Disease"
+    ]
+            for pubmed in raw_pubmed_results:
+                filtered_pubmed_results.append({key: pubmed.get(key, "N/A") for key in required_fields})
+        # Store only the relevant patent data
+            search_results['pubmedData'] = filtered_pubmed_results
 
         elif label == 'Clinical Trials':
-            clinical_query = preprocess(user_query, diseasename)
+            clinical_query = preprocess(user_query, diseasename if diseasename else "")
             clinicalresults = get_elasticsearch_results(
                 index="clinicaltrial",
                 query=clinical_query,
-                fields=["Study Title", "Study Description", "NCT Number", "Study Status", "Conditions",
-                        "Interventions", "Sponsor", "Collaborators", "Study Design", "Phases"],
+                fields=["Study Title", "Study Description", "Conditions"],
                 operator="OR"
             )
             search_results['clinicalData'] = clinicalresults
+
+        elif label == 'Patent':
+            patent_query = preprocess(user_query, diseasename if diseasename else "")
+            print(patent_query)
+            raw_patent_results = get_elasticsearch_results(
+                index="pg_pharma, granted_updated_final",
+                query=patent_query,
+                fields=["Abstract", "Claim", "Title"],
+                operator="OR"
+            )
+            filtered_patent_results = []
+            required_fields = [
+                "Abstract", "Application_Date", "Application_Year", "Assignee_Applicant",
+                "Broad_Industry", "CPC_Classification", "CPC_Classifications", "Claim",
+                "Display_Key", "Earliest_Priority_Date", "IPC_Classifications", "Industry",
+                "Inventor", "Jurisdiction", "Patent_Legal_Status", "Publication_Date",
+                "Publication_Year", "Technology", "Title"
+            ]
+
+            for patent in raw_patent_results:
+                filtered_patent_results.append({key: patent.get(key, "N/A") for key in required_fields})
+            # Store only the relevant patent data
+            search_results['patentData'] = filtered_patent_results
 
     response = process_question(search_results, user_query, conversation_history)
     return response
@@ -166,7 +205,7 @@ def process_question(results, question, conversation_history):
     return answer
 
 if __name__ == "__main__":
-    user_query = "Pubmed for Malaria"
+    user_query = "pubmed related Biomarkers for Malaria"
     search_results = {'diseaseData': [{'Disease': 'Malaria'}], 'drugData': [{}, {}, {}]}
     final_response = route_to_chatbot(user_query, search_results, conversation_history)
     print("\nFinal Aggregated Response from Dynamic Chatbot:")
