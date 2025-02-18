@@ -1543,7 +1543,8 @@ def predict_tier_and_requirement_route():
     
     
     
-from RnD.rnd import fetch_raw_results, stream_llm_results, processed_data_cache
+from RnD.rnd import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search
+from RnD.RNDAI_column import getAIColumn
 # ------------------------------
 # API Routes
 # ------------------------------
@@ -1578,6 +1579,38 @@ def get_processed_results():
 
     return jsonify({"results": processed_data_cache[user_query]}), 200
     
+    
+
+@app.route('/add-ai-column-rnd', methods=['POST'])
+def add_ai_column_rnd():
+    """
+    Receives JSON with:
+      - userQuery
+      - columnName
+      - columnDescription
+
+    Returns JSON with:
+      - updated_ai_responses: an array of strings,
+        each one corresponding (by index) to an SSE record in the frontend.
+    """
+    data = request.get_json()
+
+    user_query = data.get('userQuery')
+    column_name = data.get('columnName')
+    column_description = data.get('columnDescription')
+
+    # Retrieve or replicate the SSE data in the same order
+    results = fuzzy_search(user_query)
+
+    # Generate or fetch the new AI field for each item
+    updated_ai_responses = getAIColumn(results, column_name, column_description)
+
+    # Return the array so the frontend can merge it by index
+    return jsonify({
+        "updated_ai_responses": updated_ai_responses
+    })
+
+
 
 @app.route('/rnd-excel-export', methods=['POST'])
 def rnd_excel_export():

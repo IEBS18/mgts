@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from rnd import fuzzy_search
+from RnD.rnd import fuzzy_search
 from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential
@@ -73,23 +73,9 @@ def getAIColumn(results, column_name, column_description):
     responses = []
     for patent in results:
         response = extract_info(patent, column_name, column_description)
-        print(response)
         responses.append(response)
         
     return responses
  
  
-if __name__=="__main__":
-    
-    user_query = "lamivudine"
-    column_name = "Interaction"
-    column_description = f"Summarize how the active ingredient '{user_query}', interacts with other components."
-    
-    results = fuzzy_search(user_query)
-    responses = getAIColumn(results, column_name, column_description)
-    
-    print("bharat me jo deshdrohi hai:", responses)
-    print("unki maa ka bhosda")
-        
-    
     
