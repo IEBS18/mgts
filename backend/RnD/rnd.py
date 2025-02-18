@@ -5,8 +5,11 @@ from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential
 from azure.core.pipeline.transport import RequestsTransport
 import os
-from Utilities.query_classifier import (
-    es,
+from elasticsearch import Elasticsearch
+
+es = Elasticsearch(
+    os.getenv('elasticsearchendpoint'),
+    api_key=os.getenv('elasticapikey')
 )
  
  
@@ -79,12 +82,6 @@ def fuzzy_search(user_query, size=10):
     for index_name, fields in index_fields.items():
  
         results = get_elasticsearch_results(index_name, user_query, fields, size=size)
-        if index_name == "test":
-            for result in results:
-                if "PMC_ID" in result:
-                    print(result["PMC_ID"])
-                else:
-                    print("Not found")
  
         # Add an index label to each result
  
@@ -102,26 +99,27 @@ def fetch_raw_results(user_query, size=5):
     """Fetches raw Elasticsearch results and returns them immediately."""
     return fuzzy_search(user_query, size=size)
  
-def get_prompt(field_name):
+def get_prompt(field_name, user_query):
     prompts = {
-        "Stability Conditions": "Extract details about the stability of the active ingredient formulation...",
-        "Interaction": "Summarize how the active ingredient interacts with other components...",
-        "Composition": "Provide the composition of the formulation...",
-        "Composition Characteristics": "Describe the characteristics of each ingredient...",
-        "Interaction Components": "List the components that interact with the active ingredient...",
-        "Solution Form": "Identify the physical form of the formulation...",
-        "Testing Conditions": "Extract details about the experimental conditions used in stability...",
-        "Stability Test Results": "Summarize the stability test results...",
-        "Dissolution Study": "Extract details of dissolution studies conducted on the formulation...",
-        "Safety Study Results": "Summarize safety-related findings...",
-        "Efficacy Studies": "Summarize key efficacy findings...",
-        "Toxicity Studies": "Summarize toxicity-related findings...",
-        "Application": "Identify the intended application of the formulation...",
-        "IEB Comment (Summary)": "Provide a concise summary of the patent..."
+        f"Stability Conditions": "Extract details about the stability of the active ingredient '{user_query}', formulation, including storage conditions, temperature variations, shelf life, and degradation prevention methods.",
+        f"Interaction": "Summarize how the active ingredient '{user_query}', interacts with other components in the formulation, including synergistic effects, adverse reactions, and stability changes.",
+        f"Composition": "Provide the composition of the formulation, including the active ingredient '{user_query}', carrier agents, and key excipients.",
+        f"Composition Characteristics": "Describe the characteristics of each ingredient in the composition, including physical and chemical properties.",
+        f"Interaction Components": "List the components that interact with the active ingredient'{user_query}', specifying whether they improve efficacy, stability, or cause degradation.",
+        f"Solution Form": "Identify the physical form of the formulation (e.g., lotion, cream, gel, patch, spray, tablet, injectable) for the active ingredient '{user_query}'.",
+        f"Testing Conditions": "Extract details about the experimental conditions used in stability, efficacy, and safety tests for the active ingredient '{user_query}'.",
+        f"Stability Test Results": "Summarize the stability test results, including duration, storage conditions, and observed stability or degradation percentages for the active ingredient '{user_query}'.",
+        f"Dissolution Study": "Extract details of dissolution studies conducted on the formulation, including dissolution rate, pH conditions, temperature, and medium used for the active ingredient '{user_query}'.",
+        f"Safety Study Results": "Summarize safety-related findings, including cytotoxicity test results, irritation studies, toxicity data, and reported adverse effects for the active ingredient '{user_query}'.",
+        f"Efficacy Studies": "Summarize key efficacy findings, including clinical or human trial results, observed benefits, duration, and proof of effectiveness for the active ingredient '{user_query}'.",
+        f"Toxicity Studies": "Summarize toxicity-related findings, including acute and chronic toxicity studies, genotoxicity, and carcinogenicity data for the active ingredient '{user_query}'.",
+        f"Application": "Identify the intended application of the formulation (e.g., pharmaceuticals, cosmetics, food, industrial) for the active ingredient '{user_query}'.",
+        f"IEB Comment (Summary)": "Provide a concise summary of the patent for the active ingredient '{user_query}', covering stability, composition, interaction, safety, efficacy, and toxicity." 
+ 
     }
     return prompts.get(field_name, "NA")
  
-def extract_info(field_name, text):
+def extract_info(field_name, text, user_query):
     try:
         response = client.complete(
             model=MODEL,
@@ -142,7 +140,7 @@ def extract_info(field_name, text):
     5. Directly start with answer instead of Based on the provided text or The article discusses or any similar
     6. Response with Not Mentioned words if no response if found instead of any eloborated sentences
                 """),
-                UserMessage(content=get_prompt(field_name) + "\n\n" + text)
+                UserMessage(content=get_prompt(field_name, user_query) + "\n\nCONTEXT:\n\n" + text)
             ],
             temperature=0.3,
             # max_tokens=168
@@ -225,15 +223,14 @@ def extract_info(field_name, text):
 #column description
 #active ingredient }--> from frontend
 # processed data cacghe+ get elastic results --> from backend
-def stream_llm_results(results):
+def stream_llm_results(results, user_query):
     """
     Yields partial SSE updates for each patent + field.
     Finally yields an event 'done' to signal completion.
     """
     for patent in results:
         # Identify the record
-        print(patent.keys())
-        print("DHKWBHJBFHJBHFJBWHJFBJFHJVGJVGJGHVJDEVJVWFVJVVDGVDFGVGVVVVVVV")
+
         title = patent.get("Title", "N/A")
         claim = patent.get("Claim", "N/A")
         display_key = patent.get("Display_Key", patent.get("pgpub_id", "N/A"))
@@ -266,7 +263,7 @@ def stream_llm_results(results):
  
         for field in fields_to_extract:
             # Extract each field
-            extracted_info[field] = extract_info(field, patent_text)
+            extracted_info[field] = extract_info(field, patent_text, user_query)
             # Immediately yield to the frontend
             yield f"data: {json.dumps(extracted_info)}\n\n"
  

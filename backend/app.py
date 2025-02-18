@@ -1564,7 +1564,7 @@ def rnd_formulation_llama():
 
     # 2) Stream results as SSE
     return Response(
-        stream_llm_results(raw_results),
+        stream_llm_results(raw_results, user_query),
         content_type="text/event-stream",
         status=200
     )
