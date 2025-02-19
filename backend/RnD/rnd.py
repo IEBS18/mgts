@@ -4,6 +4,7 @@ from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential
 from azure.core.pipeline.transport import RequestsTransport
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
 from elasticsearch import Elasticsearch
 
@@ -223,53 +224,68 @@ def extract_info(field_name, text, user_query):
 #column description
 #active ingredient }--> from frontend
 # processed data cacghe+ get elastic results --> from backend
+
 def stream_llm_results(results, user_query):
     """
     Yields partial SSE updates for each patent + field.
-    Finally yields an event 'done' to signal completion.
+    Extracts LLM responses in parallel and prints debug statements.
     """
-    for patent in results:
-        # Identify the record
+    fields_to_extract = [
+        "Stability Conditions", "Interaction", "Composition",
+        "Composition Characteristics", "Interaction Components",
+        "Solution Form", "Testing Conditions",
+        "Stability Test Results", "Dissolution Study",
+        "Safety Study Results", "Efficacy Studies",
+        "Toxicity Studies", "Application",
+        "IEB Comment (Summary)"
+    ]
+    
+    with ThreadPoolExecutor(max_workers=5) as executor:  # Adjust max_workers if needed
+        for patent in results:
+            # Identify the record
+            title = patent.get("Title", "N/A")
+            claim = patent.get("Claim", "N/A")
+            display_key = patent.get("Display_Key", patent.get("pgpub_id", "N/A"))
+            if display_key == "N/A":
+                display_key = patent.get("PMC_ID", "N/A")
 
-        title = patent.get("Title", "N/A")
-        claim = patent.get("Claim", "N/A")
-        display_key = patent.get("Display_Key", patent.get("pgpub_id", "N/A"))
-        if display_key=="N/A":
-            display_key = patent.get("PMC_ID", "N/A")
- 
-        patent_text = (
-            f"Title: {title}\n"
-            f"Abstract: {patent.get('Abstract', '')}\n"
-            f"Claim: {patent.get('Claim', '')}\n"
-            f"Full Paper: {patent.get('Full Paper', '')}"
-        )
- 
-        # Start partial dict
-        extracted_info = {
-            "Title": title,
-            "Claim": claim,
-            "Publication Number": display_key
-        }
- 
-        fields_to_extract = [
-            "Stability Conditions", "Interaction", "Composition",
-            "Composition Characteristics", "Interaction Components",
-            "Solution Form", "Testing Conditions",
-            "Stability Test Results", "Dissolution Study",
-            "Safety Study Results", "Efficacy Studies",
-            "Toxicity Studies", "Application",
-            "IEB Comment (Summary)"
-        ]
- 
-        for field in fields_to_extract:
-            # Extract each field
-            extracted_info[field] = extract_info(field, patent_text, user_query)
-            # Immediately yield to the frontend
-            yield f"data: {json.dumps(extracted_info)}\n\n"
- 
-    # After all patents/fields, send a "done" event to close connection gracefully
+            # print(f"\n[Processing] Patent: {display_key} - {title}")  # Debug: Start processing patent
+
+            patent_text = (
+                f"Title: {title}\n"
+                f"Abstract: {patent.get('Abstract', '')}\n"
+                f"Claim: {patent.get('Claim', '')}\n"
+                f"Full Paper: {patent.get('Full Paper', '')}"
+            )
+
+            # Start partial dict
+            extracted_info = {
+                "Title": title,
+                "Claim": claim,
+                "Publication Number": display_key
+            }
+
+            # Submit LLM tasks in parallel
+            future_to_field = {
+                executor.submit(extract_info, field, patent_text, user_query): field
+                for field in fields_to_extract
+            }
+
+            for future in as_completed(future_to_field):
+                field = future_to_field[future]
+                try:
+                    extracted_info[field] = future.result()
+                    # print(f"[Completed] {field} extracted for {display_key}")  # Debug: Field extracted
+                except Exception as e:
+                    extracted_info[field] = f"Error: {str(e)}"
+                    # print(f"[Error] {field} failed for {display_key}: {e}")  # Debug: Error encountered
+
+                # Yield partial results as they complete
+                # print(f"[Yielding] Partial result for {display_key} - Field: {field}")  # Debug: Yield event
+                yield f"data: {json.dumps(extracted_info)}\n\n"
+
+            # print(f"[Finished] All extractions completed for {display_key}\n")  # Debug: Completed all fields
+
+    # Send "done" event at the end
+    # print("[Done] All patents processed. Sending completion event.")  # Debug: Completion event
     yield 'event: done\ndata: {"finished": true}\n\n'
- 
- 
- 
- 
