@@ -1556,20 +1556,35 @@ def rnd_formulation_llama():
     """
     user_query = request.args.get('user_query')
     size = request.args.get('size', default=2, type=int)
+    # Accept requested fields as a comma-separated list
+    requested_fields = request.args.get('requested_fields', '')
+    # Log the raw input
+    print("Raw requested_fields:", repr(requested_fields))
+    print("Type of requested_fields:", type(requested_fields))
+
+    # Convert requested fields into a list
+    if isinstance(requested_fields, list):
+        processed_fields = [field.strip() for field in requested_fields if field.strip()]
+    else:
+        processed_fields = [field.strip() for field in requested_fields.split(',') if field.strip()]
+
+    print("Processed requested_fields:", processed_fields)
+    print("Type after processing:", type(processed_fields))
 
     if not user_query:
         return jsonify({"error": "Missing 'user_query'"}), 400
 
-    # 1) Fetch Elasticsearch results
+    # Fetch Elasticsearch results
     raw_results = fetch_raw_results(user_query, size=size)
 
-    # 2) Stream results as SSE
+    # Stream results as SSE (pass processed fields)
     return Response(
-        stream_llm_results(raw_results, user_query),
+        stream_llm_results(raw_results, user_query, processed_fields),
         content_type="text/event-stream",
         status=200
     )
-
+ 
+ 
 @app.route('/api/rnd-formulation-llama-results', methods=['GET'])
 def get_processed_results():
     """Endpoint to fetch processed LLaMA-3.3 results."""
