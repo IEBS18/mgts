@@ -5,6 +5,53 @@ from openai import AzureOpenAI
 import os
 from flask import Flask
 app = Flask(__name__)
+
+def fetch_data(disease_name):
+    index_name = "reimbursementfinal"  # Use the environment variable
+    fetched = {}
+ 
+    for disease in disease_name:
+        query = {
+            "query": {
+                "match": {
+                    "Disease Name": {
+                        "query": disease,
+                        "fuzziness": "AUTO"  # Enables fuzzy search for approximate matches
+                    }
+                }
+            }
+        }
+ 
+        try:
+            result = es.search(index=index_name, body=query)
+        except es_exceptions.ConnectionError:
+            return {"error": "Failed to connect to Elasticsearch."}, 500
+        except es_exceptions.AuthenticationException:
+            return {"error": "Authentication with Elasticsearch failed."}, 401
+        except Exception as e:
+            return {"error": f"An error occurred: {str(e)}"}, 500
+ 
+        hits = [hit['_source'] for hit in result['hits']['hits']]
+        print(f"Found {len(hits)} hits for disease: {disease}")
+       
+        if hits:
+            hits = hits[0]
+            fetched[disease] = {
+
+                    "Drug Name": hits.get("Drug Name", "Not Available"),
+                    "Drug Type": hits.get("Drug Type", "Not Available"),
+                    "Tier": hits.get("Tier", "Not Available"),
+                    "Requirements/Limits": hits.get("Safety", "Not Available"),
+                    "Plan Name": hits.get("Modality", "Not Available"),
+                    "Plan Type": hits.get("SubModality", "Not Available"),                   
+                    "State Name": hits.get("SubModality", "Not Available")
+                }
+        else:
+            fetched[disease] = "No matching data found"
+ 
+    return fetched
+
+
 def fetch_drug_data(drug_names):
     """
     Fetch efficacy, safety, modality, and submodality for given drug names from Elasticsearch.
@@ -133,8 +180,37 @@ def predict_tier_and_requirement(new_plan: dict, competitor_data: dict):
  
     # Prepare prompt for OpenAI API
     system_prompt = (
-        "You are an expert in formulary management. "
-        "Your task is to analyze the formulary tier placement and associated limitations for a new drug based on existing competitor data."
+"""
+You are an expert in formulary management, responsible for analyzing the formulary tier placement and associated requirements/limitations for a new drug based on existing competitor data. 
+Your objective is to determine the most suitable formulary tier level for the drug and identify any restrictions, prior authorizations, step therapy requirements, or coverage limitations that may apply.
+
+#TASK:
+    -Evaluate the new drug based on its efficacy, safety, and modality in comparison to competitor drugs used for the same disease.
+    -Identify which formulary tier (Tier 1, Tier 2, Tier 3, Tier 4, Tier 5) the drug would likely be placed in, based on factors such as:
+        --Comparative efficacy (superior, equivalent, or inferior to competitors).
+        --Safety profile (any notable adverse effects vs. competitors).
+        --Modality considerations (biologic vs. small molecule, innovative mechanisms, etc.).
+        --Market precedents (how similar drugs are tiered).
+    -Outline any requirements/limitations, such as:
+        --Prior authorization (if the drug requires approval before prescribing).
+        --Step therapy (if the drug is only covered after other treatments fail).
+        --Quantity limits (restrictions on dosage or duration).
+        --Cost-sharing implications (higher/lower co-pays based on tier placement).
+#INSTRUCTIONS:
+    -Provide a clear formulary tier recommendation based on the comparative analysis.
+    -List any requirements or limitations that might be imposed based on existing formulary trends.
+    -Only provide the Tier and Requirements/Limitations.
+    -Do not include explanations, justifications, or headers.
+    -Ensure the tier placement is based on comparative analysis with competitor drugs.
+    -List any applicable restrictions or coverage criteria directly.
+    -Use competitor drugs as reference points to justify the tier placement and restrictions.
+    -If the drug has advantages over competitors, highlight how this might influence tiering decisions.
+    -If the drug faces disadvantages, discuss potential hurdles in achieving a favorable placement.
+    
+#Expected Output Format:
+    Tier: [Tier level]
+    Requirements/Limitations: [List of applicable restrictions]
+    """
     )
     user_prompt = (
         f"{competitor_section}"
