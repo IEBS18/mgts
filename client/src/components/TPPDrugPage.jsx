@@ -16,6 +16,7 @@ const TPPDrugPage = () => {
 
   const { searchResults, drug } = location.state || {}
   console.log(drug)
+  console.log(searchResults);
   const [selectedCards, setSelectedCards] = useState([])
   const [isExporting, setIsExporting] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -191,6 +192,11 @@ const TPPDrugPage = () => {
       "Dosage Size": card["Dosage Size"],
       "Special Warnings": card["Special Warnings"],
       "Patient Eligibility": card["Patient Eligibility"],
+      "Progression Free Survival": card["Progression Free Survival"],
+      "Overall Survival": card["Overall Survival"],
+      "Overall Response Rate": card["Overall Response Rate"],
+      "Relapse Rate": card["Relapse Rate"],
+      "Relative risk reduction for vaccine": card["Relative risk reduction for vaccine"],
       Country: card.Countries,
     }))
 

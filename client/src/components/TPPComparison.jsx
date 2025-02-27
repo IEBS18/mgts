@@ -22,6 +22,11 @@ const topics = [
     "Dosage Size",
     "Special Warnings",
     "Patient Eligibility",
+    "Progression Free Survival",
+    "Overall Survival",
+    "Overall Response Rate",
+    "Relapse Rate",
+    "Relative risk reduction for vaccine",
 ]
 
 export function TPPComparison() {
