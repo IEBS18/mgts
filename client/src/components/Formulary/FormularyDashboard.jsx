@@ -10,6 +10,17 @@ import { DiseaseList } from "./DiseaseList";
 import { ResultList } from "./ResultList";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import "react-toastify/dist/ReactToastify.css";
 
 export function FormularyDashboard() {
@@ -36,6 +47,25 @@ export function FormularyDashboard() {
   const [selectedResultRows, setSelectedResultRows] = useState([]);
   const maxSelectedRows = 5;
 
+  // For "Add Drug" dialog
+  const [isAddDrugDialogOpen, setIsAddDrugDialogOpen] = useState(false);
+
+  // Example form state for the new drug
+  const [comparatorForm, setComparatorForm] = useState({
+    drugName: "",
+    diseaseName: "",
+    routeOfAdministration: "",
+    modality: "",
+    safety: "",
+    efficacy: "",
+    dosageForm: "",
+    dosageRegime: "",
+    dosageSize: "",
+    specialWarnings: "",
+    patientEligibility: "",
+    country: "",
+  });
+
   const navigate = useNavigate();
 
   // Filtered drugs
@@ -43,7 +73,7 @@ export function FormularyDashboard() {
   // Filtered plans
   const [filteredPlans, setFilteredPlans] = useState([]);
 
-  // Fetch formulary data
+  // ----------- Fetch Formulary Data -----------
   useEffect(() => {
     const fetchFormularyData = async () => {
       setLoadingFormulary(true);
@@ -80,7 +110,7 @@ export function FormularyDashboard() {
     fetchFormularyData();
   }, [selectedState]);
 
-  // Update filteredDrugs when selectedDiseases changes
+  // ----------- Update Filtered Drugs -----------
   useEffect(() => {
     if (selectedDiseases.length === 0) {
       setFilteredDrugs(formularyData.drugs);
@@ -94,7 +124,7 @@ export function FormularyDashboard() {
     }
   }, [selectedDiseases, formularyData.diseaseToDrugs, formularyData.drugs]);
 
-  // Update filteredPlans when selectedPlanType changes
+  // ----------- Update Filtered Plans -----------
   useEffect(() => {
     if (selectedPlanType === "All Plan Types") {
       setFilteredPlans(formularyData.plans);
@@ -105,7 +135,7 @@ export function FormularyDashboard() {
     }
   }, [selectedPlanType, formularyData.plans]);
 
-  // Handlers
+  // ----------- Handle Selection Actions -----------
   const handleDiseaseSelect = (disease) => {
     setSelectedDiseases((prev) =>
       prev.includes(disease)
@@ -132,6 +162,7 @@ export function FormularyDashboard() {
     );
   };
 
+  // ----------- Plan Bulk Selections -----------
   const handleSelectAllPlans = () => {
     const allPlans = filteredPlans.map((plan) => ({
       id: plan.name,
@@ -169,6 +200,7 @@ export function FormularyDashboard() {
     );
   };
 
+  // ----------- View Results -----------
   const handleViewResults = async () => {
     if (selectedPlans.length === 0) {
       toast.warn("Please select at least one plan to view results.");
@@ -223,6 +255,7 @@ export function FormularyDashboard() {
     }
   };
 
+  // ----------- Row Selection for Compare -----------
   const toggleRowSelection = (index) => {
     if (selectedResultRows.includes(index)) {
       setSelectedResultRows((prev) => prev.filter((i) => i !== index));
@@ -237,6 +270,7 @@ export function FormularyDashboard() {
     }
   };
 
+  // ----------- Download Excel -----------
   const handleDownloadExcel = async () => {
     const dataToDownload =
       selectedResultRows.length > 0
@@ -273,6 +307,7 @@ export function FormularyDashboard() {
     }
   };
 
+  // ----------- Compare Plans -----------
   const handleComparePlans = async () => {
     if (selectedResultRows.length === 0) {
       toast.warn("Please select at least one row to compare plans.");
@@ -284,7 +319,6 @@ export function FormularyDashboard() {
     }
 
     const selectedData = selectedResultRows.map((i) => results[i]);
-
     // Extract unique drug names
     const drugNames = [
       ...new Set(
@@ -335,12 +369,11 @@ export function FormularyDashboard() {
       navigate("/compare-plans", { state: { selectedData: augmentedData } });
     } catch (error) {
       console.error("Error fetching Safety and Efficacy data:", error);
-      toast.error(
-        error.message || "Failed to fetch Safety and Efficacy data."
-      );
+      toast.error(error.message || "Failed to fetch Safety and Efficacy data.");
     }
   };
 
+  // ----------- Loading Spinner -----------
   if (loadingFormulary) {
     return (
       <div className="spinner-container flex flex-col items-center gap-2">
@@ -360,6 +393,60 @@ export function FormularyDashboard() {
     );
   }
 
+  // ----------- Helpers for form fields in Dialog -----------
+  const handleComparatorFormChange = (field, value) => {
+    setComparatorForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const renderInput = (id, label, value, onChange) => (
+    <div key={id}>
+      <Label htmlFor={id} className="text-gray-700">
+        {label}
+      </Label>
+      <Input
+        id={id}
+        value={value}
+        onChange={(e) => onChange(id, e.target.value)}
+        className="w-full p-2 mt-1 border border-gray-200 rounded-[12px]
+                   text-gray-800 focus:border-[#a6ce39] focus:ring-[#a6ce39]
+                   hover:border-[#a6ce39] transition duration-200 ease-in-out"
+      />
+    </div>
+  );
+
+  const renderSelect = (
+    id,
+    label,
+    options,
+    value,
+    onChange,
+    placeholder = "Select...",
+    disabled = false
+  ) => (
+    <div key={id}>
+      <Label htmlFor={id} className="text-gray-700">
+        {label}
+      </Label>
+      <select
+        id={id}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(id, e.target.value)}
+        className="w-full p-2 mt-1 border border-gray-200 rounded-[12px]
+                   text-gray-800 focus:border-[#a6ce39] focus:ring-[#a6ce39]
+                   hover:border-[#a6ce39] transition duration-200 ease-in-out"
+      >
+        <option value="">{placeholder}</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+  // ----------- Main Return -----------
   return (
     <div className="flex min-h-screen">
       <ToastContainer
@@ -373,6 +460,7 @@ export function FormularyDashboard() {
         pauseOnHover
       />
 
+      {/* Left Section: Tabs + Content */}
       <div className="flex-1 p-6">
         <Tabs
           defaultValue="disease-list"
@@ -386,30 +474,54 @@ export function FormularyDashboard() {
             <TabsList className="flex flex-row border-b w-auto justify-start rounded-none h-auto p-0 bg-transparent space-x-4">
               <TabsTrigger
                 value="disease-list"
-                className="w-[160px] data-[state=active]:h-[32px] data-[state=active]:rounded-[19px] data-[state=active]:bg-green-500 data-[state=active]:border-green-600 data-[state=active]:text-black data-[state=active]:font-bold border-transparent rounded-none"
+                className="w-[160px] data-[state=active]:h-[32px]
+                           data-[state=active]:rounded-[19px]
+                           data-[state=active]:bg-green-500
+                           data-[state=active]:border-green-600
+                           data-[state=active]:text-black
+                           data-[state=active]:font-bold
+                           border-transparent rounded-none"
               >
                 Disease List
               </TabsTrigger>
               <TabsTrigger
                 value="drug-list"
-                className="w-[160px] data-[state=active]:h-[32px] data-[state=active]:rounded-[19px] data-[state=active]:bg-green-500 data-[state=active]:border-green-600 data-[state=active]:text-black data-[state=active]:font-bold border-transparent rounded-none"
+                className="w-[160px] data-[state=active]:h-[32px]
+                           data-[state=active]:rounded-[19px]
+                           data-[state=active]:bg-green-500
+                           data-[state=active]:border-green-600
+                           data-[state=active]:text-black
+                           data-[state=active]:font-bold
+                           border-transparent rounded-none"
               >
                 Drug List
               </TabsTrigger>
               <TabsTrigger
                 value="plan-list"
-                className="w-[160px] data-[state=active]:h-[32px] data-[state=active]:rounded-[19px] data-[state=active]:bg-green-500 data-[state=active]:border-green-600 data-[state=active]:text-black data-[state=active]:font-bold border-transparent rounded-none"
+                className="w-[160px] data-[state=active]:h-[32px]
+                           data-[state=active]:rounded-[19px]
+                           data-[state=active]:bg-green-500
+                           data-[state=active]:border-green-600
+                           data-[state=active]:text-black
+                           data-[state=active]:font-bold
+                           border-transparent rounded-none"
               >
                 Plan List
               </TabsTrigger>
               <TabsTrigger
                 value="results"
                 disabled={results.length === 0 || loading}
-                className={`w-[160px] data-[state=active]:h-[32px] data-[state=active]:rounded-[19px] data-[state=active]:bg-green-500 data-[state=active]:border-green-600 data-[state=active]:text-black data-[state=active]:font-bold border-transparent rounded-none ${
-                  results.length === 0 || loading
-                    ? "cursor-not-allowed text-gray-400"
-                    : ""
-                }`}
+                className={`w-[160px] data-[state=active]:h-[32px]
+                            data-[state=active]:rounded-[19px]
+                            data-[state=active]:bg-green-500
+                            data-[state=active]:border-green-600
+                            data-[state=active]:text-black
+                            data-[state=active]:font-bold
+                            border-transparent rounded-none ${
+                              results.length === 0 || loading
+                                ? "cursor-not-allowed text-gray-400"
+                                : ""
+                            }`}
               >
                 Results
               </TabsTrigger>
@@ -417,30 +529,45 @@ export function FormularyDashboard() {
 
             {/* Buttons on the right side */}
             <div className="flex space-x-2">
+              {/* "Add Drug" button (only if not on the results tab) */}
+              {activeTab !== "results" && (
+                <Button
+                  onClick={() => setIsAddDrugDialogOpen(true)}
+                  className="text-md font-semibold text-black bg-[#a6ce39]
+                             hover:bg-[#95b833] rounded-[12px] px-3 py-1 text-sm"
+                >
+                  Add Drug
+                </Button>
+              )}
+
               {activeTab === "results" && (
                 <>
                   <Button
                     onClick={handleDownloadExcel}
-                    className="text-white bg-[#a6ce39] hover:bg-[#95b833] rounded-[12px] px-3 py-1 text-sm"
+                    className="text-white bg-[#a6ce39] hover:bg-[#95b833]
+                               rounded-[12px] px-3 py-1 text-sm"
                   >
                     Download Excel
                   </Button>
                   <Button
                     onClick={handleComparePlans}
-                    className="bg-blue-500 text-white hover:bg-blue-600 rounded-[12px] px-3 py-1 text-sm"
+                    className="bg-blue-500 text-white hover:bg-blue-600
+                               rounded-[12px] px-3 py-1 text-sm"
                   >
                     Compare Plans
                   </Button>
                 </>
               )}
-              {/* Hide the View Results button if we're on the results tab */}
+
+              {/* Hide "View Results" if we're on the results tab */}
               {activeTab !== "results" && (
                 <Button
                   onClick={handleViewResults}
                   disabled={loading}
-                  className={`text-md font-semibold text-black bg-[#a6ce39] hover:bg-[#95b833] rounded-[12px] px-3 py-1 text-sm ${
-                    loading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className={`text-md font-semibold text-black bg-[#a6ce39]
+                              hover:bg-[#95b833] rounded-[12px] px-3 py-1 text-sm ${
+                                loading ? "opacity-50 cursor-not-allowed" : ""
+                              }`}
                 >
                   {loading ? "Loading..." : "View Results"}
                 </Button>
@@ -504,7 +631,8 @@ export function FormularyDashboard() {
         </Tabs>
       </div>
 
-      <div className="w-80 border-l bg-gray-100">
+      {/* RIGHT SIDEBAR: changed from w-80 to w-64 */}
+      <div className="w-64 border-l bg-gray-100">
         <Sidebar
           selectedDrugs={selectedDrugs}
           selectedDiseases={selectedDiseases}
@@ -525,6 +653,120 @@ export function FormularyDashboard() {
           loading={loading}
         />
       </div>
+
+      {/* "Add Drug" Dialog */}
+      <Dialog open={isAddDrugDialogOpen} onOpenChange={setIsAddDrugDialogOpen}>
+        <DialogContent className="max-w-xl bg-white rounded-lg">
+          <DialogHeader>
+            <DialogTitle>Add Drug</DialogTitle>
+            <DialogDescription>
+              Enter details about the drug you want to add.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-2">
+            {renderInput(
+              "drugName",
+              "Drug Name",
+              comparatorForm.drugName,
+              handleComparatorFormChange
+            )}
+            {renderSelect(
+              "diseaseName",
+              "Disease Name",
+              formularyData.diseases || [],
+              comparatorForm.diseaseName,
+              handleComparatorFormChange,
+              "Select disease..."
+            )}
+            {/* {renderSelect(
+              "routeOfAdministration",
+              "Route of Administration",
+              ["Oral", "IV", "Subcutaneous", "Intramuscular"],
+              comparatorForm.routeOfAdministration,
+              handleComparatorFormChange
+            )} */}
+            {renderSelect(
+              "modality",
+              "Modality",
+              ["Small Molecule", "Biologic", "Vaccine"],
+              comparatorForm.modality,
+              handleComparatorFormChange
+            )}
+            {renderInput(
+              "safety",
+              "Safety",
+              comparatorForm.safety,
+              handleComparatorFormChange
+            )}
+            {renderInput(
+              "efficacy",
+              "Efficacy",
+              comparatorForm.efficacy,
+              handleComparatorFormChange
+            )}
+            {/* {renderInput(
+              "dosageForm",
+              "Dosage Form",
+              comparatorForm.dosageForm,
+              handleComparatorFormChange
+            )} */}
+            {/* {renderInput(
+              "dosageRegime",
+              "Dosage Regime",
+              comparatorForm.dosageRegime,
+              handleComparatorFormChange
+            )} */}
+            {/* {renderInput(
+              "dosageSize",
+              "Dosage Size",
+              comparatorForm.dosageSize,
+              handleComparatorFormChange
+            )}
+            {renderInput(
+              "specialWarnings",
+              "Special Warnings",
+              comparatorForm.specialWarnings,
+              handleComparatorFormChange
+            )}
+            {renderInput(
+              "patientEligibility",
+              "Patient Eligibility",
+              comparatorForm.patientEligibility,
+              handleComparatorFormChange
+            )}
+            {renderSelect(
+              "country",
+              "Country",
+              ["USA", "Canada", "UK", "Australia"],
+              comparatorForm.country,
+              handleComparatorFormChange,
+              "Select country..."
+            )} */}
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button
+              onClick={() => {
+                // Example: handle the new drug data here
+                console.log("Submitted new drug:", comparatorForm);
+                // Then close the dialog
+                setIsAddDrugDialogOpen(false);
+              }}
+              className="bg-[#54681D] text-white hover:bg-[#95b833] rounded-[60px]"
+            >
+              Submit
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsAddDrugDialogOpen(false)}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-[60px]"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

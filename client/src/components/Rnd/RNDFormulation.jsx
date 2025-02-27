@@ -631,6 +631,24 @@ export default function RNDFormulation() {
           {isAiColumnLoading ? "Loading..." : "Add AI Column"}
         </Button>
       </div>
+      <div className="flex items-center gap-4 mb-4">
+        {sseError && <p className="text-red-500">{sseError}</p>}
+        {isLoading && (
+          <div className="flex items-center gap-2 text-gray-500">
+            <Loader2 className="animate-spin" />
+            <span>Loading real-time LLM data...</span>
+          </div>
+        )}
+
+        <Button
+          onClick={() => setAiColumnDialogOpen(true)}
+          variant="outline"
+          className="bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] rounded-lg ml-auto"
+          disabled={isAiColumnLoading}
+        >
+          {isAiColumnLoading ? "Loading..." : "Add AI Column"}
+        </Button>
+      </div>
 
       <div className="overflow-x-auto border border-gray-300 rounded-lg bg-white shadow-md">
         <table className="min-w-max text-sm text-gray-700">

@@ -126,8 +126,6 @@ export function Sidebar({
           )}
         </div>
       </div>
-
-      {/* "View Results" button removed because it's now in the Tabs header */}
     </div>
   );
 }

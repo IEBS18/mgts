@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from RnD.rnd import fuzzy_search
+from RnD.rnd import fuzzy_search
 from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential

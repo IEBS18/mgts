@@ -2,6 +2,7 @@ import os
 import sys
 from dotenv import load_dotenv
 from openai import AzureOpenAI
+from Formulary import predict_tier_and_requirement
 
 # Ensure UTF-8 output (especially on Windows)
 sys.stdout.reconfigure(encoding='utf-8')
