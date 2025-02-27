@@ -36,9 +36,9 @@ def fetch_data(disease_name):
        
         if hits:
             hits = hits[0]
+            drug_names = hits.get("Drug Name", "Not Available")
             fetched[disease] = {
-
-                    "Drug Name": hits.get("Drug Name", "Not Available"),
+                    "Drug Name": drug_names,
                     "Drug Type": hits.get("Drug Type", "Not Available"),
                     "Tier": hits.get("Tier", "Not Available"),
                     "Requirements/Limits": hits.get("Safety", "Not Available"),
