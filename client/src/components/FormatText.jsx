@@ -8,6 +8,10 @@ import React from 'react';
  * @returns {React.Element} - The formatted React elements.
  */
 const FormatText = ({ text }) => {
+  if (typeof text === 'number') {
+    return <span>{text}</span>;
+  }
+
   if (!text) return null;
 
   // Split the text into lines and trim each line

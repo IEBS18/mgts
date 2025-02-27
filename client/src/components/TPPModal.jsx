@@ -160,6 +160,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
       }
       const data = await response.json()
       setIsSearching(false)
+      console.log(data.data);
       navigate("/tpp-by-drug", {
         state: { searchResults: data.data, drug: drugSearchForm.drugName },
       })
