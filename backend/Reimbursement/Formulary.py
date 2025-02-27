@@ -3,6 +3,7 @@ from Utilities.query_classifier import (
 )
 from openai import AzureOpenAI
 import os
+import pandas as pd
 from flask import Flask
 app = Flask(__name__)
 
@@ -16,7 +17,7 @@ def fetch_data(disease_name):
                 "match": {
                     "Disease Name": {
                         "query": disease,
-                        "fuzziness": "AUTO"  # Enables fuzzy search for approximate matches
+                        "fuzziness": "AUTO"
                     }
                 }
             }
@@ -35,74 +36,61 @@ def fetch_data(disease_name):
         print(f"Found {len(hits)} hits for disease: {disease}")
        
         if hits:
-            hits = hits[0]
-            drug_names = hits.get("Drug Name", "Not Available")
-            fetched[disease] = {
-                    "Drug Name": drug_names,
-                    "Drug Type": hits.get("Drug Type", "Not Available"),
-                    "Tier": hits.get("Tier", "Not Available"),
-                    "Requirements/Limits": hits.get("Safety", "Not Available"),
-                    "Plan Name": hits.get("Modality", "Not Available"),
-                    "Plan Type": hits.get("SubModality", "Not Available"),                   
-                    "State Name": hits.get("SubModality", "Not Available")
-                }
+            fetched[disease] = []
+            drug_names = [hit.get("Drug Name", "Not Available") for hit in hits if hit.get("Drug Name")]
+            drug_details = fetch_drug_details_from_excel(drug_names)
+
+            for hit in hits:
+                drug_name = hit.get("Drug Name", "Not Available")
+                drug_detail = next((d for d in drug_details if d["Drug"].lower() == drug_name.lower()), {}) if drug_details != "No matching drug details found" else {}
+                
+                fetched[disease].append({
+                    "Drug Name": drug_name,
+                    "Drug Type": hit.get("Drug Type", "Not Available"),
+                    "Tier": hit.get("Tier", "Not Available"),
+                    "Requirements/Limits": hit.get("Safety", "Not Available"),
+                    "Plan Name": hit.get("Modality", "Not Available"),
+                    "Plan Type": hit.get("SubModality", "Not Available"),
+                    "State Name": hit.get("SubModality", "Not Available"),
+                    "Modality": drug_detail.get("Modality", "Not Available"),
+                    "Efficacy": drug_detail.get("Efficacy", "Not Available"),
+                    "Safety": drug_detail.get("Safety", "Not Available")
+                })
         else:
             fetched[disease] = "No matching data found"
  
     return fetched
 
+# def fetch_drug_details_from_excel(drug_name):
+#     excel_file = r"C:\Users\nirmiti.deshmukh\marketX\mgts\backend\tpp_database.xlsx"
+#     df = pd.read_excel(excel_file)
+    
+#     drug_info = df[df['Drug'].str.lower() == drug_name.lower()]
+    
+#     # if not drug_info.empty:
+#     drug_details= {
+#             "Modality": drug_info.iloc[0]["Modality"],
+#             "Efficacy": drug_info.iloc[0]["Efficacy"],
+#             "Safety": drug_info.iloc[0]["Safety"]
+#         }
+#     # else:
+#     print(drug_details)
+#     return drug_details 
 
-def fetch_drug_data(drug_names):
-    """
-    Fetch efficacy, safety, modality, and submodality for given drug names from Elasticsearch.
-   
-    Parameters:
-        drug_names (list): List of drug names to search for.
-       
-    Returns:
-        dict: Drug data mapped with efficacy, safety, modality, and submodality.
-    """
- 
-    index_name = "tpp_data_refine"  # Use the environment variable
-    results = {}
- 
-    for drug in drug_names:
-        query = {
-            "query": {
-                "match": {
-                    "Drug": {
-                        "query": drug,
-                        "fuzziness": "AUTO"  # Enables fuzzy search for approximate matches
-                    }
-                }
-            }
-        }
- 
-        try:
-            result = es.search(index=index_name, body=query)
-        except es_exceptions.ConnectionError:
-            return {"error": "Failed to connect to Elasticsearch."}, 500
-        except es_exceptions.AuthenticationException:
-            return {"error": "Authentication with Elasticsearch failed."}, 401
-        except Exception as e:
-            return {"error": f"An error occurred: {str(e)}"}, 500
- 
-        hits = [hit['_source'] for hit in result['hits']['hits']]
-        print(f"Found {len(hits)} hits for drug: {drug}")
-       
-        if hits:
-            hits = hits[0]
-            results[drug] = {
-                    "Efficacy": hits.get("Efficacy", "Not Available"),
-                    "Safety": hits.get("Safety", "Not Available"),
-                    "Modality": hits.get("Modality", "Not Available"),
-                    "SubModality": hits.get("SubModality", "Not Available")
-                }
-        else:
-            results[drug] = "No matching data found"
- 
-    return results
+def fetch_drug_details_from_excel(drug_names):
+    excel_file = r"C:\Users\nirmiti.deshmukh\marketX\mgts\backend\tpp_database.xlsx"
+    df = pd.read_excel(excel_file)
 
+    # Ensure drug_names is a list and convert to lowercase
+    drug_names = [drug.strip().lower() for drug in drug_names]  
+
+    # Filter the dataframe where 'Drug' matches any in the list
+    drug_info = df[df['Drug'].str.lower().isin(drug_names)]
+
+    if not drug_info.empty:
+        return drug_info[['Drug', 'Modality', 'Efficacy', 'Safety']].to_dict(orient='records')
+    else:
+        return "No matching drug details found"
 
 
 
