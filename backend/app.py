@@ -1214,7 +1214,7 @@ def main_drug_insights():
 
 
 # Formulary
-from Reimbursement.Formulary import fetch_drug_data, predict_tier_and_requirement
+from Reimbursement.Formulary import fetch_drug_details_from_excel, predict_tier_and_requirement, fetch_data
 
 @app.route('/get_safety_efficacy', methods=['POST'])
 def get_safety_efficacy():
@@ -1235,7 +1235,7 @@ def get_safety_efficacy():
         return jsonify({"error": "'drug_names' must be a list of strings."}), 400
 
     # Fetch drug data using the helper function
-    safety_efficacy_data = fetch_drug_data(drug_names)
+    safety_efficacy_data = fetch_drug_details_from_excel(drug_names)
 
     # Check if fetch_drug_data returned an error
     if isinstance(safety_efficacy_data, tuple):
@@ -1366,6 +1366,34 @@ def predict_tier_and_requirement_route():
         app.logger.exception("Unexpected error during prediction.")
         return jsonify({"status": "error", "message": str(e)}), 500
     
+
+
+@app.route('/add-drug-formulary', methods=['POST'])  # Change to POST
+def add_drug_formulary():
+    try:
+        # Ensure the request is JSON
+        data = request.get_json()
+
+        # Extract fields from the request
+        drug_name = data.get('drugName')
+        diseasesname = data.get('diseaseName')
+        efficacy = data.get('efficacy')
+        safety = data.get('safety')
+        modality = data.get('modality')
+
+        # Print for debugging (you can remove this later)
+        list_competitor_drug = fetch_data(diseasesname)
+        print(list_competitor_drug)
+
+        # Here, you would proceed with saving the drug data to your database or perform other operations
+
+        # Return a response indicating success
+        return jsonify({"message": "Drug added successfully!", "status": "success"}), 201
+
+    except Exception as e:
+        # If something goes wrong, return an error message
+        print("Error:", e)
+        return jsonify({"message": "Failed to add drug", "status": "error"}), 400
     
     
 from RnD.rnd import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search

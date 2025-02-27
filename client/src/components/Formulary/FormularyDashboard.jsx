@@ -54,16 +54,9 @@ export function FormularyDashboard() {
   const [comparatorForm, setComparatorForm] = useState({
     drugName: "",
     diseaseName: "",
-    routeOfAdministration: "",
     modality: "",
     safety: "",
     efficacy: "",
-    dosageForm: "",
-    dosageRegime: "",
-    dosageSize: "",
-    specialWarnings: "",
-    patientEligibility: "",
-    country: "",
   });
 
   const navigate = useNavigate();
@@ -414,6 +407,7 @@ export function FormularyDashboard() {
     </div>
   );
 
+  // Fixed CSS styling for dropdowns to match input fields
   const renderSelect = (
     id,
     label,
@@ -432,9 +426,7 @@ export function FormularyDashboard() {
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(id, e.target.value)}
-        className="w-full p-2 mt-1 border border-gray-200 rounded-[12px]
-                   text-gray-800 focus:border-[#a6ce39] focus:ring-[#a6ce39]
-                   hover:border-[#a6ce39] transition duration-200 ease-in-out"
+        className="w-full p-2 mt-1 border border-gray-200 rounded-[12px] text-gray-800 focus:border-[#a6ce39] focus:ring-[#a6ce39] hover:border-[#a6ce39] transition duration-200 ease-in-out"
       >
         <option value="">{placeholder}</option>
         {options.map((opt) => (
@@ -445,6 +437,37 @@ export function FormularyDashboard() {
       </select>
     </div>
   );
+
+  // ----------- Submit Drug Handler -----------
+
+  const handleSubmitDrug = async () => {
+    const { drugName, diseaseName, modality, safety, efficacy } = comparatorForm;
+    if (!drugName || !diseaseName  || !safety | !efficacy) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/add-drug-formulary`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(comparatorForm),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to add drug.");
+      }
+
+      toast.success("Drug added successfully!");
+      setIsAddDrugDialogOpen(false);
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error(error.message || "An error occurred while adding the drug.");
+    }
+  };
 
   // ----------- Main Return -----------
   return (
@@ -665,94 +688,45 @@ export function FormularyDashboard() {
           </DialogHeader>
 
           <div className="space-y-4 mt-2">
+            {/* Render input and select fields for the drug form */}
             {renderInput(
               "drugName",
               "Drug Name",
               comparatorForm.drugName,
-              handleComparatorFormChange
+              (field, value) => setComparatorForm((prev) => ({ ...prev, [field]: value }))
             )}
             {renderSelect(
               "diseaseName",
               "Disease Name",
               formularyData.diseases || [],
               comparatorForm.diseaseName,
-              handleComparatorFormChange,
+              (field, value) => setComparatorForm((prev) => ({ ...prev, [field]: value })),
               "Select disease..."
             )}
-            {/* {renderSelect(
-              "routeOfAdministration",
-              "Route of Administration",
-              ["Oral", "IV", "Subcutaneous", "Intramuscular"],
-              comparatorForm.routeOfAdministration,
-              handleComparatorFormChange
-            )} */}
             {renderSelect(
               "modality",
               "Modality",
               ["Small Molecule", "Biologic", "Vaccine"],
               comparatorForm.modality,
-              handleComparatorFormChange
+              (field, value) => setComparatorForm((prev) => ({ ...prev, [field]: value }))
             )}
             {renderInput(
               "safety",
               "Safety",
               comparatorForm.safety,
-              handleComparatorFormChange
+              (field, value) => setComparatorForm((prev) => ({ ...prev, [field]: value }))
             )}
             {renderInput(
               "efficacy",
               "Efficacy",
               comparatorForm.efficacy,
-              handleComparatorFormChange
+              (field, value) => setComparatorForm((prev) => ({ ...prev, [field]: value }))
             )}
-            {/* {renderInput(
-              "dosageForm",
-              "Dosage Form",
-              comparatorForm.dosageForm,
-              handleComparatorFormChange
-            )} */}
-            {/* {renderInput(
-              "dosageRegime",
-              "Dosage Regime",
-              comparatorForm.dosageRegime,
-              handleComparatorFormChange
-            )} */}
-            {/* {renderInput(
-              "dosageSize",
-              "Dosage Size",
-              comparatorForm.dosageSize,
-              handleComparatorFormChange
-            )}
-            {renderInput(
-              "specialWarnings",
-              "Special Warnings",
-              comparatorForm.specialWarnings,
-              handleComparatorFormChange
-            )}
-            {renderInput(
-              "patientEligibility",
-              "Patient Eligibility",
-              comparatorForm.patientEligibility,
-              handleComparatorFormChange
-            )}
-            {renderSelect(
-              "country",
-              "Country",
-              ["USA", "Canada", "UK", "Australia"],
-              comparatorForm.country,
-              handleComparatorFormChange,
-              "Select country..."
-            )} */}
           </div>
 
           <DialogFooter className="mt-4">
             <Button
-              onClick={() => {
-                // Example: handle the new drug data here
-                console.log("Submitted new drug:", comparatorForm);
-                // Then close the dialog
-                setIsAddDrugDialogOpen(false);
-              }}
+              onClick={handleSubmitDrug}
               className="bg-[#54681D] text-white hover:bg-[#95b833] rounded-[60px]"
             >
               Submit

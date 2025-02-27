@@ -25,10 +25,10 @@ def fetch_data(disease_name):
  
         try:
             result = es.search(index=index_name, body=query)
-        except es_exceptions.ConnectionError:
-            return {"error": "Failed to connect to Elasticsearch."}, 500
-        except es_exceptions.AuthenticationException:
-            return {"error": "Authentication with Elasticsearch failed."}, 401
+        # except es_exceptions.ConnectionError:
+            # return {"error": "Failed to connect to Elasticsearch."}, 500
+        # except es_exceptions.AuthenticationException:
+            # return {"error": "Authentication with Elasticsearch failed."}, 401
         except Exception as e:
             return {"error": f"An error occurred: {str(e)}"}, 500
  
@@ -78,7 +78,7 @@ def fetch_data(disease_name):
 #     return drug_details 
 
 def fetch_drug_details_from_excel(drug_names):
-    excel_file = r"C:\Users\nirmiti.deshmukh\marketX\mgts\backend\tpp_database.xlsx"
+    excel_file = os.path.abspath('../tpp_database.xlsx')
     df = pd.read_excel(excel_file)
 
     # Ensure drug_names is a list and convert to lowercase
