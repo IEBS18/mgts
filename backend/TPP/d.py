@@ -56,23 +56,32 @@ def get_differences_from_llm(prompt_text):
     """Sends the prompt to OpenAI GPT model and returns the response text."""
     system_prompt = (
 
-        "You are a market research analyst. You are provided with information about multiple drugs' 'Safety' and 'Efficacy'. "
+"""
+You are a market research analyst tasked with evaluating the Safety and Efficacy profiles of multiple drugs, including a given main drug and its comparators. 
+Your objective is to identify and analyze clinically significant or numerically important differences between the main drug and other drugs.
 
-        "Your task is to identify key numeric or clinically important differences between the given drug(main drug) and other drugs. "
+-->TASK:
+-Compare the Safety and Efficacy of the main drug against the other drugs.
+-Identify key differences based on available data, considering statistical significance, clinical relevance, and impact on patient outcomes.
+-Provide an impact-driven analysis explaining how these differences influence the main drug’s positioning in the market.
+-->INSTRUCTIONS:
+-Examine both Safety and Efficacy sections for the main drug and the comparators.
+-Quantify differences wherever applicable (e.g., “X% lower incidence of adverse effects” or “Y% higher response rate”).
+-Provide only the impact points in a structured manner. Each point should be a detailed summary (80-120 words) explaining the observed difference, potential causes, and implications on patient treatment, regulatory standing, or market competitiveness.
+-If no significant differences exist, explicitly state that and mention any minor but notable differentiating factors that may still be relevant for decision-making.
+-Ensure that the points are concise yet comprehensive, avoiding unnecessary repetition while covering all key insights.
+-->FORMAT:
+-Provide two separate sections for Safety and Efficacy.
+-List 2-3 bullet points under each section, with each point offering an insightful explanation of a key difference.
+-Avoid explicit section headers for the bullet points—just present the findings in a seamless, structured manner.
+-->OUTPUT EXPECTATIONS:
+-A precise yet detailed comparative analysis that highlights how the main drug stands out (positively or negatively) in terms of Safety and Efficacy.
+-A focus on real-world impact, including treatment effectiveness, patient tolerability, and competitive advantages or disadvantages.
+-If applicable, mention potential reasons for observed differences, such as formulation, mechanism of action, or patient demographics.
+-This will help in understanding the market positioning of the main drug while ensuring data-driven decision-making in clinical and commercial strategies
 
-        "Provide your findings in two separate bullet-point lists for both Safety and Efficacy along with how the difference affects the drug. "
-
-        "INSTRUCTIONS:\n"
-
-        "- CONSIDER both Safety and Efficacy headers for both the given drug and other drugs. "
-
-        "- All the key differences of the main drug from the other drugs should be added in Impact along with the percentages. \n"
-
-        "- ONLY display the Impact points. The Impact point should be the summary (50-80 words). \n"
-
-        "Don't give explicit headers for the points and provide 2-3 bullet points. "
-
-        "If there is no significant difference found among the given drugs, then highlight that as well along with any differentiating factors."
+Return in Bullet points. Maximum 6 points not more than that
+"""
 
     )
     
@@ -82,7 +91,7 @@ def get_differences_from_llm(prompt_text):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt_text}
         ],
-        max_tokens=350,
+        
         temperature=0.7
     )
 

@@ -294,8 +294,8 @@ export function TPPComparison() {
                         ))}
                     </tbody>
                 </table>
-                <div className="flex flex-row gap-4 mb-4">
-                    <Card className="w-1/2">
+                <div className="flex flex-row gap-4 m-4">
+                    <Card className="w-1/2 bg-white">
                         <CardHeader>
                             <CardTitle>Differentiator for {location.state?.mainDrug}</CardTitle>
                         </CardHeader>
@@ -315,7 +315,7 @@ export function TPPComparison() {
                             )}
                         </CardContent>
                     </Card>
-                    <Card className="w-1/2">
+                    <Card className="w-1/2 bg-white">
                         <CardHeader>
                             <CardTitle>Key Insights for {location.state?.mainDrug}</CardTitle>
                         </CardHeader>
