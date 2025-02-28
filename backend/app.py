@@ -1367,7 +1367,6 @@ def predict_tier_and_requirement_route():
         return jsonify({"status": "error", "message": str(e)}), 500
     
 
-
 @app.route('/add-drug-formulary', methods=['POST'])  # Change to POST
 def add_drug_formulary():
     try:
@@ -1382,20 +1381,19 @@ def add_drug_formulary():
         modality = data.get('modality')
 
         # Print for debugging (you can remove this later)
-        list_competitor_drug = fetch_data(diseasesname)
-        print(list_competitor_drug)
+        list_competitor_drug = fetch_data([diseasesname])
+        # print(list_competitor_drug)
 
         # Here, you would proceed with saving the drug data to your database or perform other operations
 
         # Return a response indicating success
-        return jsonify({"message": "Drug added successfully!", "status": "success"}), 201
+        return jsonify({"list_competitor_drug": list_competitor_drug, "drug_name": drug_name}), 201
 
     except Exception as e:
         # If something goes wrong, return an error message
         print("Error:", e)
         return jsonify({"message": "Failed to add drug", "status": "error"}), 400
-    
-    
+
 from RnD.rnd import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search
 from RnD.RNDAI_column import getAIColumn
 # ------------------------------

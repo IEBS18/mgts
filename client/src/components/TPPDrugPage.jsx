@@ -414,4 +414,3 @@ const TPPDrugPage = () => {
 }
 
 export default TPPDrugPage
-

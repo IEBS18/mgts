@@ -78,7 +78,7 @@ def fetch_data(disease_name):
 #     return drug_details 
 
 def fetch_drug_details_from_excel(drug_names):
-    excel_file = os.path.abspath('../tpp_database.xlsx')
+    excel_file = os.path.abspath('tpp_database.xlsx')
     df = pd.read_excel(excel_file)
 
     # Ensure drug_names is a list and convert to lowercase
