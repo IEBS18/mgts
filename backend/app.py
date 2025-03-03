@@ -1455,22 +1455,31 @@ def formulary_drug_insights():
         drug_name = data.get('drug_name')
         all_data = data.get('all_data')
         user_added_drug = all_data[0]
-        safety = user_added_drug.get('safety')
-        efficacy = user_added_drug.get('efficacy')
-        tier = user_added_drug.get('tier')
-        requirement = user_added_drug.get('requirement')
+        safety = user_added_drug.get('Safety')
+        efficacy = user_added_drug.get('Efficacy')
+        tier = user_added_drug.get('Tier')
+        requirement = user_added_drug.get('Requirements/Limits')
         competitor_data = all_data[1:]  # List of competitor drug data
+        if requirement=="N/A" or not requirement:
+            requirement="Not Available"
+            
+        print(drug_name)
+        print(safety)
+        print(efficacy)
+        print(tier)
+        print(requirement)
 
         # Validate input data
-        if not drug_name:
-            return jsonify({"error": "Drug name is required"}), 400
-        if not safety or not efficacy or not tier or not requirement:
-            return jsonify({"error": "Drug safety, efficacy, tier, and requirement are required"}), 400
+        # if not drug_name:
+            # return jsonify({"error": "Drug name is required"}), 400
+        # if not safety or not efficacy or not tier or not requirement:
+            # return jsonify({"error": "Drug safety, efficacy, tier, and requirement are required"}), 400
         if not competitor_data or not isinstance(competitor_data, list):
             return jsonify({"error": "Competitor data is required and should be a list"}), 400
 
         # Generate Differentiator and Insights using the imported functions
         differentiator = generate_differentiator(drug_name, safety, efficacy, tier, requirement, competitor_data)
+        print("MADARCHOD")
         insights = generate_insights(drug_name, safety, efficacy, tier, requirement)
 
         # Return the generated insights and differentiator
@@ -1482,6 +1491,7 @@ def formulary_drug_insights():
 
 
 from RnD.rnd import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search
+from RnD.searchbyDrug import fetch_results, stream_drug, processed_cache, search_drug
 from RnD.RNDAI_column import getAIColumn
 # ------------------------------
 # API Routes
@@ -1521,7 +1531,7 @@ def rnd_formulation_llama():
         content_type="text/event-stream",
         status=200
     )
- 
+    
  
 @app.route('/api/rnd-formulation-llama-results', methods=['GET'])
 def get_processed_results():
@@ -1532,7 +1542,53 @@ def get_processed_results():
 
     return jsonify({"results": processed_data_cache[user_query]}), 200
     
+## SEARCH BY DRUG RND Formulation    
+ 
+@app.route('/api/rnd-formulation-drug', methods=['GET'])
+def rnd_formulation_drug():
+    """
+    SSE endpoint that streams LLaMA results for R&D Formulations.
+    """
+    user_query = request.args.get('user_query')
+    size = request.args.get('size', default=2, type=int)
+    # Accept requested fields as a comma-separated list
+    requested_fields = request.args.get('requested_fields', '')
+    # Log the raw input
+    print("Raw requested_fields:", repr(requested_fields))
+    print("Type of requested_fields:", type(requested_fields))
 
+    # Convert requested fields into a list
+    if isinstance(requested_fields, list):
+        processed_fields = [field.strip() for field in requested_fields if field.strip()]
+    else:
+        processed_fields = [field.strip() for field in requested_fields.split(',') if field.strip()]
+
+    print("Processed requested_fields:", processed_fields)
+    print("Type after processing:", type(processed_fields))
+
+    if not user_query:
+        return jsonify({"error": "Missing 'user_query'"}), 400
+
+    # Fetch Elasticsearch results
+    raw_results = fetch_results(user_query, size=size)
+
+    # Stream results as SSE (pass processed fields)
+    return Response(
+        stream_drug(raw_results, user_query, processed_fields),
+        content_type="text/event-stream",
+        status=200
+    )
+  
+
+ 
+@app.route('/api/rnd-formulation-drug-results', methods=['GET'])
+def get_results():
+    """Endpoint to fetch processed LLaMA-3.3 results."""
+    user_query = request.args.get("user_query")
+    if not user_query or user_query not in processed_cache:
+        return jsonify({"error": "Results not ready yet"}), 404
+
+    return jsonify({"results": processed_cache[user_query]}), 200
 
 @app.route('/add-ai-column-rnd', methods=['POST'])
 def add_ai_column_rnd():
