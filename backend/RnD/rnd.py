@@ -6,7 +6,10 @@ from azure.core.credentials import AzureKeyCredential
 from azure.core.pipeline.transport import RequestsTransport
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
+from dotenv import load_dotenv
 from elasticsearch import Elasticsearch
+
+load_dotenv()
 
 es = Elasticsearch(
     os.getenv('elasticsearchendpoint'),
@@ -19,7 +22,7 @@ executor = ThreadPoolExecutor(max_workers=5)
 MODEL = "Llama-3.3-70B-Instruct"
 transport = RequestsTransport(timeout=(600, 600))  # Increase timeout
 client = ChatCompletionsClient(
-    endpoint=os.getenv("LLAMA_searchbyingredient_URL"),
+    endpoint=os.getenv("LLAMA_searchbyingredient_URI"),
     credential=AzureKeyCredential(os.getenv("LLAMA_searchbyingredient_API")),
     transport=transport
 )

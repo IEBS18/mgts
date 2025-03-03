@@ -16,7 +16,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 MODEL = "Llama-3.3-70B-Instruct"
 transport = RequestsTransport(timeout=(600, 600))  # Increase timeout
 client = ChatCompletionsClient(
-    endpoint=os.getenv("LLAMA_searchbyingredient_URL"),
+    endpoint=os.getenv("LLAMA_searchbyingredient_URI"),
     credential=AzureKeyCredential(os.getenv("LLAMA_searchbyingredient_API")),
     transport=transport
 )
