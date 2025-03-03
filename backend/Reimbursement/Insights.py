@@ -2,7 +2,6 @@ import os
 import sys
 from dotenv import load_dotenv
 from openai import AzureOpenAI
-from Formulary import predict_tier_and_requirement
 
 # Ensure UTF-8 output (especially on Windows)
 sys.stdout.reconfigure(encoding='utf-8')
@@ -85,23 +84,3 @@ def generate_insights(drug_name, safety, efficacy, tier, requirement):
     )
     
     return response.choices[0].message.content.strip()
-
-# Example call:
-if __name__ == "__main__":
-    drug_name = "Aspirin"
-    safety = "Mild risk of stomach irritation and bleeding with prolonged use."
-    efficacy = "Effective at reducing pain, fever, and inflammation. Can prevent blood clots."
-    tier = "Tier 2"
-    requirement = "Requires physician prescription for long-term use."
-    competitor_data = [
-        {"Drug": "Ibuprofen", "Safety": "Can cause gastrointestinal discomfort.", "Efficacy": "Highly effective for pain relief.","Tier":"Tier 4","Requirement":"Requires physician prescription for long-term use."},
-        {"Drug": "Acetaminophen", "Safety": "Liver toxicity at high doses.", "Efficacy": "Good analgesic but weak anti-inflammatory effect.","Tier":"Tier 4","Requirement":"Requires physician prescription for long-term use."}
-    ]
-    
-    differentiator = generate_differentiator(drug_name, safety, efficacy, tier, requirement, competitor_data)
-    insights = generate_insights(drug_name, safety, efficacy, tier, requirement)
-    
-    print("Differentiator:")
-    print(differentiator)
-    print("\nInsights:")
-    print(insights)

@@ -1215,7 +1215,7 @@ def main_drug_insights():
 
 # Formulary
 from Reimbursement.Formulary import fetch_drug_details_from_excel, predict_tier_and_requirement, fetch_data
-
+from Reimbursement.Insights import generate_differentiator, generate_insights
 @app.route('/get_safety_efficacy', methods=['POST'])
 def get_safety_efficacy():
     """
@@ -1369,14 +1369,17 @@ def get_safety_efficacy():
 @app.route('/add-drug-formulary', methods=['POST'])
 def add_drug_formulary():
     
-    # Ensure the request is JSON
+# Parse JSON payload from the frontend
     data = request.get_json()
+
     # Extract fields from the request
-    new_drug = data.get('drugName')
-    diseasesname = data.get('diseaseName')
-    efficacy = data.get('efficacy')
-    safety = data.get('safety')
-    modality = data.get('modality')
+    new_drug = data.get('drugName', '')
+    diseasesname = data.get('diseaseName', '')
+    efficacy = data.get('efficacy', '')
+    safety = data.get('safety', '')
+    modality = data.get('modality', '')
+
+    # Prepare the "plan" dict used for any downstream processing/predictions
     new_plan = {
         "drug_name": new_drug,
         "diseasesname": diseasesname,
@@ -1384,75 +1387,99 @@ def add_drug_formulary():
         "safety": safety,
         "modality": modality
     }
-    print(new_plan)
-    # Step 1: Fetch competitor data
+
+    # STEP 1: Fetch competitor data from your existing source
+    # Expecting fetch_data to return either a list or dict of competitor drugs
     list_competitor_drug = fetch_data([diseasesname])
-    # print("list:", list_competitor_drug)
-    
-    # Step 2: Ensure that fetched competitor data is a dictionary
+
+    # Convert competitor data to the dict structure { diseaseName: [ ... ] }
     if isinstance(list_competitor_drug, list):
-        # If the fetched data is a list, convert it into a dictionary with disease name as key
         list_competitor_drug = {diseasesname: list_competitor_drug}
     elif not isinstance(list_competitor_drug, dict):
-        # If the fetched data is neither a list nor a dictionary, reset to an empty dict
-        list_competitor_drug = {}
+        list_competitor_drug = {diseasesname: []}
 
-    # Step 3: Ensure that the disease name exists in the competitor data
-    competitor_data = list_competitor_drug.get(diseasesname, [])
-    
-    if not competitor_data:
-        return jsonify({
-            "error": "No competitor data found for the given disease.",
-            "drug_name": drug_name
-        }), 400
+    # Make sure there's a list under the disease key
+    if diseasesname not in list_competitor_drug:
+        list_competitor_drug[diseasesname] = []
 
-    # Step 4: Restructure competitor data to match the expected format for prediction
+    competitor_data = list_competitor_drug[diseasesname]
+
+    # STEP 2: Restructure competitor data (if needed) for your prediction engine
+    # For demonstration, let's create a competitor_data_dict. Adjust as your model requires.
     competitor_data_dict = {}
-    for drug in competitor_data:
-        if isinstance(drug, dict):  # Ensure drug is a dictionary
-            drug_name = drug.get('Drug Name')  # Access drug name
-            if drug_name:  # Ensure drug name exists
-                competitor_data_dict[drug_name] = [drug]  # Store drug details in a list for each drug
-        else:
-            print(f"Warning: Skipping invalid data for drug: {drug}")
+    for item in competitor_data:
+        if isinstance(item, dict):
+            drug_name_in_item = item.get('Drug Name') or item.get('drug_name')
+            if drug_name_in_item:
+                competitor_data_dict[drug_name_in_item] = [item]
 
-    # Log competitor_data_dict before passing it to the prediction function
-    # print(f"competitor_data_dict before passing to prediction: {competitor_data_dict}")
-    
-    # Check if competitor_data_dict is a dictionary
-    if isinstance(competitor_data_dict, dict):
-        print("competitor_data_dict is a dictionary.")
-    else:
-        print(f"competitor_data_dict is not a dictionary, it is a {type(competitor_data_dict)}")
-
-    # Step 5: Predict Tier & Requirement using the correctly structured dictionary
+    # STEP 3: Predict tier/requirement for the new drug (adjust as needed for your logic)
     prediction_result = predict_tier_and_requirement(new_plan, competitor_data_dict)
-    print("predicted:",prediction_result)
-    # Ensure prediction_result is a dictionary
-    # if isinstance(prediction_result, list) and prediction_result:
-    #     prediction_result = prediction_result[0]
-    # elif not isinstance(prediction_result, dict):
-    #     prediction_result = {}
 
-    # Step 6: Return Response
-    response_data = []
+    # STEP 4: Create a dictionary for the newly added drug using the same key style
+    # (lowercase keys like "drug_name", "efficacy", etc. are fine, since your React
+    # code unifies them to "Drug Name," "Efficacy," etc. in the front end.)
     new_drug_entry = {
         "drug_name": new_drug,
         "diseasesname": diseasesname,
         "efficacy": efficacy,
         "safety": safety,
-        "modality": modality,    
+        "modality": modality,
         "Tier": prediction_result.get("Tier", "N/A"),
         "Requirement": prediction_result.get("Requirement", "Fully Reimbursed"),
     }
-    response_data.append(new_drug_entry)
 
-    # Append competitor data
-    response_data.extend(competitor_data)
+    # Insert the newly added drug into the competitor array (front of the list, if you prefer)
+    competitor_data.insert(0, new_drug_entry)
 
-    # print("comp:", competitor_data)
-    # print(response_data)
-    return jsonify(response_data), 201
+    # Reassign the updated array back to the main dict
+    list_competitor_drug[diseasesname] = competitor_data
+
+    # STEP 5: Return exactly what the front-end code expects:
+    # {
+    #   "list_competitor_drug": { "Disease X": [ {drug}, ... ] },
+    #   "drug_name": "..."
+    # }
+    # The front-end’s unify/parse logic references "rawData.list_competitor_drug"
+    # and "rawData.drug_name" – so we must include these keys exactly.
+    return jsonify({
+        "list_competitor_drug": list_competitor_drug,
+        "drug_name": new_drug
+    }), 201
+
+@app.route('/formulary-drug-insights', methods=['POST'])
+def formulary_drug_insights():
+    try:
+        # Extract the incoming JSON data
+        data = request.json
+        drug_name = data.get('drug_name')
+        all_data = data.get('all_data')
+        user_added_drug = all_data[0]
+        safety = user_added_drug.get('safety')
+        efficacy = user_added_drug.get('efficacy')
+        tier = user_added_drug.get('tier')
+        requirement = user_added_drug.get('requirement')
+        competitor_data = all_data[1:]  # List of competitor drug data
+
+        # Validate input data
+        if not drug_name:
+            return jsonify({"error": "Drug name is required"}), 400
+        if not safety or not efficacy or not tier or not requirement:
+            return jsonify({"error": "Drug safety, efficacy, tier, and requirement are required"}), 400
+        if not competitor_data or not isinstance(competitor_data, list):
+            return jsonify({"error": "Competitor data is required and should be a list"}), 400
+
+        # Generate Differentiator and Insights using the imported functions
+        differentiator = generate_differentiator(drug_name, safety, efficacy, tier, requirement, competitor_data)
+        insights = generate_insights(drug_name, safety, efficacy, tier, requirement)
+
+        # Return the generated insights and differentiator
+        return jsonify({"differentiator": differentiator, "insights": insights}), 200
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 from RnD.rnd import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search
 from RnD.RNDAI_column import getAIColumn

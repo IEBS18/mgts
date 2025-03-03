@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog"
-import { useLocation, useNavigate } from "react-router-dom"
-import { PlusCircle } from "lucide-react"
-import { toast, ToastContainer } from "react-toastify"
-import FormatText from "./FormatText"
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import { useLocation, useNavigate } from "react-router-dom";
+import { PlusCircle } from "lucide-react";
+import { toast, ToastContainer } from "react-toastify";
+import FormatText from "../FormatText";
 
 /**
  * Example topics you'd like to compare.
@@ -20,51 +20,51 @@ const topics = [
   "Tier",
   "Efficacy",
   "Safety",
-]
+];
 
 export function FormularyComparison() {
-  const location = useLocation()
-  const navigate = useNavigate()
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // The array of selected competitor drug objects
-  const { selectedDrugs = [], mainDrug = "" } = location.state || {}
+  const { selectedDrugs = [], mainDrug = "" } = location.state || {};
 
   // (Optional) If you want to dynamically fetch "differentiator" or "keyInsights" for the main drug:
-  const [mainDrugInsights, setMainDrugInsights] = useState(null)
-  const [isLoadingInsights, setIsLoadingInsights] = useState(false)
+  const [mainDrugInsights, setMainDrugInsights] = useState(null);
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
 
   useEffect(() => {
     const fetchMainDrugInsights = async () => {
-      if (!mainDrug) return
-      setIsLoadingInsights(true)
+      if (!mainDrug) return;
+      setIsLoadingInsights(true);
       try {
         // Adjust to your actual endpoint:
         const response = await fetch(`${import.meta.env.VITE_API_URL}/formulary-drug-insights`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ drug_name: mainDrug, all_data: selectedDrugs }),
-        })
+        });
         if (!response.ok) {
-          throw new Error("Failed to fetch main drug insights")
+          throw new Error("Failed to fetch main drug insights");
         }
-        const data = await response.json()
-        setMainDrugInsights(data) // e.g. { differentiator: "...", keyInsights: "..." }
+        const data = await response.json();
+        setMainDrugInsights(data); // e.g. { differentiator: "...", keyInsights: "..." }
       } catch (error) {
-        console.error("Error fetching main drug insights:", error)
-        toast.error(error.message || "Failed to fetch main drug insights")
+        console.error("Error fetching main drug insights:", error);
+        toast.error(error.message || "Failed to fetch main drug insights");
       } finally {
-        setIsLoadingInsights(false)
+        setIsLoadingInsights(false);
       }
-    }
+    };
 
-    fetchMainDrugInsights()
-  }, [mainDrug, selectedDrugs])
+    fetchMainDrugInsights();
+  }, [mainDrug, selectedDrugs]);
 
   // Example: you might have a function to export or add AI columns, etc.
   const handleExport = () => {
     // Implementation for exporting
-    toast.info("Exporting is not implemented yet.")
-  }
+    toast.info("Exporting is not implemented yet.");
+  };
 
   return (
     <div className="w-full p-4 overflow-x-auto">
@@ -146,5 +146,5 @@ export function FormularyComparison() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
