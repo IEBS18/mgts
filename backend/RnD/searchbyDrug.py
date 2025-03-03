@@ -19,8 +19,8 @@ executor = ThreadPoolExecutor(max_workers=5)
 MODEL = "Llama-3.3-70B-Instruct"
 transport = RequestsTransport(timeout=(600, 600))  # Increase timeout
 client = ChatCompletionsClient(
-    endpoint=os.getenv("LLAMA_3_URL"),
-    credential=AzureKeyCredential(os.getenv("LLAMA_3_API")),
+    endpoint=os.getenv("LLAMA_searchbydrug_URL"),
+    credential=AzureKeyCredential(os.getenv("LLAMA_searchbydrug_API")),
     transport=transport
 )
  
