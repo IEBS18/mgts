@@ -1246,153 +1246,213 @@ def get_safety_efficacy():
 
 
 # Route for predicting tier and requirement
-@app.route('/predict_tier_and_requirement', methods=['POST'])
-def predict_tier_and_requirement_route():
-    """
-    Endpoint to predict the Tier and Requirement for a new drug plan.
+# @app.route('/predict_tier_and_requirement', methods=['POST'])
+# def predict_tier_and_requirement_route():
+#     """
+#     Endpoint to predict the Tier and Requirement for a new drug plan.
  
-    Expects a JSON payload:
-    {
-        "drug_name": "Aspirin",
-        "diseasesname": "Hypertension",
-        "efficacy": "Effective in reducing blood clot formation",
-        "safety": "Generally safe with minor gastrointestinal side effects",
-        "modality": "Small Molecule",
-        "competitor_data": {
-            "Hypertension": {
-                "Amlodipine": [
-                    {
-                        "Efficacy": "Effective in lowering blood pressure",
-                        "Safety": "Generally well tolerated, mild headaches reported",
-                        "Modality": "Small Molecule",
-                        "Tier": "Tier 1",
-                        "Requirement": "No prior authorization required"
-                    },
-                    {
-                        "Efficacy": "Moderate effectiveness in elderly patients",
-                        "Safety": "Mild dizziness and occasional swelling",
-                        "Modality": "Small Molecule",
-                        "Tier": "Tier 2",
-                        "Requirement": "Prior authorization required for patients over 65"
-                    }
-                ],
-                "Losartan": [
-                    {
-                        "Efficacy": "Strong efficacy in preventing strokes and heart failure",
-                        "Safety": "Mild fatigue and occasional dry cough",
-                        "Modality": "Small Molecule",
-                        "Tier": "Tier 2",
-                        "Requirement": "Step therapy required"
-                    }
-                ]
-            }
-        }
-    }
-    """
-    data = request.json
+#     Expects a JSON payload:
+#     {
+#         "drug_name": "Aspirin",
+#         "diseasesname": "Hypertension",
+#         "efficacy": "Effective in reducing blood clot formation",
+#         "safety": "Generally safe with minor gastrointestinal side effects",
+#         "modality": "Small Molecule",
+#         "competitor_data": {
+#             "Hypertension": {
+#                 "Amlodipine": [
+#                     {
+#                         "Efficacy": "Effective in lowering blood pressure",
+#                         "Safety": "Generally well tolerated, mild headaches reported",
+#                         "Modality": "Small Molecule",
+#                         "Tier": "Tier 1",
+#                         "Requirement": "No prior authorization required"
+#                     },
+#                     {
+#                         "Efficacy": "Moderate effectiveness in elderly patients",
+#                         "Safety": "Mild dizziness and occasional swelling",
+#                         "Modality": "Small Molecule",
+#                         "Tier": "Tier 2",
+#                         "Requirement": "Prior authorization required for patients over 65"
+#                     }
+#                 ],
+#                 "Losartan": [
+#                     {
+#                         "Efficacy": "Strong efficacy in preventing strokes and heart failure",
+#                         "Safety": "Mild fatigue and occasional dry cough",
+#                         "Modality": "Small Molecule",
+#                         "Tier": "Tier 2",
+#                         "Requirement": "Step therapy required"
+#                     }
+#                 ]
+#             }
+#         }
+#     }
+#     """
+#     data = request.json
  
+#     # Extract fields from the request
+#     drug_name = data.get('drug_name')
+#     diseasesname = data.get('diseasesname')
+#     efficacy = data.get('efficacy')
+#     safety = data.get('safety')
+#     modality = data.get('modality')
+#     competitor_data = data.get('competitor_data')  # Expecting this in the request
+ 
+#     # Validate input
+#     missing_fields = []
+#     for field in ['drug_name', 'diseasesname', 'efficacy', 'safety', 'modality', 'competitor_data']:
+#         if not data.get(field):
+#             missing_fields.append(field)
+ 
+#     if missing_fields:
+#         message = f"The following fields are required: {', '.join(missing_fields)}."
+#         app.logger.error(message)
+#         return jsonify({
+#             "status": "error",
+#             "message": message
+#         }), 400
+ 
+#     # Validate competitor_data structure
+#     if not isinstance(competitor_data, dict):
+#         message = "Invalid format for competitor_data. It should be a dictionary."
+#         app.logger.error(message)
+#         return jsonify({
+#             "status": "error",
+#             "message": message
+#         }), 400
+ 
+#     # Further validation: Ensure diseasesname exists in competitor_data
+#     if diseasesname not in competitor_data:
+#         message = f"Disease '{diseasesname}' not found in competitor_data."
+#         app.logger.error(message)
+#         return jsonify({
+#             "status": "error",
+#             "message": message
+#         }), 400
+ 
+#     try:
+#         # Construct new_plan dictionary
+#         new_plan = {
+#             "drug_name": drug_name,
+#             "diseasesname": diseasesname,
+#             "efficacy": efficacy,
+#             "safety": safety,
+#             "modality": modality
+#         }
+ 
+#         app.logger.info(f"Processing new plan: {new_plan}")
+ 
+#         # Call the prediction function
+#         prediction = predict_tier_and_requirement(new_plan, competitor_data)
+ 
+#         # Check if the result is an error or a valid prediction
+#         if "error" in prediction:
+#             app.logger.error(f"Prediction Error: {prediction['message']}")
+#             return jsonify({"status": "error", "message": prediction["message"]}), 500
+ 
+#         # Return successful prediction response
+#         response_payload = {
+#             "status": "success",
+#             "tier": prediction["Tier"],  # Return Tier
+#             "requirement": prediction["Requirement"]  # Return Requirement
+#         }
+ 
+#         app.logger.info(f"Prediction Successful: {response_payload}")
+ 
+#         return jsonify(response_payload), 200
+ 
+#     except Exception as e:
+#         app.logger.exception("Unexpected error during prediction.")
+#         return jsonify({"status": "error", "message": str(e)}), 500
+    
+@app.route('/add-drug-formulary', methods=['POST'])
+def add_drug_formulary():
+    
+    # Ensure the request is JSON
+    data = request.get_json()
     # Extract fields from the request
-    drug_name = data.get('drug_name')
-    diseasesname = data.get('diseasesname')
+    new_drug = data.get('drugName')
+    diseasesname = data.get('diseaseName')
     efficacy = data.get('efficacy')
     safety = data.get('safety')
     modality = data.get('modality')
-    competitor_data = data.get('competitor_data')  # Expecting this in the request
- 
-    # Validate input
-    missing_fields = []
-    for field in ['drug_name', 'diseasesname', 'efficacy', 'safety', 'modality', 'competitor_data']:
-        if not data.get(field):
-            missing_fields.append(field)
- 
-    if missing_fields:
-        message = f"The following fields are required: {', '.join(missing_fields)}."
-        app.logger.error(message)
-        return jsonify({
-            "status": "error",
-            "message": message
-        }), 400
- 
-    # Validate competitor_data structure
-    if not isinstance(competitor_data, dict):
-        message = "Invalid format for competitor_data. It should be a dictionary."
-        app.logger.error(message)
-        return jsonify({
-            "status": "error",
-            "message": message
-        }), 400
- 
-    # Further validation: Ensure diseasesname exists in competitor_data
-    if diseasesname not in competitor_data:
-        message = f"Disease '{diseasesname}' not found in competitor_data."
-        app.logger.error(message)
-        return jsonify({
-            "status": "error",
-            "message": message
-        }), 400
- 
-    try:
-        # Construct new_plan dictionary
-        new_plan = {
-            "drug_name": drug_name,
-            "diseasesname": diseasesname,
-            "efficacy": efficacy,
-            "safety": safety,
-            "modality": modality
-        }
- 
-        app.logger.info(f"Processing new plan: {new_plan}")
- 
-        # Call the prediction function
-        prediction = predict_tier_and_requirement(new_plan, competitor_data)
- 
-        # Check if the result is an error or a valid prediction
-        if "error" in prediction:
-            app.logger.error(f"Prediction Error: {prediction['message']}")
-            return jsonify({"status": "error", "message": prediction["message"]}), 500
- 
-        # Return successful prediction response
-        response_payload = {
-            "status": "success",
-            "tier": prediction["Tier"],  # Return Tier
-            "requirement": prediction["Requirement"]  # Return Requirement
-        }
- 
-        app.logger.info(f"Prediction Successful: {response_payload}")
- 
-        return jsonify(response_payload), 200
- 
-    except Exception as e:
-        app.logger.exception("Unexpected error during prediction.")
-        return jsonify({"status": "error", "message": str(e)}), 500
+    new_plan = {
+        "drug_name": new_drug,
+        "diseasesname": diseasesname,
+        "efficacy": efficacy,
+        "safety": safety,
+        "modality": modality
+    }
+    print(new_plan)
+    # Step 1: Fetch competitor data
+    list_competitor_drug = fetch_data([diseasesname])
+    # print("list:", list_competitor_drug)
     
+    # Step 2: Ensure that fetched competitor data is a dictionary
+    if isinstance(list_competitor_drug, list):
+        # If the fetched data is a list, convert it into a dictionary with disease name as key
+        list_competitor_drug = {diseasesname: list_competitor_drug}
+    elif not isinstance(list_competitor_drug, dict):
+        # If the fetched data is neither a list nor a dictionary, reset to an empty dict
+        list_competitor_drug = {}
 
-@app.route('/add-drug-formulary', methods=['POST'])  # Change to POST
-def add_drug_formulary():
-    try:
-        # Ensure the request is JSON
-        data = request.get_json()
+    # Step 3: Ensure that the disease name exists in the competitor data
+    competitor_data = list_competitor_drug.get(diseasesname, [])
+    
+    if not competitor_data:
+        return jsonify({
+            "error": "No competitor data found for the given disease.",
+            "drug_name": drug_name
+        }), 400
 
-        # Extract fields from the request
-        drug_name = data.get('drugName')
-        diseasesname = data.get('diseaseName')
-        efficacy = data.get('efficacy')
-        safety = data.get('safety')
-        modality = data.get('modality')
+    # Step 4: Restructure competitor data to match the expected format for prediction
+    competitor_data_dict = {}
+    for drug in competitor_data:
+        if isinstance(drug, dict):  # Ensure drug is a dictionary
+            drug_name = drug.get('Drug Name')  # Access drug name
+            if drug_name:  # Ensure drug name exists
+                competitor_data_dict[drug_name] = [drug]  # Store drug details in a list for each drug
+        else:
+            print(f"Warning: Skipping invalid data for drug: {drug}")
 
-        # Print for debugging (you can remove this later)
-        list_competitor_drug = fetch_data([diseasesname])
-        # print(list_competitor_drug)
+    # Log competitor_data_dict before passing it to the prediction function
+    # print(f"competitor_data_dict before passing to prediction: {competitor_data_dict}")
+    
+    # Check if competitor_data_dict is a dictionary
+    if isinstance(competitor_data_dict, dict):
+        print("competitor_data_dict is a dictionary.")
+    else:
+        print(f"competitor_data_dict is not a dictionary, it is a {type(competitor_data_dict)}")
 
-        # Here, you would proceed with saving the drug data to your database or perform other operations
+    # Step 5: Predict Tier & Requirement using the correctly structured dictionary
+    prediction_result = predict_tier_and_requirement(new_plan, competitor_data_dict)
+    print("predicted:",prediction_result)
+    # Ensure prediction_result is a dictionary
+    # if isinstance(prediction_result, list) and prediction_result:
+    #     prediction_result = prediction_result[0]
+    # elif not isinstance(prediction_result, dict):
+    #     prediction_result = {}
 
-        # Return a response indicating success
-        return jsonify({"list_competitor_drug": list_competitor_drug, "drug_name": drug_name}), 201
+    # Step 6: Return Response
+    response_data = []
+    new_drug_entry = {
+        "drug_name": new_drug,
+        "diseasesname": diseasesname,
+        "efficacy": efficacy,
+        "safety": safety,
+        "modality": modality,    
+        "Tier": prediction_result.get("Tier", "N/A"),
+        "Requirement": prediction_result.get("Requirement", "Fully Reimbursed"),
+    }
+    response_data.append(new_drug_entry)
 
-    except Exception as e:
-        # If something goes wrong, return an error message
-        print("Error:", e)
-        return jsonify({"message": "Failed to add drug", "status": "error"}), 400
+    # Append competitor data
+    response_data.extend(competitor_data)
+
+    # print("comp:", competitor_data)
+    # print(response_data)
+    return jsonify(response_data), 201
 
 from RnD.rnd import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search
 from RnD.RNDAI_column import getAIColumn
