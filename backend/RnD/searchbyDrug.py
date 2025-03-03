@@ -104,14 +104,14 @@ def fetch_results(user_query, size=5):
  
 def get_prompt(field_name, user_query):
     prompts = {
-        f"Disease Name": "Extract details about the stability of the active ingredient '{user_query}', formulation, including storage conditions, temperature variations, shelf life, and degradation prevention methods.",
-        f"Mechanism of Association": "Summarize how the active ingredient '{user_query}', interacts with other components in the formulation, including synergistic effects, adverse reactions, and stability changes.",
-        f"Bacteria or Microbe": "Provide the composition of the formulation, including the active ingredient '{user_query}', carrier agents, and key excipients.",
+        f"Disease Name": "Identify, extract, and derive the list of diseases that have been studied in connection with the gut microbiome, microbiota, gut-axis and the drug given '{user_query}'",
+        f"Mechanism of Association": " For the extracted diseases describe how the gut microbiome influences or is implicated in the disease (e.g., immune modulation, metabolic pathways, gut-brain axis, systemic inflammation)",
+        f"Bacteria or Microbe": "For the diseases found identify specific bacterial strains or microbial taxa that have been linked to the disease (e.g., Firmicutes/Bacteroidetes ratio, Akkermansia muciniphila, Clostridium species, etc.)",
         f"Role/Pathway": "Describe the characteristics of each ingredient in the composition, including physical and chemical properties.",
-        f"Potential of Drug": "List the components that interact with the active ingredient'{user_query}', specifying whether they improve efficacy, stability, or cause degradation.",
-        f"Constipation as Comorbidity": "Identify the physical form of the formulation (e.g., lotion, cream, gel, patch, spray, tablet, injectable) for the active ingredient '{user_query}'.",
-        f"Analyst Comment (Disease Association to Gut Microbiome)": "Extract details about the experimental conditions used in stability, efficacy, and safety tests for the active ingredient '{user_query}'.",
-        f"Scientific Evidence": "Summarize the stability test results, including duration, storage conditions, and observed stability or degradation percentages for the active ingredient '{user_query}'.",
+        f"Potential of Drug": "Explore the therapeutic potential of gut microbiome modulation (e.g., probiotics, prebiotics, microbiota-based therapies, fecal microbiota transplantation (FMT), small molecules) by the drug '{user_query}",
+        f"Constipation as Comorbidity": "Identify whether constipation is a comorbidity or symptom associated with the disease '{user_query}'.",
+        f"Analyst Comment (Disease Association to Gut Microbiome)": "Provide expert insight on the strength and validity of the gut microbiome-disease connection, citing key findings from studies '{user_query}'.",
+        f"Scientific Evidence": "Summarize relevant research, including clinical studies, meta-analyses, or preclinical findings that support the disease-microbiome association '{user_query}'.",
         
  
     }
@@ -168,8 +168,7 @@ def stream_drug(results, user_query, requested_fields):
     "Potential of Drug",
     "Constipation as Comorbidity",
     "Analyst Comment (Disease Association to Gut Microbiome)",
-    "Scientific Evidence",
-    "Drug Studied player",
+    "Scientific Evidence"
 
   
     ]
