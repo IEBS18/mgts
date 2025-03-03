@@ -21,6 +21,7 @@ import TPPDrugPage from "./components/TPPDrugPage";
 import { TPPComparison } from "./components/TPPComparison";
 import { ComparePlans } from "./components/Formulary/ComparePlans";
 import RNDFormulation from "./components/Rnd/RNDFormulation";
+import DrugFormulation from './components/Rnd/DrugFormulation'
 import FormularyDrugPage from "./components/Formulary/FormularyDrugPage";
 import { FormularyComparison } from "./components/Formulary/FormularyComparison";
 
@@ -64,7 +65,8 @@ function App() {
         <Route path="/tpp-by-drug" element={<PrivateRoute><Layout><TPPDrugPage/></Layout></PrivateRoute>} />
         <Route path="/tpp-comparison" element={<PrivateRoute><Layout><TPPComparison /></Layout></PrivateRoute>} />
         <Route path="/compare-plans" element={<PrivateRoute><Layout><ComparePlans/></Layout></PrivateRoute>} />
-        <Route path="/rnd-formulation" element={<PrivateRoute><Layout><RNDFormulation/></Layout></PrivateRoute>} />
+        <Route path="/rnd-formulation-ingredients" element={<PrivateRoute><Layout><RNDFormulation/></Layout></PrivateRoute>} />
+        <Route path="/rnd-formulation-drugs" element={<PrivateRoute><Layout><DrugFormulation/></Layout></PrivateRoute>} />
       </Routes>
     </Router>
   );

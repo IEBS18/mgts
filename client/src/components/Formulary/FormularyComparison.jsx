@@ -20,6 +20,7 @@ const topics = [
   "Tier",
   "Efficacy",
   "Safety",
+  "Requirements/Limit"
 ];
 
 export function FormularyComparison() {

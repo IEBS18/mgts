@@ -1491,7 +1491,7 @@ def formulary_drug_insights():
 
 
 from RnD.rnd import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search
-from RnD.searchbyDrug import fetch_results, stream_drug, processed_cache, search_drug
+from RnD.searchbyDrug import fetch_results, stream_drug, processed_cache
 from RnD.RNDAI_column import getAIColumn
 # ------------------------------
 # API Routes
