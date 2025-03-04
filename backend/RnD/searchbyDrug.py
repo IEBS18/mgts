@@ -55,7 +55,7 @@ index_fields = {
 # Define post-processing fields for filtering after search (if needed)
 post_processing_fields = {
     "granted_updated_final": [
-        "source", "Title", "Abstract", "Claim","Assignee_Applicant"],
+        "display_key", "Title", "Abstract", "Claim","Assignee_Applicant"],
     "pregranted": [
         "pgpub_id", "Title", "Abstract", "Claim","Assignee_Applicant"],
     "test": ["PMC_ID", "Title", "Abstract", "Full Paper"],
@@ -200,6 +200,10 @@ def stream_drug(results, user_query, requested_fields):
             claim = patent.get("Claim", "N/A")
             brief_summary=patent.get("Brief Summary","N/A")
             description=patent.get("Study Description","N/A")
+            studies_by=patent.get("Assignee_Applicant","N/A")
+            if studies_by=="N/A":
+                studies_by=patent.get("Sponsor","N/A")
+            
             source = patent.get("source", patent.get("pgpub_id", "N/A"))
             if source == "N/A":
                 source = patent.get("PMC_ID", "N/A")
@@ -215,6 +219,7 @@ def stream_drug(results, user_query, requested_fields):
                 f"Full Paper: {patent.get('Full Paper', '')}\n"
                 f"Brief Summary: {patent.get('Brief Summary', '')}\n"
                 f"Study Description: {patent.get('Study Description', '')}\n"
+                f"Studies By: {studies_by}\n"
             )
 
             extracted_info = {
@@ -222,7 +227,8 @@ def stream_drug(results, user_query, requested_fields):
                 "Claim": claim,
                 "Brief Summary":brief_summary,
                 "Study Description":description,
-                "Publication Number": source
+                "Publication Number": source,
+                "Studies By": studies_by
             }
 
             # Submit only the requested fields
