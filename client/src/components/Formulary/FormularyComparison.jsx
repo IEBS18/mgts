@@ -3,12 +3,18 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PlusCircle } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import FormatText from "../FormatText";
-
+import ReactMarkdown from "react-markdown";
 /**
  * Example topics you'd like to compare.
  * Adjust as needed for your formulary data.
@@ -20,7 +26,7 @@ const topics = [
   "Tier",
   "Efficacy",
   "Safety",
-  "Requirements/Limit"
+  "Requirements/Limit",
 ];
 
 export function FormularyComparison() {
@@ -40,11 +46,17 @@ export function FormularyComparison() {
       setIsLoadingInsights(true);
       try {
         // Adjust to your actual endpoint:
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/formulary-drug-insights`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ drug_name: mainDrug, all_data: selectedDrugs }),
-        });
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/formulary-drug-insights`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              drug_name: mainDrug,
+              all_data: selectedDrugs,
+            }),
+          }
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch main drug insights");
         }
@@ -73,7 +85,9 @@ export function FormularyComparison() {
 
       {/* Title & Action Buttons */}
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">Formulary Comparison</h1>
+        <h1 className="text-2xl font-bold text-gray-800">
+          Formulary Comparison
+        </h1>
         <div className="flex gap-2">
           <Button
             onClick={handleExport}
@@ -127,7 +141,9 @@ export function FormularyComparison() {
             {isLoadingInsights ? (
               <p>Loading differentiator...</p>
             ) : (
-              <FormatText text={mainDrugInsights?.differentiator || "N/A"} />
+              <ReactMarkdown>
+                {mainDrugInsights?.differentiator || "N/A"}
+              </ReactMarkdown>
             )}
           </CardContent>
         </Card>
@@ -141,7 +157,7 @@ export function FormularyComparison() {
             {isLoadingInsights ? (
               <p>Loading insights...</p>
             ) : (
-              <FormatText text={mainDrugInsights?.keyInsights || "N/A"} />
+              <ReactMarkdown>{mainDrugInsights?.insights || "N/A"}</ReactMarkdown>
             )}
           </CardContent>
         </Card>
