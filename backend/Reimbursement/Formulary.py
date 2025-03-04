@@ -138,7 +138,7 @@ def predict_tier_and_requirement(new_plan, competitor_data_dict):
     modality = new_plan.get("modality")
 
     app.logger.info(f"Predicting Tier and Requirement for Drug: {drug_name} under Disease: {diseasename}")
-    print("comp.", competitor_data_dict)
+    # print("comp.", competitor_data_dict)
     # Fetch competitor data for the given disease
     # disease_competitors = competitor_data_dict.get(diseasename, {})
     # print(f"Looking for disease: '{diseasename}' in {competitor_data_dict.keys()}")
@@ -217,7 +217,7 @@ def predict_tier_and_requirement(new_plan, competitor_data_dict):
             model=MODEL,
             messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}]
         )
-        print(response)
+        # print(response)
         app.logger.info("Received response from OpenAI.")
 
         # Parse the response from OpenAI

@@ -19,13 +19,14 @@ openai_client = AzureOpenAI(
 MODEL = "gpt-4o-mini"  # Replace with an available model
 
 def generate_differentiator(drug_name, safety, efficacy, tier, requirement, competitor_data):
+    # print("fuck off-difference")
     """Generates a differentiator for the drug compared to competitors."""
     system_prompt = (
         "You are an expert in pharmaceutical market research. Your task is to analyze how a drug stands out "
         "compared to competitors in terms of Safety and Efficacy. Based on its tier and requirements, "
         "explain why it has been classified in that tier. Keep it concise with 2-3 key points."
     )
-    
+    # print("sys", system_prompt)
     prompt = f"""
     Drug: {drug_name}
     Tier: {tier}
@@ -33,24 +34,26 @@ def generate_differentiator(drug_name, safety, efficacy, tier, requirement, comp
     Safety: {safety}
     Efficacy: {efficacy}
     """
-    
+    # print("promtp:",prompt)
     for competitor in competitor_data:
-        prompt += f"""
+        # print("comp_data",competitor)
+        # print("promtp:",prompt)
+        new_prompt=prompt + f"""
         
-        Competitor: {competitor['Drug']}
+        Competitor: {competitor['Drug Name']}
         Safety: {competitor['Safety']}
         Efficacy: {competitor['Efficacy']}
         Tier: {competitor['Tier']}
-        Requirement: {competitor['Requirement']}
+        Requirements/Limitations: {competitor['Requirements/Limits']}
         """
-    
+        # print("prompt",new_prompt)
     response = openai_client.chat.completions.create(
         model=MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": new_prompt}
         ],
-        max_tokens=350,
+        # max_tokens=350,
         temperature=0.7
     )
     
@@ -58,6 +61,7 @@ def generate_differentiator(drug_name, safety, efficacy, tier, requirement, comp
 
 def generate_insights(drug_name, safety, efficacy, tier, requirement):
     """Generates insights about the drug, explaining its strengths, weaknesses, and market impact."""
+    # print("fuck off-insights")
     system_prompt = (
         "You are a pharmaceutical market analyst. Provide an analysis of the drug based on Safety, Efficacy, "
         "Tier classification, and Requirements. Discuss its strengths, weaknesses, and how it impacts the market."
@@ -65,22 +69,24 @@ def generate_insights(drug_name, safety, efficacy, tier, requirement):
         "in 3-5 bullet points."
     )
     
-    prompt = f"""
-    Drug: {drug_name}
+    insights_prompt = f"""
+    drug_name: {drug_name}
     Tier: {tier}
     Requirements/Limitations: {requirement}
     Safety: {safety}
     Efficacy: {efficacy}
     """
-    
-    response = openai_client.chat.completions.create(
+    # print("promtp", insights_prompt)
+    insights_response = openai_client.chat.completions.create(
         model=MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": insights_prompt}
         ],
-        max_tokens=350,
+        # max_tokens=350,
         temperature=0.7
     )
-    
-    return response.choices[0].message.content.strip()
+    #print("response", insights_response)
+    insights_resp=insights_response.choices[0].message.content.strip()
+    # print("insights", insights)
+    return insights_resp

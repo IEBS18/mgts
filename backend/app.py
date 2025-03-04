@@ -1463,11 +1463,11 @@ def formulary_drug_insights():
         if requirement=="N/A" or not requirement:
             requirement="Not Available"
             
-        print(drug_name)
-        print(safety)
-        print(efficacy)
-        print(tier)
-        print(requirement)
+        # print(drug_name)
+        # print(safety)
+        # print(efficacy)
+        # print(tier)
+        # print(requirement)
 
         # Validate input data
         # if not drug_name:
@@ -1479,9 +1479,9 @@ def formulary_drug_insights():
 
         # Generate Differentiator and Insights using the imported functions
         differentiator = generate_differentiator(drug_name, safety, efficacy, tier, requirement, competitor_data)
-        print("MADARCHOD")
+        # print("fck")
         insights = generate_insights(drug_name, safety, efficacy, tier, requirement)
-
+        # print("insights",insights)
         # Return the generated insights and differentiator
         return jsonify({"differentiator": differentiator, "insights": insights}), 200
 
