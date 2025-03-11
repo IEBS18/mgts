@@ -1,9 +1,3 @@
-#query classifier
-#dynamic cypher quer
-# neo4j search relation found give response
-# else throw back to the elastic search data.
-# thats it.
-
 import os
 import torch
 import pickle
@@ -440,7 +434,7 @@ def generate_response(user_query, context, source):
     
     if source == "neo4j":
         prompt = f"User Query: {user_query}\n\nRetrieved structured data from Neo4j:\n{context}\n\nGenerate a precise and structured response based on this structured data."
-    else:
+    else: #query classifier la call karaych ahe ithe 
         prompt = f"User Query: {user_query}\n\nRetrieved data from Elasticsearch:\n{context}\n\nProvide an insightful response based on this unstructured search data."
     
     try:
@@ -490,3 +484,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
