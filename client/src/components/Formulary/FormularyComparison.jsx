@@ -22,6 +22,7 @@ import ReactMarkdown from "react-markdown";
 const topics = [
   "Drug Name",
   "Drug Type",
+  // "Specialty",
   "Modality",
   "Tier",
   "Efficacy",
@@ -117,7 +118,7 @@ export function FormularyComparison() {
           {topics.map((topic) => (
   <tr key={topic} className="border-b bg-white hover:bg-gray-50">
     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap sticky left-0 bg-white">
-      {topic}
+      {topic !== "Drug Type" ? topic  : "Specialty"}
     </td>
     {selectedDrugs.map((drug, idx) => (
       <td
