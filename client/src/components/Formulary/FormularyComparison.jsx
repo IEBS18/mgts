@@ -26,7 +26,7 @@ const topics = [
   "Tier",
   "Efficacy",
   "Safety",
-  "Requirements/Limit",
+  // "Requirements/Limit",
 ];
 
 export function FormularyComparison() {
@@ -74,10 +74,10 @@ export function FormularyComparison() {
   }, [mainDrug, selectedDrugs]);
 
   // Example: you might have a function to export or add AI columns, etc.
-  const handleExport = () => {
-    // Implementation for exporting
-    toast.info("Exporting is not implemented yet.");
-  };
+  // const handleExport = () => {
+  //   // Implementation for exporting
+  //   toast.info("Exporting is not implemented yet.");
+  // };
 
   return (
     <div className="w-full p-4 overflow-x-auto">
@@ -88,14 +88,14 @@ export function FormularyComparison() {
         <h1 className="text-2xl font-bold text-gray-800">
           Formulary Comparison
         </h1>
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <Button
             onClick={handleExport}
             className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[12px]"
           >
             Export
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Comparison Table or Layout */}
@@ -121,7 +121,7 @@ export function FormularyComparison() {
                 </td>
                 {selectedDrugs.map((drug, idx) => (
                   <td key={idx} className="px-6 py-4 whitespace-normal">
-                    <FormatText text={drug[topic]} />
+                    <FormatText text={drug[topic] || "N/A"} />
                   </td>
                 ))}
               </tr>
