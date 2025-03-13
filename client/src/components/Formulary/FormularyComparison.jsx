@@ -114,18 +114,24 @@ export function FormularyComparison() {
             </tr>
           </thead>
           <tbody>
-            {topics.map((topic) => (
-              <tr key={topic} className="border-b bg-white hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap sticky left-0 bg-white">
-                  {topic}
-                </td>
-                {selectedDrugs.map((drug, idx) => (
-                  <td key={idx} className="px-6 py-4 whitespace-normal">
-                    <FormatText text={drug[topic] || "N/A"} />
-                  </td>
-                ))}
-              </tr>
-            ))}
+          {topics.map((topic) => (
+  <tr key={topic} className="border-b bg-white hover:bg-gray-50">
+    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap sticky left-0 bg-white">
+      {topic}
+    </td>
+    {selectedDrugs.map((drug, idx) => (
+      <td
+        key={idx}
+        className={`px-6 py-4 whitespace-normal ${
+          topic === "Tier" ? "font-bold text-black" : ""
+        }`}
+      >
+        <FormatText text={drug[topic] || "N/A"} />
+      </td>
+    ))}
+  </tr>
+))}
+
           </tbody>
         </table>
       </div>
