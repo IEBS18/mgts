@@ -641,7 +641,7 @@ const FormularyDrugPage = () => {
                 {/* If present, show Drug Type */}
                 {drugItem["Drug Type"] !== "Not Available" && (
                   <p>
-                    <strong className="font-semibold">Drug Type:</strong>{" "}
+                    <strong className="font-semibold">Specialty:</strong>{" "}
                     {drugItem["Drug Type"]}
                   </p>
                 )}
