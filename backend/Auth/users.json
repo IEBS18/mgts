@@ -1,0 +1,30 @@
+[
+    {
+        "id": 1,
+        "first_name": "Ayush",
+        "last_name": "abad",
+        "email": "ayush.abad@iebrain.com",
+        "password_hash": "pbkdf2:sha256:1000000$j3kk1amAipTX4F5a$0c278fa6283b5a3561beda7184a0c154caa813b6eb4c5f47784f1a400efe1802"
+    },
+    {
+        "id": 2,
+        "first_name": "fly",
+        "last_name": "god",
+        "email": "ffllyygod@gmail.com",
+        "password_hash": "pbkdf2:sha256:1000000$gsPl7jNy5udPG9Lm$a6489a5aa2fc69863cf683541143e39a557e08cc483ba8064e30395fc57abb07"
+    },
+    {
+        "id": 3,
+        "first_name": "Ayush",
+        "last_name": "abad",
+        "email": "abad.1@iitj.ac.in",
+        "password_hash": "pbkdf2:sha256:1000000$tXiuBmcUK5XhE1aA$511fc3289ac44200aad295f82c492e81ce9205a455689bbd2fb8c5ff8e9c90ac"
+    },
+    {
+        "id": 4,
+        "first_name": "nimriti",
+        "last_name": "d",
+        "email": "nirmiti.dna@gmail.com",
+        "password_hash": "pbkdf2:sha256:1000000$lIXNN7qcaNKAlubJ$96ce0083d49534086d6f271d692347e2fe07e890e24eac6e5ac4f9453a1bba07"
+    }
+]
