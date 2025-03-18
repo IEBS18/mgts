@@ -17,7 +17,7 @@ COPY . .
 EXPOSE 5001
 
 # Define environment variable
-ENV FLASK_APP=app.py
+ENV FLASK_APP=auth.py
 
 # Use Gunicorn as the WSGI server for production
-CMD ["gunicorn", "-w", "4", "-k", "gevent", "-b", "0.0.0.0:5001", "--timeout", "30000", "app:app"]
+CMD ["gunicorn", "-w", "4", "-k", "gevent", "-b", "0.0.0.0:5001", "--timeout", "30000", "auth:app"]

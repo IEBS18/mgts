@@ -156,5 +156,4 @@ function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggl
   );
 }
 
-
 export default ChatBot;

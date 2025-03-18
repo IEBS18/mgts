@@ -1,12 +1,14 @@
-from flask import Blueprint, request, jsonify
+from flask import Flask, Blueprint, request, jsonify
+from flask_cors import CORS
 import re
 import pandas as pd
 import os
 from Chatbot.query_classifier import es
-
+import logging
 
 
 competitive_analysis_blueprint = Blueprint('competitive_analysis', __name__)
+
 
 def get_disease_data(disease_name):
     # Get the absolute directory where this file is located
@@ -164,3 +166,44 @@ def get_drug_data():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    
+# 4. Create the Flask app instance, configure logging/CORS, and register the blueprint
+def create_app():
+    app = Flask(__name__)
+
+    # Configure Logging
+    log_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+    os.makedirs(log_directory, exist_ok=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler(os.path.join(log_directory, "app.log")),
+            logging.StreamHandler()
+        ]
+    )
+
+    # Set up CORS
+    CORS(
+        app,
+        supports_credentials=True,
+        origins=[
+            "http://localhost:5173",
+            "http://68.154.56.138:3000",
+            "http://localhost:5174",
+            "http://127.0.0.1:5000"
+        ]
+    )
+
+    # Register Blueprint
+    app.register_blueprint(competitive_analysis_blueprint)
+
+    return app
+
+
+# 5. Run the application
+if __name__ == '__main__':
+    logging.info("Starting Flask Competitive Analysis microsrvicrsron port 5003...")
+    app = create_app()
+    app.run(host="0.0.0.0", port=5003)

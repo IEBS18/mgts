@@ -108,7 +108,7 @@ export default function DrugFormulation() {
     // This is the critical difference:
     // We call /api/rnd-formulation-drug (instead of /api/rnd-formulation-llama).
     const endpoint =
-      `${import.meta.env.VITE_API_URL}/api/rnd-formulation-drug` +
+      `${import.meta.env.VITE_API_URL}/rnd-formulation-drug` +
       `?user_query=${encodeURIComponent(userQuery)}` +
       `&size=5` +
       `&requested_fields=${encodeURIComponent(requestedFields)}`;

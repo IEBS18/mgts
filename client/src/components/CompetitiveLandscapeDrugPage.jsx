@@ -4,7 +4,6 @@ import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { scaleLinear } from 'd3-scale'
-import { Heatmap } from '@ant-design/plots';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from 'react-router-dom';
 

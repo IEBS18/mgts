@@ -3,7 +3,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Visualize from "@/components/Visualize";
 import Layout from "@/pages/Layout";
-import Dashboard2 from "./components/Dashboard2";
+import Dashboard from "./components/Dashboard";
 import DiseaseSearchPage from "./components/DiseaseSearchPage";
 import SelectedCardsTablePage from "./components/List";
 import DrugResultsPage from "./components/DrugResultPage";
@@ -13,7 +13,6 @@ import PrivateRoute from "./components/PrivateRoute";
 import Authenticate from "./components/Authenticate";
 import { DrugComparisonTable } from "./components/DrugComparisonTable";
 import CompetitorAnalysis from "./components/PricePrediction";
-import DrugAnalysis from "./components/CompetitiveLandscapeDrugPage";
 import CompetitiveLandscapeDrugPage from "./components/CompetitiveLandscapeDrugPage";
 // import { Formulary } from "./components/Formulary";
 import { FormularyDashboard } from "./components/Formulary/FormularyDashboard";
@@ -35,7 +34,7 @@ function App() {
           element={
             <PrivateRoute>
               <Layout type="dashboard"> {/* Pass type as 'dashboard' */}
-                <Dashboard2 />
+                <Dashboard />
               </Layout>
             </PrivateRoute>
             

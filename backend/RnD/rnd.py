@@ -1,6 +1,9 @@
 from flask import Flask, Blueprint, request, jsonify, Response, send_file
-from .rnd_util import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search, getAIColumn
-from .searchbyDrug import fetch_results, stream_drug, processed_cache
+from flask_cors import CORS
+import os
+import logging
+from rnd_util import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search, getAIColumn
+from searchbyDrug import fetch_results, stream_drug, processed_cache
 from openpyxl import Workbook
 import io
 
@@ -202,3 +205,43 @@ def rnd_excel_export():
         download_name="exported_data.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )    
+
+# 4. Create the Flask app instance, configure logging/CORS, and register the blueprint
+def create_app():
+    app = Flask(__name__)
+
+    # Configure Logging
+    log_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+    os.makedirs(log_directory, exist_ok=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler(os.path.join(log_directory, "app.log")),
+            logging.StreamHandler()
+        ]
+    )
+
+    # Set up CORS
+    CORS(
+        app,
+        supports_credentials=True,
+        origins=[
+            "http://localhost:5173",
+            "http://68.154.56.138:3000",
+            "http://localhost:5174",
+            "http://127.0.0.1:5000"
+        ]
+    )
+
+    # Register Blueprint
+    app.register_blueprint(rnd_blueprint)
+
+    return app
+
+
+# 5. Run the application
+if __name__ == '__main__':
+    logging.info("Starting Flask R&D microservice on port 5007...")
+    app = create_app()
+    app.run(host="0.0.0.0", port=5007)

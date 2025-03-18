@@ -25,7 +25,7 @@ import inputData from "../assets/data/drugDiseaseData.json";
 const fetchDrugInfo = async (drugName) => {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/drug-info`,
+      `${import.meta.env.VITE_API_URL}/drug-info`,
       {
         method: "POST",
         headers: {
@@ -48,7 +48,7 @@ const fetchDrugInfo = async (drugName) => {
 const fetchDiseaseInfo = async (diseaseName) => {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/disease-info`,
+      `${import.meta.env.VITE_API_URL}/disease-info`,
       {
         method: "POST",
         headers: {
@@ -256,7 +256,7 @@ export default function DiseaseOverviewModal({
       };
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/tpp-by-drug`,
+        `${import.meta.env.VITE_API_URL}/tpp-by-drug`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -299,7 +299,7 @@ export default function DiseaseOverviewModal({
       };
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/tpp-by-therapies`,
+        `${import.meta.env.VITE_API_URL}/tpp-by-therapies`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

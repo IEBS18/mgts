@@ -5,7 +5,7 @@ FROM python:3.12
 WORKDIR /app
 
 # Copy the requirements file into the container at /app
-COPY requirements.txt .
+COPY ../requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
@@ -17,7 +17,7 @@ COPY . .
 EXPOSE 5002
 
 # Define environment variable
-ENV FLASK_APP=app.py
+ENV FLASK_APP=chatbot.py
 
 # Use Gunicorn as the WSGI server for production
-CMD ["gunicorn", "-w", "4", "-k", "gevent", "-b", "0.0.0.0:5002", "--timeout", "30000", "app:app"]
+CMD ["gunicorn", "-w", "4", "-k", "gevent", "-b", "0.0.0.0:5002", "--timeout", "30000", "chatbot:app"]

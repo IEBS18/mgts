@@ -1,7 +1,10 @@
 from flask import Flask, Blueprint, request, jsonify, Response, send_file
+from flask_cors import CORS
+import os
+import logging
 from .pp_util import display_competitor_details, fetch_competitor_data, parse_data, predict_price
-pp_blueprint = Blueprint('pp', __name__)
 
+pp_blueprint = Blueprint('pp', __name__)
 
 
 @pp_blueprint.route('/price-prediction', methods=['POST'])
@@ -44,5 +47,46 @@ def price_prediction():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+# 4. Create the Flask app instance, configure logging/CORS, and register the blueprint
+def create_app():
+    app = Flask(__name__)
+
+    # Configure Logging
+    log_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+    os.makedirs(log_directory, exist_ok=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler(os.path.join(log_directory, "app.log")),
+            logging.StreamHandler()
+        ]
+    )
+
+    # Set up CORS
+    CORS(
+        app,
+        supports_credentials=True,
+        origins=[
+            "http://localhost:5173",
+            "http://68.154.56.138:3000",
+            "http://localhost:5174",
+            "http://127.0.0.1:5000"
+        ]
+    )
+
+    # Register Blueprint
+    app.register_blueprint(pp_blueprint)
+
+    return app
+
+
+# 5. Run the application
+if __name__ == '__main__':
+    logging.info("Starting Flask Price Prediction microservice on port 5006...")
+    app = create_app()
+    app.run(host="0.0.0.0", port=5006)
     
     

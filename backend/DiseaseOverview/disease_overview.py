@@ -1,10 +1,12 @@
-from flask import Blueprint, request, jsonify, send_file
+from flask import Flask, Blueprint, request, jsonify, send_file
+from flask_cors import CORS
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
 import os
+import logging
 from io import BytesIO
-from .disease_overview_util import adverse_effect_score, calculate_safety_efficacy_scores, extract_adverse_events, extract_annual_therapy_cost, process_drug_comparison, format_output, process_key_insights, key_insights, update_drug_data
+from disease_overview_util import adverse_effect_score, calculate_safety_efficacy_scores, extract_adverse_events, extract_annual_therapy_cost, process_drug_comparison, format_output, process_key_insights, key_insights, update_drug_data
 from Chatbot.query_classifier import es
 
 disease_overview_blueprint = Blueprint('disease_overview', __name__)
@@ -720,3 +722,43 @@ def get_country_data(disease_name):
     if not country_data:
         print(f"No data found for disease '{disease_name}' in the file.")
     return country_data
+
+# 4. Create the Flask app instance, configure logging/CORS, and register the blueprint
+def create_app():
+    app = Flask(__name__)
+
+    # Configure Logging
+    log_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+    os.makedirs(log_directory, exist_ok=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler(os.path.join(log_directory, "app.log")),
+            logging.StreamHandler()
+        ]
+    )
+
+    # Set up CORS
+    CORS(
+        app,
+        supports_credentials=True,
+        origins=[
+            "http://localhost:5173",
+            "http://68.154.56.138:3000",
+            "http://localhost:5174",
+            "http://127.0.0.1:5000"
+        ]
+    )
+
+    # Register Blueprint
+    app.register_blueprint(disease_overview_blueprint)
+
+    return app
+
+
+
+if __name__ == '__main__':
+    logging.info("Starting Flask Disease Overview microservice on port 5004...")
+    app = create_app()
+    app.run(host="0.0.0.0", port=5004)

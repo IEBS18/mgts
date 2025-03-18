@@ -12,7 +12,7 @@ import inputData from "../assets/data/drugDiseaseData.json"
 
 const fetchDrugInfo = async (drugName) => {
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/drug-info`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/drug-info`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -32,7 +32,7 @@ const fetchDrugInfo = async (drugName) => {
 
 const fetchDiseaseInfo = async (diseaseName) => {
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/disease-info`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/disease-info`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -148,7 +148,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
         modality: drugSearchForm.modality || "",
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tpp-by-drug`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/tpp-by-drug`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -189,7 +189,7 @@ export default function TPPModal({ isOpen, onOpenChange }) {
         country: comparatorForm.country || "N/A",
       };
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tpp-by-therapies`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/tpp-by-therapies`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
