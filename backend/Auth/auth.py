@@ -8,6 +8,8 @@ import logging
 # Blueprint for Auth functionality
 auth_blueprint = Blueprint('auth', __name__)
 
+USER_FILE_PATH = os.path.join(os.path.dirname(__file__), "users.json")
+
 def load_users():
     """Helper function to load users from the JSON file."""
     try:
