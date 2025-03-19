@@ -1,8 +1,15 @@
 from flask import Flask, Blueprint, request, jsonify
 from flask_cors import CORS
 import logging
+import sys
 import os
-from query_classifier import route_to_chatbot, conversation_history
+try:
+    from .query_classifier import route_to_chatbot, conversation_history
+except:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+    from query_classifier import route_to_chatbot, conversation_history
+# from .query_classifier import route_to_chatbot, conversation_history
 
 chatbot_blueprint = Blueprint('chatbot', __name__)
 

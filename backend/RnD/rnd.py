@@ -2,10 +2,17 @@ from flask import Flask, Blueprint, request, jsonify, Response, send_file
 from flask_cors import CORS
 import os
 import logging
-from rnd_util import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search, getAIColumn
-from searchbyDrug import fetch_results, stream_drug, processed_cache
 from openpyxl import Workbook
 import io
+import sys
+
+try:
+    from .rnd_util import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search, getAIColumn
+    from .searchbyDrug import fetch_results, stream_drug, processed_cache
+except:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+    from rnd_util import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search, getAIColumn
+    from searchbyDrug import fetch_results, stream_drug, processed_cache
 
 
 rnd_blueprint = Blueprint('rnd', __name__)

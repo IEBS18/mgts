@@ -15,12 +15,19 @@ es = Elasticsearch(
     os.getenv('elasticsearchendpoint'),
     api_key=os.getenv('elasticapikey')
 )
-
-from .train_query_classifier import QueryClassifierModel
-from .utils import(
-    preprocess,
-    create_prompt
-)  
+try:
+    from .train_query_classifier import QueryClassifierModel
+    from .utils import(
+        preprocess,
+        create_prompt
+    )  
+except:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))   
+    from train_query_classifier import QueryClassifierModel
+    from utils import(
+        preprocess,
+        create_prompt
+    )  
 
 MODEL = "gpt-4o-mini"
 

@@ -1,12 +1,25 @@
 from flask import Flask, jsonify, request, Blueprint, send_file
 from flask_cors import CORS
+from elasticsearch import Elasticsearch
 import logging
 import pandas as pd
 import io
 import os
-from Chatbot.query_classifier import es
-from formulary_util import fetch_drug_details_from_excel, predict_tier_and_requirement, fetch_data, generate_differentiator, generate_insights
+import sys
+# from Chatbot.query_classifier import es
+try:
+    from .formulary_util import fetch_drug_details_from_excel, predict_tier_and_requirement, fetch_data, generate_differentiator, generate_insights
+except:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+    from formulary_util import fetch_drug_details_from_excel, predict_tier_and_requirement, fetch_data, generate_differentiator, generate_insights
 
+from dotenv import load_dotenv
+load_dotenv()
+
+es = Elasticsearch(
+    os.getenv('elasticsearchendpoint'),
+    api_key=os.getenv('elasticapikey')
+)
 
 formulary_blueprint = Blueprint('formulary', __name__)
 

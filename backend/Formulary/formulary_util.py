@@ -1,11 +1,19 @@
-from Chatbot.query_classifier import (
-    es,
-)
+# from Chatbot.query_classifier import (
+#     es,
+# )
+from elasticsearch import Elasticsearch
 from openai import AzureOpenAI
 import os
 import sys
 import pandas as pd
 from flask import Flask
+from dotenv import load_dotenv
+load_dotenv()
+
+es = Elasticsearch(
+    os.getenv('elasticsearchendpoint'),
+    api_key=os.getenv('elasticapikey')
+)
 sys.stdout.reconfigure(encoding='utf-8')
 app = Flask(__name__)
 

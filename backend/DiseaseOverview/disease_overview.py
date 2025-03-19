@@ -6,8 +6,15 @@ from sklearn.linear_model import LinearRegression
 import os
 import logging
 from io import BytesIO
-from disease_overview_util import adverse_effect_score, calculate_safety_efficacy_scores, extract_adverse_events, extract_annual_therapy_cost, process_drug_comparison, format_output, process_key_insights, key_insights, update_drug_data
-from Chatbot.query_classifier import es
+import sys
+try:
+    from .disease_overview_util import adverse_effect_score, calculate_safety_efficacy_scores, extract_adverse_events, extract_annual_therapy_cost, process_drug_comparison, format_output, process_key_insights, key_insights, update_drug_data
+    from Chatbot.query_classifier import es
+except:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+    from disease_overview_util import adverse_effect_score, calculate_safety_efficacy_scores, extract_adverse_events, extract_annual_therapy_cost, process_drug_comparison, format_output, process_key_insights, key_insights, update_drug_data
+    from Chatbot.query_classifier import es
+
 
 disease_overview_blueprint = Blueprint('disease_overview', __name__)
 

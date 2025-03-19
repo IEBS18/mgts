@@ -3,11 +3,16 @@ import re
 import sys
 from dotenv import load_dotenv
 from openai import AzureOpenAI
-
+from elasticsearch import Elasticsearch
 
 sys.stdout.reconfigure(encoding='utf-8')
 
 load_dotenv()
+
+es = Elasticsearch(
+    os.getenv('elasticsearchendpoint'),
+    api_key=os.getenv('elasticapikey')
+)
 
 openai_client = AzureOpenAI(
     api_key=os.getenv("AZURE_API"),

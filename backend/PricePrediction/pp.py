@@ -1,9 +1,13 @@
 from flask import Flask, Blueprint, request, jsonify, Response, send_file
 from flask_cors import CORS
 import os
+import sys
 import logging
-from .pp_util import display_competitor_details, fetch_competitor_data, parse_data, predict_price
-
+try:
+    from .pp_util import display_competitor_details, fetch_competitor_data, parse_data, predict_price
+except:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+    from pp_util import display_competitor_details, fetch_competitor_data, parse_data, predict_price
 pp_blueprint = Blueprint('pp', __name__)
 
 
