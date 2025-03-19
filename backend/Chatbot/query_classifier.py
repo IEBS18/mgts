@@ -39,20 +39,27 @@ openai_client = AzureOpenAI(
 
 tokenizer = AutoTokenizer.from_pretrained('dmis-lab/biobert-v1.1') 
 
-# Lazy loading for the model
-_model = None
 
 def get_model():
     global _model
     if _model is None:
-        with open(r"Utilities/chatbot.pkl", "rb") as f:
-        # with open(r"chatbot.pkl", "rb") as f:
-            _model = QueryClassifierModel()
-            state_dict = pickle.load(f)
-            _model.load_state_dict(state_dict)
-            _model.eval()
-    return _model
+        # Get the absolute path of the current directory
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Construct the absolute path to chatbot.pkl
+        chatbot_model_path = os.path.join(current_dir, 'chatbot.pkl')
 
+        try:
+            with open(chatbot_model_path, "rb") as f:
+                _model = QueryClassifierModel()
+                state_dict = pickle.load(f)
+                _model.load_state_dict(state_dict)
+                _model.eval()
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
+            raise e  # Re-raise the exception after logging it
+        
+    return _model
 
 context = []
 conversation_history = []

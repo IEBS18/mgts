@@ -10,6 +10,7 @@ const PrivateRoute = ({ children }) => {
       .then(response => response.json())
       .then(data => {
         setIsAuthenticated(data.logged_in);
+        console.log(data.logged_in,isAuthenticated);
       })
       .catch(() => setIsAuthenticated(false)); // Handle fetch errors
   }, []);
