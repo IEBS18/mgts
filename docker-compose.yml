@@ -7,14 +7,135 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      - auth
+      - chatbot
+    networks:
+      - app-network
 
-  backend:
+  auth:
     build:
-      context: ./backend
+      context: ./backend/Auth
     ports:
-      - "5000:5000"
+      - "5001:5001"
     environment:
+      - FLASK_APP=auth.py  # Set FLASK_APP to auth.py
       - FLASK_ENV=development
     volumes:
-      - ./backend:/app
+      - ./backend/Auth:/app
+    networks:
+      - app-network
+    restart: always
+
+  chatbot:
+    build:
+      context: ./backend/Chatbot
+    ports:
+      - "5002:5002"
+    environment:
+      - FLASK_APP=chatbot.py  # Set FLASK_APP to chatbot.py
+      - FLASK_ENV=development
+    volumes:
+      - ./backend/Chatbot:/app
+    networks:
+      - app-network
+    restart: always
+
+  competitive_analysis:
+    build:
+      context: ./backend/CompetitiveAnalysis
+    ports:
+      - "5003:5003"
+    environment:
+      - FLASK_APP=competitive_analysis.py
+      - FLASK_ENV=development
+    volumes:
+      - ./backend/CompetitiveAnalysis:/app
+    networks:
+      - app-network
+    restart: always
+
+  disease_overview:
+    build:
+      context: ./backend/DiseaseOverview
+    ports:
+      - "5004:5004"
+    environment:
+      - FLASK_APP=disease_overview.py
+      - FLASK_ENV=development
+    volumes:
+      - ./backend/DiseaseOverview:/app
+    networks:
+      - app-network
+    restart: always
+  
+  formulary:
+    build:
+      context: ./backend/Formulary
+    ports:
+      - "5005:5005"
+    environment:
+      - FLASK_APP=formulary.py
+      - FLASK_ENV=development
+    volumes:
+      - ./backend/Formulary:/app
+    networks:
+      - app-network
+    restart: always
+
+  price_prediction:
+    build:
+      context: ./backend/PricePrediction
+    ports:
+      - "5006:5006"
+    environment:
+      - FLASK_APP=pp.py
+      - FLASK_ENV=development
+    volumes:
+      - ./backend/PricePrediction:/app
+    networks:
+      - app-network
+    restart: always
+
+  rnd:
+    build:
+      context: ./backend/RnD
+    ports:
+      - "5007:5007"
+    environment:
+      - FLASK_APP=rnd.py
+      - FLASK_ENV=development
+    volumes:
+      - ./backend/RnD:/app
+    networks:
+      - app-network
+    restart: always
+
+  # backend:
+  #   build:
+  #     context: ./backend
+  #   ports:
+  #     - "5000:5000"
+  #   environment:
+  #     - FLASK_ENV=development
+  #   volumes:
+  #     - ./backend:/app
+
+  # You can add more microservices here following the same structure
+  # Example:
+  # service_name:
+  #   build:
+  #     context: ./backend/service_name
+  #   ports:
+  #     - "port:port"
+  #   environment:
+  #     - FLASK_APP=service_name.py
+  #     - FLASK_ENV=development
+  #   volumes:
+  #     - ./backend/service_name:/app
+  #   networks:
+  #     - app-network
+  #   restart: always
+
+networks:
+  app-network:
+    driver: bridge

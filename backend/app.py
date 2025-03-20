@@ -24,15 +24,6 @@ CORS(app, supports_credentials=True, origins=[
     "http://127.0.0.1:5000"
 ])
 
-# Register Blueprints with a URL prefix
-# app.register_blueprint(auth_blueprint, url_prefix="/auth")
-# app.register_blueprint(competitive_analysis_blueprint, url_prefix="/competitive_analysis")
-# app.register_blueprint(disease_overview_blueprint, url_prefix="/disease_overview")
-# app.register_blueprint(chatbot_blueprint, url_prefix="/chatbot")
-# app.register_blueprint(formulary_blueprint, url_prefix="/formulary")
-# app.register_blueprint(pp_blueprint, url_prefix="/price_prediction")
-# app.register_blueprint(rnd_blueprint, url_prefix="/rnd")
-
 # # Register Blueprints with a URL prefix
 app.register_blueprint(auth_blueprint)
 app.register_blueprint(competitive_analysis_blueprint)
