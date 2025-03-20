@@ -1543,47 +1543,156 @@ def get_processed_results():
     return jsonify({"results": processed_data_cache[user_query]}), 200
     
 ## SEARCH BY DRUG RND Formulation    
- 
+
+
+EXCEL_FILE_PATH = r"C:\Users\nirmiti.deshmukh\marketX\mgts\backend\RnD\drug_repurpose_results.xlsx"
+
+# @app.route('/api/rnd-formulation-drug', methods=['GET'])
+#def get_rnd_formulation_drug():
+
+    # try:
+    #     requested_tabs = request.args.getlist('selected_tabs')  # Expecting a list of column names
+    #     print(requested_tabs)
+    #     if not requested_tabs:
+    #         raise ValueError("Missing 'selected_tabs' parameter in request")
+        
+    #     if not os.path.exists(EXCEL_FILE_PATH):
+    #         raise ValueError("Excel file does not exist in backend")
+        
+    #     # Read the Excel file
+    #     xl = pd.ExcelFile(EXCEL_FILE_PATH)
+        
+    #     # Read the single sheet into a DataFrame
+    #     df = xl.parse('Sheet1')
+    #     print(df.columns)
+    #     # Ensure the columns exist in the DataFrame
+    #     missing_columns = [col for col in requested_tabs if col not in df.columns]
+    #     if missing_columns:
+    #         raise ValueError(f"Missing columns in the Excel file: {', '.join(missing_columns)}")
+
+    #     # Extract the requested columns
+    #     data = df[requested_tabs].to_dict(orient='records')
+        
+    #     # Send back the relevant data
+    #     response_data = {
+    #         "data": data,
+    #         "message": "Columns retrieved successfully"
+    #     }
+        
+    #     return jsonify(response_data), 200
+    
+    # except Exception as e:
+    #     return jsonify({"error": str(e)}), 400
 @app.route('/api/rnd-formulation-drug', methods=['GET'])
-def rnd_formulation_drug():
-    """
-    SSE endpoint that streams LLaMA results for R&D Formulations.
-    """
-    user_query = request.args.get('user_query')
-    size = request.args.get('size', default=2, type=int)
-    # Accept requested fields as a comma-separated list
-    requested_fields = request.args.get('requested_fields', '')
-    # Log the raw input
-    print("Raw requested_fields:", repr(requested_fields))
-    print("Type of requested_fields:", type(requested_fields))
+def get_rnd_formulation_drug():
+    try:
+        # Retrieve the selected_tabs parameter from the request
+        requested_tabs_raw = request.args.get('selected_tabs')  # Expecting a comma-separated string
+        print("Raw requested_tabs:", requested_tabs_raw)
+        
+        if not requested_tabs_raw:
+            raise ValueError("Missing 'selected_tabs' parameter in request")
 
-    # Convert requested fields into a list
-    if isinstance(requested_fields, list):
-        processed_fields = [field.strip() for field in requested_fields if field.strip()]
-    else:
-        processed_fields = [field.strip() for field in requested_fields.split(',') if field.strip()]
+        # Split the selected_tabs string by commas and sanitize
+        requested_tabs = [tab.strip() for tab in requested_tabs_raw.split(',')]
+        print("Sanitized requested_tabs:", requested_tabs)
 
-    print("Processed requested_fields:", processed_fields)
-    print("Type after processing:", type(processed_fields))
+        if not os.path.exists(EXCEL_FILE_PATH):
+            raise ValueError("Excel file does not exist in backend")
+        
+        # Read the Excel file
+        xl = pd.ExcelFile(EXCEL_FILE_PATH)
+        
+        # Read the single sheet into a DataFrame
+        df = xl.parse('Sheet1')
+        
+        # Sanitize column names (strip spaces, lowercase)
+        df.columns = [col.strip().lower() for col in df.columns]
+        print(df.columns)
+        # Sanitize requested columns
+        sanitized_requested_tabs = [tab.strip().lower() for tab in requested_tabs]
 
-    if not user_query:
-        return jsonify({"error": "Missing 'user_query'"}), 400
+        # Ensure the columns exist in the DataFrame (case insensitive)
+        missing_columns = [col for col in sanitized_requested_tabs if col not in df.columns]
+        if missing_columns:
+            raise ValueError(f"Missing columns in the Excel file: {', '.join(missing_columns)}")
 
-    # Fetch Elasticsearch results
-    raw_results = fetch_results(user_query, size=size)
+        # Extract the requested columns
+        data = df[sanitized_requested_tabs].to_dict(orient='records')
+        
+        # Send back the relevant data
+        response_data = {
+            "data": data,
+            "message": "Columns retrieved successfully"
+        }
+        
+        return jsonify(response_data), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+ 
+# def rnd_formulation_drug():
+#     """
+#     SSE endpoint that streams LLaMA results for R&D Formulations.
+#     """
+#     # user_query = request.args.get('user_query')
+#     # size = request.args.get('size', default=2, type=int)
+#     # Accept requested fields as a comma-separated list
+#     requested_fields = request.args.get('requested_fields', '')
+#     # Log the raw input
+#     print("Raw requested_fields:", repr(requested_fields))
+#     print("Type of requested_fields:", type(requested_fields))
 
-    # Stream results as SSE (pass processed fields)
-    return Response(
-        stream_drug(raw_results, user_query, processed_fields),
-        content_type="text/event-stream",
-        status=200
-    )
+#     # # Convert requested fields into a list
+#     # if isinstance(requested_fields, list):
+#     #     processed_fields = [field.strip() for field in requested_fields if field.strip()]
+#     # else:
+#     #     processed_fields = [field.strip() for field in requested_fields.split(',') if field.strip()]
+
+#     # print("Processed requested_fields:", processed_fields)
+#     # print("Type after processing:", type(processed_fields))
+
+#     # if not user_query:
+#     #     return jsonify({"error": "Missing 'user_query'"}), 400
+
+#     # # Fetch Elasticsearch results
+#     # raw_results = fetch_results(user_query, size=size)
+
+#     # # Stream results as SSE (pass processed fields)
+#     # return Response(
+#     #     stream_drug(raw_results, user_query, processed_fields),
+#     #     content_type="text/event-stream",
+#     #     status=200
+#     # )
+
+    # response_data = {"requested_tabs": requested_fields, "message": "Data fetched successfully"}
+        
+    # return jsonify(response_data), 200
+
   
 
  
 @app.route('/api/rnd-formulation-drug-results', methods=['GET'])
 def get_results():
-    """Endpoint to fetch processed LLaMA-3.3 results."""
+    # try:
+    #     selected_columns = request.json.get('columns')
+        
+    #     if not os.path.exists(EXCEL_FILE_PATH):
+    #         raise ValueError("Excel file does not exist in backend")
+    #     if not selected_columns:
+    #         raise ValueError("No columns provided")
+        
+    #     df = pd.read_excel(EXCEL_FILE_PATH)
+    #     missing_columns = [col for col in selected_columns if col not in df.columns]
+    #     if missing_columns:
+    #         raise ValueError(f"Columns not found in the file: {missing_columns}")
+        
+    #     extracted_data = df[selected_columns].to_dict(orient='records')
+        
+    #     return jsonify({"extracted_data": extracted_data, "message": "Columns extracted successfully"}), 200
+    # except Exception as e:
+    #     return jsonify({"error": str(e)}), 400
+#     """Endpoint to fetch processed LLaMA-3.3 results."""
     user_query = request.args.get("user_query")
     if not user_query or user_query not in processed_cache:
         return jsonify({"error": "Results not ready yet"}), 404
