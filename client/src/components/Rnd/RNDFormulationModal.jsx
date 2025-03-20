@@ -224,6 +224,7 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
     "Drug_Title",
     "Drug_Mechanism",
     "Drug_Microbes",
+    "Disease_Microbes",
   ];
 
   // Toggle selection of a topic in "Search by Ingredient"

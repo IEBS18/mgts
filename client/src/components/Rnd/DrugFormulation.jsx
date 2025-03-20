@@ -812,6 +812,8 @@
 //   );
 // }
 
+
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -885,11 +887,35 @@ export default function DrugFormulation() {
   const [tableData, setTableData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [sseError, setSseError] = useState(null);
+  const [orderedTabs, setOrderedTabs] = useState([]); // State to store the correct column order
 
   useEffect(() => {
+    // Ensure there are no duplicates in selectedTabs
+    const uniqueSelectedTabs = Array.from(new Set(selectedTabs));
+
+    // Define the desired column order
+    const columnOrder = [
+      "Disease",
+      "Diseases_PMC_ID",
+      "Disease_Title",
+      "Disease_Mechanism",
+      "Disease_Microbes",
+      "Drug_PMC_ID",
+      "Drug_Title",
+      "Drug_Mechanism",
+      "Drug_Microbes",
+      "Justification_for_Drug_Use"
+    ];
+
+    // Filter the selectedTabs to only include columns from the order and set the order
+    const orderedTabs = columnOrder.filter(tab => uniqueSelectedTabs.includes(tab));
+    
+    // Set the orderedTabs state
+    setOrderedTabs(orderedTabs);
+
     setIsLoading(true);
 
-    const requestedFields = selectedTabs.join(",");
+    const requestedFields = orderedTabs.join(",");
 
     const endpoint =
       `${import.meta.env.VITE_API_URL}/api/rnd-formulation-drug` +
@@ -937,13 +963,13 @@ export default function DrugFormulation() {
         <table className="min-w-max text-sm text-gray-700">
           <thead>
             <tr className="sticky top-0 bg-[#a6ce39]">
-              {selectedTabs.map((topic) => (
+              {orderedTabs.map((topic) => (
                 <th
                   key={topic}
                   className="px-2 py-3 font-medium text-white whitespace-nowrap"
                   style={{ minWidth: "180px" }}
                 >
-                  {topic}
+                  {topic.replace(/_/g, " ").toUpperCase()}
                 </th>
               ))}
             </tr>
@@ -951,7 +977,7 @@ export default function DrugFormulation() {
           <tbody>
             {tableData.map((record, rowIndex) => (
               <tr key={rowIndex} className="border-b hover:bg-gray-50">
-                {selectedTabs.map((topic) => (
+                {orderedTabs.map((topic) => (
                   <td
                     key={topic}
                     className="px-2 py-3 align-top w-[400px] max-w-[400px] break-words"

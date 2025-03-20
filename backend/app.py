@@ -1545,7 +1545,7 @@ def get_processed_results():
 ## SEARCH BY DRUG RND Formulation    
 
 
-EXCEL_FILE_PATH = r"C:\Users\nirmiti.deshmukh\marketX\mgts\backend\RnD\drug_repurpose_results.xlsx"
+EXCEL_FILE_PATH = r"drug_repurpose.xlsx"
 
 # @app.route('/api/rnd-formulation-drug', methods=['GET'])
 #def get_rnd_formulation_drug():
@@ -1594,7 +1594,7 @@ def get_rnd_formulation_drug():
             raise ValueError("Missing 'selected_tabs' parameter in request")
 
         # Split the selected_tabs string by commas and sanitize
-        requested_tabs = [tab.strip() for tab in requested_tabs_raw.split(',')]
+        requested_tabs = [tab.strip().lower().replace(" ", "_") for tab in requested_tabs_raw.split(',')]
         print("Sanitized requested_tabs:", requested_tabs)
 
         if not os.path.exists(EXCEL_FILE_PATH):
@@ -1606,19 +1606,18 @@ def get_rnd_formulation_drug():
         # Read the single sheet into a DataFrame
         df = xl.parse('Sheet1')
         
-        # Sanitize column names (strip spaces, lowercase)
-        df.columns = [col.strip().lower() for col in df.columns]
-        print(df.columns)
-        # Sanitize requested columns
-        sanitized_requested_tabs = [tab.strip().lower() for tab in requested_tabs]
+        # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
+        df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+        
+        print("Sanitized columns in the Excel file:", df.columns)
 
-        # Ensure the columns exist in the DataFrame (case insensitive)
-        missing_columns = [col for col in sanitized_requested_tabs if col not in df.columns]
+        # Ensure the requested columns exist in the DataFrame (case insensitive)
+        missing_columns = [col for col in requested_tabs if col not in df.columns]
         if missing_columns:
             raise ValueError(f"Missing columns in the Excel file: {', '.join(missing_columns)}")
 
         # Extract the requested columns
-        data = df[sanitized_requested_tabs].to_dict(orient='records')
+        data = df[requested_tabs].to_dict(orient='records')
         
         # Send back the relevant data
         response_data = {
