@@ -148,7 +148,7 @@ def check_login():
 def disease_search():
     data = request.json
     search_type = data.get("search_type")
-    index = "disease_data_final"
+    index = "disease_data_final_mar_17"
 
     es_query = []
 
