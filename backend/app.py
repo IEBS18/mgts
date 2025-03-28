@@ -1491,7 +1491,7 @@ def formulary_drug_insights():
 
 
 from RnD.rnd import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search
-from RnD.searchbyDrug import fetch_results, stream_drug, processed_cache
+# from RnD.searchbyDrug import fetch_results, stream_drug, processed_cache
 from RnD.RNDAI_column import getAIColumn
 # ------------------------------
 # API Routes
@@ -1545,7 +1545,6 @@ def get_processed_results():
 ## SEARCH BY DRUG RND Formulation    
 
 
-EXCEL_FILE_PATH = r"drug_repurpose.xlsx"
 
 # @app.route('/api/rnd-formulation-drug', methods=['GET'])
 #def get_rnd_formulation_drug():
@@ -1583,6 +1582,25 @@ EXCEL_FILE_PATH = r"drug_repurpose.xlsx"
     
     # except Exception as e:
     #     return jsonify({"error": str(e)}), 400
+
+
+import matplotlib.pyplot as plt    
+import io
+import base64
+from RnD.benchmark import benchmark_score_llama, run_benchmark_from_excel, get_user_weights
+
+EXCEL_FILE_PATH = r"gutmicrobiome​_scored_disease_output.xlsx"
+
+# Default Weights
+default_weights = {
+    "No_of_Patient_Treated": 0.20,
+    "Gut_Microbiome_Association": 0.15,
+    "Rifaximin_Treatment": 0.20,
+    "Prevalence": 0.20,
+    "Bausch_Presence": 0.15,
+    "Safety_Efficacy": 0.10
+}
+
 @app.route('/api/rnd-formulation-drug', methods=['GET'])
 def get_rnd_formulation_drug():
     try:
@@ -1618,7 +1636,7 @@ def get_rnd_formulation_drug():
 
         # Extract the requested columns
         data = df[requested_tabs].to_dict(orient='records')
-        
+
         # Send back the relevant data
         response_data = {
             "data": data,
@@ -1629,7 +1647,118 @@ def get_rnd_formulation_drug():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 400
- 
+    
+
+#==== BENCHMARK TABLE SCORE API ROUTE ====
+@app.route('/api/benchmark-table', methods=['GET'])
+def get_benchmark_table():
+    try:
+        # User-defined Weights (you can replace this part with dynamic input from user interface)
+        # custom_weights = get_user_weights()  # User-defined weights input
+        
+        # Read the Excel file
+        xl = pd.ExcelFile(EXCEL_FILE_PATH)
+        
+        # Read the sheet into a DataFrame
+        df = xl.parse('Sheet1')
+        print("cols:",df.columns)
+        # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
+        df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+
+        # Calculate benchmark scores for each disease
+        benchmark_scores = []
+        for index, row in df.iterrows():
+            scores, total = benchmark_score_llama(
+                enrollment=row['enrollment'],
+                mechanism_text=row['disease_mechanism'],
+                justification=row['justification_for_drug_use'],
+                prevalence=row['prevalence'],
+                bausch_presence_text=row['bausch_presence'],
+                safety=row['safety'],
+                efficacy=row['efficacy'],
+                weights=default_weights  # Use default weights initially
+            )
+            benchmark_scores.append({"Disease": row['disease'], "Benchmark Score": total, "Weights": default_weights})
+
+        # Create the Benchmark Table with diseases, default weights, and benchmark scores
+        benchmark_table = pd.DataFrame(benchmark_scores)
+
+        # Send back the benchmark table
+        response_data = {
+            "benchmark_table": benchmark_table.to_dict(orient='records'),
+            "message": "Benchmark Table retrieved successfully"
+        }
+        return jsonify(response_data), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+#==== Top 5 Diseases to expolore in PIE CHART ====
+@app.route('/api/pie-chart', methods=['GET'])
+def get_pie_chart():
+    try:
+        # User-defined Weights (you can replace this part with dynamic input from user interface)
+        custom_weights = get_user_weights()  # User-defined weights input
+        
+        # Read the Excel file
+        xl = pd.ExcelFile(EXCEL_FILE_PATH)
+        
+        # Read the sheet into a DataFrame
+        df = xl.parse('Sheet1')
+        
+        # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
+        # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
+        df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+
+        # Calculate benchmark scores for each disease
+        benchmark_scores = []
+        for index, row in df.iterrows():
+            scores, total = benchmark_score_llama(
+                enrollment=row['enrollment'],
+                mechanism_text=row['disease_mechanism'],
+                justification=row['justification_for_drug_use'],
+                prevalence=row['prevalence'],
+                bausch_presence_text=row['bausch_presence'],
+                safety=row['safety'],
+                efficacy=row['efficacy'],
+                weights=default_weights  # Use default weights initially
+            )
+            benchmark_scores.append({"Disease": row['disease'], "Benchmark Score": total, "Weights": default_weights})
+
+        # Create the Benchmark Table with diseases, default weights, and benchmark scores
+        benchmark_df = pd.DataFrame(benchmark_scores)
+        # Drop duplicates based on 'Disease' column (keeping the first occurrence)
+        benchmark_df = benchmark_df.drop_duplicates(subset='Disease', keep='first')
+
+        # Get the top 5 diseases based on benchmark score
+        top_scores = benchmark_df.nlargest(5, 'Benchmark Score')  # Get top 5 diseases
+        pie_data = top_scores['Benchmark Score'].values
+        labels = top_scores['Disease'].values
+
+        # Generate Pie Chart
+        fig, ax = plt.subplots(figsize=(8, 8))  # Aspect ratio for a square pie chart
+        ax.pie(pie_data, labels=labels, autopct='%1.1f%%', startangle=90, wedgeprops={'edgecolor': 'black'})
+        ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+        # Save the pie chart to a BytesIO object
+        img_bytes = io.BytesIO()
+        plt.savefig(img_bytes, format='png')
+        plt.close(fig)  # Close the plot to free memory
+        img_bytes.seek(0)
+
+        # Convert image to base64 for sending to the frontend
+        img_base64 = base64.b64encode(img_bytes.read()).decode('utf-8')
+
+        return jsonify({
+            "pie_chart": img_base64,
+            "message": "Pie chart generated successfully"
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
 # def rnd_formulation_drug():
 #     """
 #     SSE endpoint that streams LLaMA results for R&D Formulations.
@@ -1671,8 +1800,8 @@ def get_rnd_formulation_drug():
   
 
  
-@app.route('/api/rnd-formulation-drug-results', methods=['GET'])
-def get_results():
+# @app.route('/api/rnd-formulation-drug-results', methods=['GET'])
+# def get_results():
     # try:
     #     selected_columns = request.json.get('columns')
         
@@ -1692,11 +1821,11 @@ def get_results():
     # except Exception as e:
     #     return jsonify({"error": str(e)}), 400
 #     """Endpoint to fetch processed LLaMA-3.3 results."""
-    user_query = request.args.get("user_query")
-    if not user_query or user_query not in processed_cache:
-        return jsonify({"error": "Results not ready yet"}), 404
+    # user_query = request.args.get("user_query")
+    # if not user_query or user_query not in processed_cache:
+    #     return jsonify({"error": "Results not ready yet"}), 404
 
-    return jsonify({"results": processed_cache[user_query]}), 200
+    # return jsonify({"results": processed_cache[user_query]}), 200
 
 @app.route('/add-ai-column-rnd', methods=['POST'])
 def add_ai_column_rnd():
