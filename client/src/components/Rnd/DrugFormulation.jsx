@@ -812,15 +812,13 @@
 //   );
 // }
 
+"use client"
 
-
-"use client";
-
-import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { Loader2 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import { toast, ToastContainer } from "react-toastify";
+import { useState, useEffect } from "react"
+import { useLocation } from "react-router-dom"
+import { Loader2 } from "lucide-react"
+import ReactMarkdown from "react-markdown"
+import { ToastContainer } from "react-toastify"
 
 // Loading and markdown rendering helpers
 function LoadingDots() {
@@ -832,66 +830,332 @@ function LoadingDots() {
         <div className="w-2 h-2 bg-[#a6ce39] rounded-full"></div>
       </div>
     </div>
-  );
+  )
 }
 
 function TruncatedMarkdown({ content, maxWords = 30 }) {
-  const [showMore, setShowMore] = useState(false);
+  const [showMore, setShowMore] = useState(false)
 
   if (!content) {
-    return <span className="text-gray-400 italic">Not mentioned</span>;
+    return <span className="text-gray-400 italic">Not mentioned</span>
   }
 
-  const words = content.split(/\s+/);
+  const words = content.split(/\s+/)
   if (words.length <= maxWords) {
-    return <ReactMarkdown>{content}</ReactMarkdown>;
+    return <ReactMarkdown>{content}</ReactMarkdown>
   }
 
-  const truncated = words.slice(0, maxWords).join(" ") + "...";
+  const truncated = words.slice(0, maxWords).join(" ") + "..."
   return (
     <div>
       <ReactMarkdown>{showMore ? content : truncated}</ReactMarkdown>
-      <button
-        onClick={() => setShowMore(!showMore)}
-        className="text-blue-600 underline mt-2"
-      >
+      <button onClick={() => setShowMore(!showMore)} className="text-blue-600 underline mt-2">
         {showMore ? "Show Less" : "Show More"}
       </button>
     </div>
-  );
+  )
 }
 
 // Function to render cell content based on the record and the column name (topic)
 function renderCellContent(record, topic) {
   // Normalize column names to match the keys in record (Excel data)
-  const normalizedTopic = topic.toLowerCase().replace(/\s+/g, "_");
+  const normalizedTopic = topic.toLowerCase().replace(/\s+/g, "_")
 
   // Access the content in the record object based on the normalized topic
-  const content = record[normalizedTopic];
+  const content = record[normalizedTopic]
 
   if (content === undefined) {
-    return <LoadingDots />;
+    return <LoadingDots />
   }
 
   if (!content || content.trim().length === 0 || content === "Not mentioned") {
-    return <span className="text-gray-400 italic">Not mentioned</span>;
+    return <span className="text-gray-400 italic">Not mentioned</span>
   }
 
-  return <TruncatedMarkdown content={String(content)} />;
+  return <TruncatedMarkdown content={String(content)} />
+}
+
+// Pie Chart Component
+function PieChart() {
+  const [pieChartData, setPieChartData] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    setIsLoading(true)
+    fetch(`${import.meta.env.VITE_API_URL}/api/pie-chart`)
+      .then((response) => response.json())
+      .then((data) => {
+        setIsLoading(false)
+        if (data.error) {
+          setError(data.error)
+        } else {
+          setPieChartData(data.pie_chart)
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching pie chart:", error)
+        setIsLoading(false)
+        setError("Error fetching pie chart data.")
+      })
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="animate-spin mr-2" />
+        <span>Loading pie chart...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="text-red-500">Error: {error}</div>
+  }
+
+  return (
+    <div className="bg-white p-4 rounded-lg shadow-md h-full">
+      <h2 className="text-xl font-bold mb-4 text-gray-800">Top 5 Diseases to Explore</h2>
+      {pieChartData && (
+        <div className="flex justify-center">
+          <img
+            src={`data:image/png;base64,${pieChartData}`}
+            alt="Top 5 Diseases Pie Chart"
+            className="max-w-full max-h-[300px]"
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Benchmark Table Component
+function BenchmarkTable() {
+  const [benchmarkData, setBenchmarkData] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [weights, setWeights] = useState({
+    enrollment: 0.2,
+    mechanism: 0.15,
+    justification: 0.2,
+    prevalence: 0.2,
+    bausch_presence: 0.15,
+    safety_efficacy: 0.1,
+  })
+  const [isUpdating, setIsUpdating] = useState(false)
+
+  const fetchBenchmarkData = (default_weights = null) => {
+    setIsLoading(true)
+
+    // Prepare URL with query parameters if custom weights are provided
+    let url = `${import.meta.env.VITE_API_URL}/api/benchmark-table`
+    if (default_weights) {
+      const params = new URLSearchParams()
+      Object.entries(default_weights).forEach(([key, value]) => {
+        params.append(key, value)
+      })
+      url = `${url}?${params.toString()}`
+    }
+
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+        setIsLoading(false)
+        if (data.error) {
+          setError(data.error)
+        } else {
+          setBenchmarkData(data.benchmark_table)
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching benchmark table:", error)
+        setIsLoading(false)
+        setError("Error fetching benchmark data.")
+      })
+  }
+
+  useEffect(() => {
+    fetchBenchmarkData()
+  }, [])
+
+  const handleWeightChange = (key, value) => {
+    // Ensure value is a number between 0 and 1
+    const numValue = Number.parseFloat(value)
+    if (isNaN(numValue) || numValue < 0 || numValue > 1) return
+
+    setWeights({
+      ...weights,
+      [key]: numValue,
+    })
+  }
+
+  const updateBenchmark = () => {
+    setIsUpdating(true)
+    fetchBenchmarkData(weights)
+    setIsUpdating(false)
+  }
+
+  // Ensure weights sum to 1
+  const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0)
+  const isValidWeights = Math.abs(totalWeight - 1) < 0.01 // Allow small rounding errors
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="animate-spin mr-2" />
+        <span>Loading benchmark data...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="text-red-500">Error: {error}</div>
+  }
+
+  return (
+    <div className="bg-white p-4 rounded-lg shadow-md h-full">
+      <h2 className="text-xl font-bold mb-4 text-gray-800">Benchmark Scores</h2>
+
+      {/* Weights Configuration */}
+      <div className="mb-4 p-3 bg-gray-50 rounded-md">
+        <h3 className="font-semibold mb-2">Adjust Weights</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
+          <div>
+            <label className="text-xs block">Enrollment</label>
+            <input
+              type="number"
+              min="0"
+              max="1"
+              step="0.05"
+              value={weights.enrollment}
+              onChange={(e) => handleWeightChange("enrollment", e.target.value)}
+              className="w-full p-1 border rounded text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs block">Mechanism</label>
+            <input
+              type="number"
+              min="0"
+              max="1"
+              step="0.05"
+              value={weights.mechanism}
+              onChange={(e) => handleWeightChange("mechanism", e.target.value)}
+              className="w-full p-1 border rounded text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs block">Justification</label>
+            <input
+              type="number"
+              min="0"
+              max="1"
+              step="0.05"
+              value={weights.justification}
+              onChange={(e) => handleWeightChange("justification", e.target.value)}
+              className="w-full p-1 border rounded text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs block">Prevalence</label>
+            <input
+              type="number"
+              min="0"
+              max="1"
+              step="0.05"
+              value={weights.prevalence}
+              onChange={(e) => handleWeightChange("prevalence", e.target.value)}
+              className="w-full p-1 border rounded text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs block">Bausch Presence</label>
+            <input
+              type="number"
+              min="0"
+              max="1"
+              step="0.05"
+              value={weights.bausch_presence}
+              onChange={(e) => handleWeightChange("bausch_presence", e.target.value)}
+              className="w-full p-1 border rounded text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs block">Safety & Efficacy</label>
+            <input
+              type="number"
+              min="0"
+              max="1"
+              step="0.05"
+              value={weights.safety_efficacy}
+              onChange={(e) => handleWeightChange("safety_efficacy", e.target.value)}
+              className="w-full p-1 border rounded text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className={`text-xs ${isValidWeights ? "text-green-600" : "text-red-600"}`}>
+            Total: {totalWeight.toFixed(2)} {isValidWeights ? "✓" : "(should equal 1.0)"}
+          </div>
+          <button
+            onClick={updateBenchmark}
+            disabled={!isValidWeights || isUpdating}
+            className={`px-3 py-1 text-sm rounded ${isValidWeights ? "bg-[#a6ce39] text-white hover:bg-[#95b933]" : "bg-gray-300 cursor-not-allowed"}`}
+          >
+            {isUpdating ? "Updating..." : "Update Scores"}
+          </button>
+        </div>
+      </div>
+
+      {/* Benchmark Table */}
+      <div className="overflow-y-auto max-h-[200px]">
+        <table className="min-w-full text-sm text-gray-700">
+          <thead>
+            <tr className="bg-[#a6ce39]">
+              <th className="px-2 py-2 text-white">Disease</th>
+              <th className="px-2 py-2 text-white">Benchmark Score</th>
+              <th className="px-2 py-2 text-white">Weight Distribution</th>
+            </tr>
+          </thead>
+          <tbody>
+            {benchmarkData.map((item, index) => (
+              <tr key={index} className="border-b hover:bg-gray-50">
+                <td className="px-2 py-2">{item.Disease}</td>
+                <td className="px-2 py-2">{item["Benchmark Score"].toFixed(2)}</td>
+                <td className="px-2 py-2 text-xs">
+                  {item.Weights && (
+                    <div className="grid grid-cols-2 gap-x-2">
+                      <div>Enrollment: {item.Weights.enrollment}</div>
+                      <div>Mechanism: {item.Weights.mechanism}</div>
+                      <div>Justification: {item.Weights.justification}</div>
+                      <div>Prevalence: {item.Weights.prevalence}</div>
+                      <div>Bausch: {item.Weights.bausch_presence}</div>
+                      <div>Safety: {item.Weights.safety_efficacy}</div>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
 }
 
 export default function DrugFormulation() {
-  const location = useLocation();
-  const { selectedTabs = [] } = location.state || {};
+  const location = useLocation()
+  const { selectedTabs = [] } = location.state || {}
 
-  const [tableData, setTableData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [sseError, setSseError] = useState(null);
-  const [orderedTabs, setOrderedTabs] = useState([]); // State to store the correct column order
+  const [tableData, setTableData] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [sseError, setSseError] = useState(null)
+  const [orderedTabs, setOrderedTabs] = useState([])
 
   useEffect(() => {
     // Ensure there are no duplicates in selectedTabs
-    const uniqueSelectedTabs = Array.from(new Set(selectedTabs));
+    const uniqueSelectedTabs = Array.from(new Set(selectedTabs))
 
     // Define the desired column order
     const columnOrder = [
@@ -904,50 +1168,58 @@ export default function DrugFormulation() {
       "Drug_Title",
       "Drug_Mechanism",
       "Drug_Microbes",
-      "Justification_for_Drug_Use"
-    ];
+      "Justification_for_Drug_Use",
+    ]
 
     // Filter the selectedTabs to only include columns from the order and set the order
-    const orderedTabs = columnOrder.filter(tab => uniqueSelectedTabs.includes(tab));
-    
+    const orderedTabs = columnOrder.filter((tab) => uniqueSelectedTabs.includes(tab))
+
     // Set the orderedTabs state
-    setOrderedTabs(orderedTabs);
+    setOrderedTabs(orderedTabs)
 
-    setIsLoading(true);
+    setIsLoading(true)
 
-    const requestedFields = orderedTabs.join(",");
+    const requestedFields = orderedTabs.join(",")
 
     const endpoint =
       `${import.meta.env.VITE_API_URL}/api/rnd-formulation-drug` +
-      `?selected_tabs=${encodeURIComponent(requestedFields)}`;
+      `?selected_tabs=${encodeURIComponent(requestedFields)}`
 
     // Fetch the data from the Excel-based API endpoint
     fetch(endpoint)
       .then((response) => response.json())
       .then((data) => {
-        setIsLoading(false);
+        setIsLoading(false)
 
         if (data.error) {
-          setSseError(data.error);
+          setSseError(data.error)
         } else {
           // Process data here (converting it into a table structure)
-          setTableData(data.data); // Update tableData with fetched data
+          setTableData(data.data) // Update tableData with fetched data
         }
       })
       .catch((error) => {
-        console.error("Error fetching data:", error);
-        setIsLoading(false);
-        setSseError("Error fetching data.");
-      });
-  }, [selectedTabs]);
+        console.error("Error fetching data:", error)
+        setIsLoading(false)
+        setSseError("Error fetching data.")
+      })
+  }, [selectedTabs])
 
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
       <ToastContainer position="top-right" autoClose={5000} />
 
-      <h1 className="text-2xl font-bold mb-4 text-gray-800">
-        Drug Formulation Results
-      </h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">Drug Formulation Results</h1>
+
+      {/* Analytics Dashboard Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="h-[350px]">
+          <PieChart />
+        </div>
+        <div className="h-[350px]">
+          <BenchmarkTable />
+        </div>
+      </div>
 
       <div className="flex items-center gap-4 mb-4">
         {sseError && <p className="text-red-500">{sseError}</p>}
@@ -978,11 +1250,8 @@ export default function DrugFormulation() {
             {tableData.map((record, rowIndex) => (
               <tr key={rowIndex} className="border-b hover:bg-gray-50">
                 {orderedTabs.map((topic) => (
-                  <td
-                    key={topic}
-                    className="px-2 py-3 align-top w-[400px] max-w-[400px] break-words"
-                  >
-                    {renderCellContent(record, topic)} {/* Rendering cell content */}
+                  <td key={topic} className="px-2 py-3 align-top w-[400px] max-w-[400px] break-words">
+                    {renderCellContent(record, topic)}
                   </td>
                 ))}
               </tr>
@@ -991,6 +1260,6 @@ export default function DrugFormulation() {
         </table>
       </div>
     </div>
-  );
+  )
 }
- 
+
