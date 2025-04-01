@@ -1665,7 +1665,7 @@ current_weights = {
 }
 
 # Route to handle the benchmark table (Excel-based or recalculated if weights are updated)
-@app.route('/api/benchmark-table', methods=['GET'])
+@app.route('/api/benchmark-table', methods=['GET', 'POST'])
 def get_benchmark_table():
     try:
         # Check if weights need to be updated
@@ -1728,7 +1728,7 @@ def get_benchmark_table():
 
 
 # Route to handle pie chart for top benchmark scores (Excel-based or recalculated if weights are updated)
-@app.route('/api/pie-chart', methods=['GET'])
+@app.route('/api/pie-chart', methods=['GET', 'POST'])
 def get_pie_chart():
     try:
         if request.args.get('update_weights', default='false') == 'true':

@@ -23,6 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 */.env
+*/.pyc
+*/.cpython-39.pyc
+**/__pycache__/
+
 backend/Utilities/__pycache__/*
 backend/__pycache__/*
 backend/models/__pycache__/*
