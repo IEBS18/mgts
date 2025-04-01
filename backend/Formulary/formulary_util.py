@@ -75,18 +75,21 @@ def fetch_data(disease_name):
 
 
 def fetch_drug_details_from_excel(drug_names):
-    df = pd.read_excel("../tpp_database.xlsx")
+    try:
+        df = pd.read_excel("./tpp_database.xlsx")
+    except:
+        df = pd.read_excel("backend/tpp_database.xlsx")    
 
-    # Ensure drug_names is a list and convert to lowercase
-    drug_names = [drug.strip().lower() for drug in drug_names]  
+        # Ensure drug_names is a list and convert to lowercase
+        drug_names = [drug.strip().lower() for drug in drug_names]  
 
-    # Filter the dataframe where 'Drug' matches any in the list
-    drug_info = df[df['Drug'].str.lower().isin(drug_names)]
+        # Filter the dataframe where 'Drug' matches any in the list
+        drug_info = df[df['Drug'].str.lower().isin(drug_names)]
 
-    if not drug_info.empty:
-        return drug_info[['Drug', 'Modality', 'Efficacy', 'Safety']].to_dict(orient='records')
-    else:
-        return "No matching drug details found"
+        if not drug_info.empty:
+            return drug_info[['Drug', 'Modality', 'Efficacy', 'Safety']].to_dict(orient='records')
+        else:
+            return "No matching drug details found"
 
 
 

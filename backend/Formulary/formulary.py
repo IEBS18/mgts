@@ -279,14 +279,14 @@ def formulary_result():
 
 
     # For debugging: Log the constructed query
-    formulary_blueprint.logger.debug(f"Elasticsearch Query: {search_body}")
+    # formulary_blueprint.logger.debug(f"Elasticsearch Query: {search_body}")
 
     try:
         # Perform search query
         response = es.search(index=index, body=search_body)
 
         # For debugging: Log the raw response
-        formulary_blueprint.logger.debug(f"Elasticsearch Response: {response}")
+        # formulary_blueprint.logger.debug(f"Elasticsearch Response: {response}")
 
         # Extract matching documents from the response
         documents = [
@@ -297,7 +297,7 @@ def formulary_result():
         return jsonify({"status": "success", "data": documents})
 
     except Exception as e:
-        formulary_blueprint.logger.error(f"Elasticsearch query failed: {e}")
+        # formulary_blueprint.logger.error(f"Elasticsearch query failed: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
     
     

@@ -18,15 +18,15 @@ except:
 
 disease_overview_blueprint = Blueprint('disease_overview', __name__)
 
-file_path = './MnP.xlsx'
-
+file_path = r'DiseaseOverview\MnP.xlsx'
+print(file_path)
 years = ['2019', '2020', '2021', '2022', '2023']
 forecast_years = ['2024', '2025', '2026', '2027', '2028']
 
 def get_disease_and_modality(drug_name):
     try:
         # Load the Excel file
-        df = pd.read_excel("../tpp_database.xlsx")
+        df = pd.read_excel("./tpp_database.xlsx")
 
         # Check if the drug exists in the 'Drug' column
         drug_data = df[df['Drug'] == drug_name]
@@ -45,15 +45,28 @@ def get_disease_and_modality(drug_name):
             "diseases": diseases,
             "modalities": modalities
         }
-    except Exception as e:
-        print(f"Error processing Excel file: {e}")
-        return None
+    except: 
+        df = pd.read_excel("tpp_database.xlsx")
+
+        # Check if the drug exists in the 'Drug' column
+        drug_data = df[df['Drug'] == drug_name]
+
+        if drug_data.empty:
+            return None
+
+        # Extract Disease and Modality columns
+        # Split the 'Disease' column values by newline and remove empty values
+        diseases = drug_data['Disease'].dropna().apply(lambda x: [d.strip() for d in x.split('\n')]).explode().unique().tolist()
+
+        # Extract modalities (assuming there are no newlines in the modality column)
+        modalities = drug_data['Modality'].dropna().unique().tolist()
 
 def get_matched_disease_info(matched_disease):
     try:
         # Load the Excel file
-        df = pd.read_excel("../tpp_database.xlsx")
-
+        df = pd.read_excel(".\tpp_database.xlsx")
+        path=r".\tpp_database.xlsx"
+        print("df",path)
         # Check if the disease exists in the 'Disease' column
         disease_data = df[df['Disease'].str.contains(matched_disease, na=False, case=False)]
 
@@ -69,8 +82,21 @@ def get_matched_disease_info(matched_disease):
             "modalities": modalities
         }
     except Exception as e:
-        print(f"Error processing Excel file: {e}")
-        return None
+        df = pd.read_excel("./tpp_database.xlsx")
+
+        disease_data = df[df['Disease'].str.contains(matched_disease, na=False, case=False)]
+
+        if disease_data.empty:
+            return None
+
+        # Extract unique routes of administration and modalities
+        routes_of_administration = disease_data['Route Of Administration'].dropna().unique().tolist()
+        modalities = disease_data['Modality'].dropna().unique().tolist()
+
+        return {
+            "routes_of_administration": routes_of_administration,
+            "modalities": modalities
+        }
 
 def load_tpp_data():
     try:
