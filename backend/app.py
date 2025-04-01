@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, send_file, make_response, Response
 import pandas as pd
 from io import BytesIO
 from flask_cors import CORS
+import ast
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
@@ -1669,13 +1670,23 @@ current_weights = {
 def get_benchmark_table():
     try:
         # Check if weights need to be updated
-        if request.args.get('update_weights', default='false') == 'true':
+        if request.method == 'POST':
             # When the user updates the weights, recalculate benchmark scores using Llama
             xl = pd.ExcelFile(EXCEL_FILE_PATH)
             df = xl.parse('Sheet1')
 
             # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
             df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+            
+            data = request.get_json()
+            updated_weights = {
+                "No_of_Patient_Treated": data['weights'].get('enrollment', 0.2),
+                "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.15),
+                "Rifaximin_Treatment": data['weights'].get('justification', 0.2),
+                "Prevalence": data['weights'].get('prevalence', 0.2),
+                "Bausch_Presence": data['weights'].get('bausch_presence', 0.15),
+                "Safety_Efficacy": data['weights'].get('safety_efficacy', 0.1)
+            }
 
             benchmark_scores = []
             for index, row in df.iterrows():
@@ -1687,13 +1698,13 @@ def get_benchmark_table():
                     bausch_presence_text=row['bausch_presence'],
                     safety=row['safety'],
                     efficacy=row['efficacy'],
-                    weights=current_weights  # Use the updated weights
+                    weights=updated_weights  # Use the updated weights
                 )
-                print(benchmark_scores)
+                # print(benchmark_scores)
                 benchmark_scores.append({
-                    "Disease": row['disease'],
-                    "Benchmark Score": total,
-                    "Weights": current_weights
+                    "disease": row['disease'],
+                    "benchmark_score": total,
+                    "score_breakdown_distribution": updated_weights
                 })
             
             benchmark_table = pd.DataFrame(benchmark_scores)
@@ -1714,6 +1725,11 @@ def get_benchmark_table():
             top_scores =top_scores.drop_duplicates(subset='disease', keep='first')
 
             # Create the benchmark table with diseases, benchmark scores, and score breakdown
+            
+
+# Assuming 'score_breakdown_distribution' is a string representation of a dictionary
+            top_scores['score_breakdown_distribution'] = top_scores['score_breakdown_distribution'].apply(ast.literal_eval)
+
             benchmark_table = top_scores[['disease', 'benchmark_score', 'score_breakdown_distribution']]
 
             response_data = {
@@ -1731,12 +1747,22 @@ def get_benchmark_table():
 @app.route('/api/pie-chart', methods=['GET', 'POST'])
 def get_pie_chart():
     try:
-        if request.args.get('update_weights', default='false') == 'true':
+        if request.method == 'POST':
             # Recalculate the pie chart when weights are updated
             xl = pd.ExcelFile(EXCEL_FILE_PATH)
             df = xl.parse('Sheet1')
 
             df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+            
+            data = request.get_json()
+            updated_weights = {
+                "No_of_Patient_Treated": data['weights'].get('enrollment', 0.2),
+                "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.15),
+                "Rifaximin_Treatment": data['weights'].get('justification', 0.2),
+                "Prevalence": data['weights'].get('prevalence', 0.2),
+                "Bausch_Presence": data['weights'].get('bausch_presence', 0.15),
+                "Safety_Efficacy": data['weights'].get('safety_efficacy', 0.1)
+            }
             benchmark_scores = []
 
             for index, row in df.iterrows():
@@ -1748,24 +1774,25 @@ def get_pie_chart():
                     bausch_presence_text=row['bausch_presence'],
                     safety=row['safety'],
                     efficacy=row['efficacy'],
-                    weights=current_weights  # Use updated weights
+                    weights=updated_weights  # Use updated weights
                 )
                 benchmark_scores.append({
-                    "Disease": row['disease'],
-                    "Benchmark Score": total,
-                    "Weights": current_weights
+                    "disease": row['disease'],
+                    "benchmark_score": total,
+                    "Weights": updated_weights
                 })
 
             benchmark_df = pd.DataFrame(benchmark_scores)
             benchmark_df= benchmark_df.drop_duplicates(subset='disease', keep='first')
-            top_scores = benchmark_df.nlargest(5, 'Benchmark Score')  # Get top 5 diseases
-
-            pie_data = top_scores['Benchmark Score'].values
-            labels = top_scores['Disease'].values
+            top_scores = benchmark_df.nlargest(5, 'benchmark_score')  # Get top 5 diseases
+            print(benchmark_df)
+            pie_data = top_scores['benchmark_score'].values
+            labels = top_scores['disease'].values
         else:
             # Use pre-calculated data from the Excel sheet
             xl = pd.ExcelFile(EXCEL_FILE_PATH)
             df = xl.parse('Sheet1')
+            df = df.drop_duplicates(subset='Disease', keep='first')
 
             df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
             top_scores = df.nlargest(5, 'benchmark_score')

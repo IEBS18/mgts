@@ -76,7 +76,7 @@ Output this JSON format:
 
     response_content = response.choices[0].message.content.strip()
     # print("resp:",response_content)
-    print(justification)
+    # print(justification)
     # Fixing double quotes issue and ensuring proper JSON format
     # response_content = response_content.replace('""', '"')
 
