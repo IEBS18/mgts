@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useLocation } from "react-router-dom"
-import { Loader2, Info } from "lucide-react"
+import { Loader2, Info, Settings, BarChart3 } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { ToastContainer, toast } from "react-toastify"
 import { Cell, Pie, PieChart, Tooltip, ResponsiveContainer, Legend } from "recharts"
@@ -14,6 +14,8 @@ import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger }
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Progress } from "@/components/ui/progress"
+import { Slider } from "@/components/ui/slider"
 
 const LoadingDots = () => {
   return <span className="loading-dots">...</span>
@@ -43,6 +45,27 @@ const TruncatedMarkdown = ({ content, maxLength = 200 }) => {
         </Button>
       )}
     </div>
+  )
+}
+
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value }) => {
+  const RADIAN = Math.PI / 180
+  const radius = outerRadius * 1.1
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#333333"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      fontSize={12}
+      fontWeight={500}
+    >
+      {`(${(percent * 100).toFixed(0)}%)`}
+    </text>
   )
 }
 
@@ -135,20 +158,31 @@ function PieChartComp({ onDataUpdate }) {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
+                  // data={pieChartData}
+                  // cx="55%"
+                  // cy="50%"
+                  // outerRadius={80}
+                  // fill="#8884d8"
+                  // dataKey="value"
+                  // label={({ name, percent }) => `${capitalizeName(name)} ${(percent * 100).toFixed(0)}%`}
+                  // labelLine={false}
                   data={pieChartData}
-                  cx="55%"
+                  cx="50%"
                   cy="50%"
                   outerRadius={80}
+                  innerRadius={40}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percent }) => `${capitalizeName(name)} ${(percent * 100).toFixed(0)}%`}
                   labelLine={false}
+                  label={renderCustomizedLabel}
+                  paddingAngle={2}
                 >
                   {pieChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 {/* <Tooltip formatter={(value) => [`Score: ${value}`, "Value"]} /> */}
+                <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ paddingLeft: "20px" }} />
                 {/* <Legend layout="vertical" verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: "10px" }} /> */}
               </PieChart>
             </ResponsiveContainer>
@@ -172,7 +206,9 @@ function BenchmarkTable({ onWeightsUpdate }) {
     safety_efficacy: 0.1,
   })
   const [isUpdating, setIsUpdating] = useState(false)
-  const [activeTab, setActiveTab] = useState("table")
+  const [activeTab, setActiveTab] = useState("dashboard")
+  const [sortBy, setSortBy] = useState("score")
+  const [sortOrder, setSortOrder] = useState("desc")
 
   const fetchBenchmarkData = async (weights = null) => {
     setIsLoading(true)
@@ -203,7 +239,7 @@ function BenchmarkTable({ onWeightsUpdate }) {
   }, [])
 
   const handleWeightChange = (key, value) => {
-    const numValue = Number.parseFloat(value)
+    const numValue = Array.isArray(value) ? value[0] : Number.parseFloat(value)
     if (isNaN(numValue) || numValue < 0 || numValue > 1) return
 
     setWeights({
@@ -242,6 +278,7 @@ function BenchmarkTable({ onWeightsUpdate }) {
       }
 
       toast.success("Scores updated successfully")
+      setActiveTab("dashboard")
     } catch (error) {
       console.error("Error updating scores:", error)
       toast.error("Failed to update scores")
@@ -252,97 +289,291 @@ function BenchmarkTable({ onWeightsUpdate }) {
   const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0)
   const isValidWeights = Math.abs(totalWeight - 1) < 0.01
 
+  const getScoreColor = (score) => {
+    if (score >= 0.8) return "bg-[#e8f5e9] text-[#2e7d32] border-[#a5d6a7]"
+    if (score >= 0.7) return "bg-[#f1f8e9] text-[#558b2f] border-[#c5e1a5]"
+    if (score >= 0.6) return "bg-[#f9fbe7] text-[#827717] border-[#e6ee9c]"
+    if (score >= 0.5) return "bg-[#fff8e1] text-[#ff8f00] border-[#ffe082]"
+    return "bg-[#fff3e0] text-[#ef6c00] border-[#ffcc80]"
+  }
+
+  const getProgressColor = (score) => {
+    // Convert score to 0-5 scale if it's in 0-1 scale
+    const normalizedScore = score <= 1 ? score * 5 : score
+
+    if (normalizedScore >= 4.5) return "bg-[#4caf50]"
+    if (normalizedScore >= 3.5) return "bg-[#8bc34a]"
+    if (normalizedScore >= 2.5) return "bg-[#cddc39]"
+    if (normalizedScore >= 1.5) return "bg-[#ffc107]"
+    return "bg-[#ff9800]"
+  }
+
+  const sortedData = [...benchmarkData].sort((a, b) => {
+    if (sortBy === "score") {
+      return sortOrder === "desc" ? b.benchmark_score - a.benchmark_score : a.benchmark_score - b.benchmark_score
+    } else {
+      return sortOrder === "desc" ? b.disease.localeCompare(a.disease) : a.disease.localeCompare(b.disease)
+    }
+  })
+
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortBy(field)
+      setSortOrder("desc")
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="animate-spin mr-2 h-5 w-5 text-primary" />
-        <span>Loading benchmark data...</span>
+        <span>Loading benchmark analysis...</span>
       </div>
     )
   }
 
   if (error) {
-    return <div className="text-destructive p-4">Error: {error}</div>
+    return (
+      <Card className="h-full shadow-md">
+        <CardHeader className="pb-2 bg-[#f9faf5]">
+          <CardTitle className="text-xl font-semibold">Benchmark Analysis</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="text-destructive p-4 bg-destructive/10 rounded-md flex items-center gap-2">
+            <span className="text-destructive">Error: {error}</span>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
-    <Card className="h-full shadow-md">
+    <Card className="h-full shadow-md border-slate-200">
       <CardHeader className="pb-2 bg-[#f9faf5]">
-        <CardTitle className="text-xl font-semibold">Benchmark Scores</CardTitle>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-[#a6ce39]" />
+            <CardTitle className="text-xl font-semibold">Benchmark Analysis</CardTitle>
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Info className="h-4 w-4 text-slate-500" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p className="text-xs">
+                  Benchmark scores are calculated based on weighted criteria. Adjust weights in the settings tab.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="px-6 pt-2">
+          <div className="px-6 pt-4">
             <TabsList className="grid w-full grid-cols-2 bg-[#f5f8e8]">
-              <TabsTrigger value="table" className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-white">
-                Scores
+              <TabsTrigger
+                value="dashboard"
+                className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-white flex items-center gap-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Dashboard
               </TabsTrigger>
-              <TabsTrigger value="weights" className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-white">
+              <TabsTrigger
+                value="weights"
+                className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-white flex items-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
                 Adjust Weights
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="table" className="mt-0">
-            <div className="px-6 py-2">
-              <ScrollArea className="h-[220px] rounded-md border">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-[#f5f8e8] sticky top-0">
-                      <th className="text-left p-2 text-xs font-medium">Disease</th>
-                      <th className="text-left p-2 text-xs font-medium">Score</th>
-                      <th className="text-left p-2 text-xs font-medium">Weight Distribution</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {benchmarkData.map((item, index) => (
-                      <tr key={index} className="border-b hover:bg-[#f9faf5]">
-                        <td className="p-2 text-xs">{capitalizeName(item.disease)}</td>
-                        <td className="p-2 text-xs">
-                          <Badge variant="outline" className="font-mono bg-[#f5f8e8] text-gray-700">
-                            {item.benchmark_score}
-                          </Badge>
-                        </td>
-                        <td className="p-2 text-xs">
-                          {item.score_breakdown_distribution && (
-                            <div className="grid grid-cols-2 gap-x-2 text-[10px] text-muted-foreground">
-                              <div>Enrollment: {item.score_breakdown_distribution.No_of_Patient_Treated}</div>
-                              <div>Mechanism: {item.score_breakdown_distribution.Gut_Microbiome_Association}</div>
-                              <div>Justification: {item.score_breakdown_distribution.Rifaximin_Treatment}</div>
-                              <div>Prevalence: {item.score_breakdown_distribution.Prevalence}</div>
-                              <div>Bausch: {item.score_breakdown_distribution.Bausch_Presence}</div>
-                              <div>Safety: {item.score_breakdown_distribution.Safety_Efficacy}</div>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </ScrollArea>
+          <TabsContent value="dashboard" className="mt-0">
+            <div className="p-4 flex justify-between items-center border-b">
+              <div className="text-sm font-medium text-slate-700">{sortedData.length} Disease Benchmarks</div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-500">Sort by:</span>
+                <Select
+                  value={`${sortBy}-${sortOrder}`}
+                  onValueChange={(value) => {
+                    const [field, order] = value.split("-")
+                    setSortBy(field)
+                    setSortOrder(order)
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[180px] bg-white">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent className='bg-white'>
+                    <SelectItem value="score-desc">Score (High to Low)</SelectItem>
+                    <SelectItem value="score-asc">Score (Low to High)</SelectItem>
+                    <SelectItem value="name-asc">Disease Name (A-Z)</SelectItem>
+                    <SelectItem value="name-desc">Disease Name (Z-A)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
+            <ScrollArea className="h-[120px]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                {sortedData.map((item, index) => (
+                  <Card key={index} className="overflow-hidden border-slate-200 hover:shadow-md transition-shadow">
+                    <CardHeader className="p-4 pb-2 bg-[#f9faf5] border-b">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-base font-medium text-slate-800 truncate">
+                          {capitalizeName(item.disease)}
+                        </CardTitle>
+                        <Badge variant="outline" className={`font-mono ${getScoreColor(item.benchmark_score)}`}>
+                          {item.benchmark_score}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-slate-500">Benchmark Score</span>
+                            <span className="text-xs font-medium">{item.benchmark_score}</span>
+                          </div>
+                          <Progress
+                            value={(Number.parseFloat(item.benchmark_score) * 100)}
+                            className={`h-2 ${getProgressColor(item.benchmark_score)}`}
+                          />
+                        </div>
+
+                        {item.score_breakdown_distribution && (
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-2">
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-xs text-slate-500">Enrollment: </span>
+                                <span className="text-xs font-medium">
+                                  {item.score_breakdown_distribution.No_of_Patient_Treated}
+                                </span>
+                              </div>
+                              <Progress
+                                value={
+                                  Number.parseFloat(item.score_breakdown_distribution.No_of_Patient_Treated) * 100 * 5
+                                }
+                                className="h-1 bg-slate-100"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-xs text-slate-500">Mechanism: </span>
+                                <span className="text-xs font-medium">
+                                  {item.score_breakdown_distribution.Gut_Microbiome_Association}
+                                </span>
+                              </div>
+                              <Progress
+                                value={
+                                  Number.parseFloat(item.score_breakdown_distribution.Gut_Microbiome_Association) *
+                                  100 *
+                                  5
+                                }
+                                className="h-1 bg-slate-100"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-xs text-slate-500">Justification: </span>
+                                <span className="text-xs font-medium">
+                                  {item.score_breakdown_distribution.Rifaximin_Treatment}
+                                </span>
+                              </div>
+                              <Progress
+                                value={
+                                  Number.parseFloat(item.score_breakdown_distribution.Rifaximin_Treatment) * 100 * 5
+                                }
+                                className="h-1 bg-slate-100"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-xs text-slate-500">Prevalence: </span>
+                                <span className="text-xs font-medium">
+                                  {item.score_breakdown_distribution.Prevalence}
+                                </span>
+                              </div>
+                              <Progress
+                                value={Number.parseFloat(item.score_breakdown_distribution.Prevalence) * 100 * 5}
+                                className="h-1 bg-slate-100"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-xs text-slate-500">Bausch: </span>
+                                <span className="text-xs font-medium">
+                                  {item.score_breakdown_distribution.Bausch_Presence}
+                                </span>
+                              </div>
+                              <Progress
+                                value={Number.parseFloat(item.score_breakdown_distribution.Bausch_Presence) * 100 * 5}
+                                className="h-1 bg-slate-100"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-xs text-slate-500">Safety: </span>
+                                <span className="text-xs font-medium">
+                                  {item.score_breakdown_distribution.Safety_Efficacy}
+                                </span>
+                              </div>
+                              <Progress
+                                value={Number.parseFloat(item.score_breakdown_distribution.Safety_Efficacy) * 100 * 5}
+                                className="h-1 bg-slate-100"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
           </TabsContent>
 
           <TabsContent value="weights" className="mt-0">
-            <div className="px-6 py-4">
+            <div className="px-6 py-4 h-[210px]">
+              <div className="mb-4 bg-[#f5f8e8] p-4 rounded-md border border-[#e7f0d1]">
+                <h3 className="text-sm font-medium text-[#4b6a1e] mb-2">Weight Configuration</h3>
+                <p className="text-sm text-[#5c7a2e]">
+                  Adjust the weight factors below to recalculate disease scores. The sum of all weights must equal 1.0
+                  for accurate benchmarking.
+                </p>
+              </div>
+
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                 {Object.entries(weights).map(([key, value]) => (
                   <div key={key} className="space-y-1">
-                    <label className="text-xs text-muted-foreground capitalize">{key.replace("_", " ")}</label>
-                    <Input
-                      type="number"
-                      value={value}
-                      onChange={(e) => handleWeightChange(key, e.target.value)}
-                      step="0.05"
-                      min="0"
-                      max="1"
-                      className="h-8"
+                    <div className="flex justify-between">
+                      <label className="text-xs text-muted-foreground capitalize">{key.replace("_", " ")}</label>
+                      <span className="text-xs text-slate-500">{value.toFixed(2)}</span>
+                    </div>
+                    <Slider
+                      value={[value]}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      onValueChange={(val) => handleWeightChange(key, val)}
+                      className="py-2 [&>span]:bg-white [&>span]:border-white [&>span]:shadow-md [&>span:before]:bg-[#a6ce39]"
                     />
                   </div>
                 ))}
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between bg-[#f9faf5] p-3 rounded-md">
                 <div className={`text-xs ${isValidWeights ? "text-green-600" : "text-destructive"}`}>
                   Total: {totalWeight.toFixed(2)} {isValidWeights ? "✓" : "(should equal 1.0)"}
                 </div>
