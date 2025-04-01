@@ -1,6 +1,7 @@
 import os
 import json
 import pandas as pd
+from openai import AzureOpenAI
 from dotenv import load_dotenv
 from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import UserMessage
@@ -10,16 +11,17 @@ from azure.core.pipeline.transport import RequestsTransport
 # Load .env with LLaMA credentials
 load_dotenv()
 
-MODEL = "Llama-3.3-70B-Instruct"
-transport = RequestsTransport(timeout=(600, 600))
-client = ChatCompletionsClient(
-    endpoint=os.getenv("LLAMA_searchbyingredient_URI"),
-    credential=AzureKeyCredential(os.getenv("LLAMA_searchbyingredient_API")),
-    transport=transport
+MODEL = "gpt-4o-mini"
+
+openai_client = AzureOpenAI(
+    api_key=os.getenv("AZURE_API"),
+    api_version=os.getenv("AZURE_API_VERSION"),
+    azure_endpoint=os.getenv("AZURE_BASE_URL")
 )
 
+
 def ask_llama(prompt: str):
-    response = client.complete(
+    response = openai_client.chat.completions.create(
         model=MODEL,
         messages=[UserMessage(content=prompt)]
     )
@@ -67,15 +69,16 @@ Output this JSON format:
 
 -- remove the ```json ``` tags from the output
 """
-    response = client.complete(
+    response = openai_client.chat.completions.create(
         model=MODEL,
         messages=[{"role": "user", "content": prompt}]
     )
 
     response_content = response.choices[0].message.content.strip()
-
+    # print("resp:",response_content)
+    print(justification)
     # Fixing double quotes issue and ensuring proper JSON format
-    response_content = response_content.replace('""', '"')
+    # response_content = response_content.replace('""', '"')
 
     try:
         score_json = json.loads(response_content)
@@ -95,19 +98,22 @@ def run_benchmark_from_excel(input_path, output_path, weights):
         try:
             scores, total = benchmark_score_llama(
                 enrollment=row['Enrollment'],
-                mechanism_text=row['Drug_Mechanism'],
+                mechanism_text=row['Disease_Mechanism'],
+                
                 justification=row['Justification_for_Drug_Use'],
                 prevalence=row['Prevalence'],
                 bausch_presence_text=row['Bausch Presence'],
                 safety=row['Safety'],
                 efficacy=row['Efficacy'],
                 weights=weights
+
+                
             )
         except Exception as e:
             print(f"❌ Error processing row {index}: {e}")
             scores = {k: 0 for k in weights}
             total = 0
-
+        
         scores_list.append(scores)
         total_scores.append(total)
 

@@ -1,7 +1,7 @@
 import os
+from openai import AzureOpenAI
 from dotenv import load_dotenv
 load_dotenv()
-
 from RnD.rnd import fuzzy_search
 from RnD.rnd import fuzzy_search
 from azure.ai.inference import ChatCompletionsClient
@@ -13,13 +13,14 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 
 # Azure AI Configuration for LLaMA 3.3-70B
-MODEL = "Llama-3.3-70B-Instruct"
-transport = RequestsTransport(timeout=(600, 600))  # Increase timeout
-client = ChatCompletionsClient(
-    endpoint=os.getenv("LLAMA_searchbyingredient_URI"),
-    credential=AzureKeyCredential(os.getenv("LLAMA_searchbyingredient_API")),
-    transport=transport
+MODEL = "gpt-4o-mini"
+
+openai_client = AzureOpenAI(
+    api_key=os.getenv("AZURE_API"),
+    api_version=os.getenv("AZURE_API_VERSION"),
+    azure_endpoint=os.getenv("AZURE_BASE_URL")
 )
+
 
 # Define fields to search within each index
 index_fields = {
@@ -41,7 +42,7 @@ post_processing_fields = {
 def extract_info(text, column_name, column_description):
     try:
         user_message = "column name:" + column_name + "\ncolumn description:" + column_description + "\n\nCONTEXT:\n\n" + str(text)
-        response = client.complete(
+        response = openai_client.chat.completions.create(
             model=MODEL,
             messages=[
                 SystemMessage(content="""

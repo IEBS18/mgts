@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor        
 import json
+from openai import AzureOpenAI
 from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential
@@ -19,14 +20,14 @@ es = Elasticsearch(
  
 executor = ThreadPoolExecutor(max_workers=5)
 # Azure AI Configuration for LLaMA 3.3-70B
-MODEL = "Llama-3.3-70B-Instruct"
-transport = RequestsTransport(timeout=(600, 600))  # Increase timeout
-client = ChatCompletionsClient(
-    endpoint=os.getenv("LLAMA_searchbyingredient_URI"),
-    credential=AzureKeyCredential(os.getenv("LLAMA_searchbyingredient_API")),
-    transport=transport
+MODEL = "gpt-4o-mini"
+
+openai_client = AzureOpenAI(
+    api_key=os.getenv("AZURE_API"),
+    api_version=os.getenv("AZURE_API_VERSION"),
+    azure_endpoint=os.getenv("AZURE_BASE_URL")
 )
- 
+
 # Cache for storing processed LLM results
 processed_data_cache = {}
  
@@ -125,7 +126,7 @@ def get_prompt(field_name, user_query):
  
 def extract_info(field_name, text, user_query):
     try:
-        response = client.complete(
+        response = openai_client.chat.completions.create(
             model=MODEL,
             messages=[
                 SystemMessage(content="""
