@@ -1707,7 +1707,8 @@ def get_benchmark_table():
                     "score_breakdown_distribution": updated_weights
                 })
             
-            benchmark_table = pd.DataFrame(benchmark_scores)
+            # benchmark_table = pd.DataFrame(benchmark_scores)
+            benchmark_table = pd.DataFrame(benchmark_scores).sort_values(by="benchmark_score", ascending=False)
             response_data = {
                 "benchmark_table": benchmark_table.to_dict(orient='records'),
                 "message": "Benchmark Table recalculated successfully"
@@ -1721,8 +1722,9 @@ def get_benchmark_table():
             df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
 
             # Sort by 'Benchmark_Score' to get the top 5 diseases
-            top_scores = df.nlargest(5, 'benchmark_score')  # Top 5 diseases based on benchmark score
-            top_scores =top_scores.drop_duplicates(subset='disease', keep='first')
+            # top_scores = df.nlargest(5, 'benchmark_score')  # Top 5 diseases based on benchmark score
+            df=pd.DataFrame(df).sort_values(by="benchmark_score", ascending=False)
+            top_scores =df.drop_duplicates(subset='disease', keep='first')
 
             # Create the benchmark table with diseases, benchmark scores, and score breakdown
             

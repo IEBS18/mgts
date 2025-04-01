@@ -216,15 +216,13 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
   // New optional tabs for the "Search by Drug" tab
   const optionalTabsDrug = [
     "Disease",
-    "Diseases_PMC_ID",
-    "Drug_PMC_ID",
     "Justification_for_Drug_Use",
-    "Disease_Title",
     "Disease_Mechanism",
-    "Drug_Title",
+    "Disease_Microbes",
     "Drug_Mechanism",
     "Drug_Microbes",
-    "Disease_Microbes",
+    "Disease_Source",
+    "Drug_Source",
   ];
 
   // Toggle selection of a topic in "Search by Ingredient"
@@ -292,11 +290,11 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
                     className="w-6 h-6 object-contain"
                   />
                 </div>
-                <p className="text-lg font-medium">R&D Formulation</p>
+                <p className="text-lg font-medium">BioFormulate</p>
               </DialogTitle>
             </div>
             <p className="text-sm text-white">
-              A brief description about what R&D and Formulations do and their basic functionality.
+            Analyze pharmaceutical ingredients and uncover new therapeutic applications using patents and research insights.
             </p>
           </div>
         </DialogHeader>

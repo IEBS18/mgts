@@ -426,15 +426,15 @@ export default function DrugFormulation() {
     const uniqueSelectedTabs = Array.from(new Set(selectedTabs))
     const columnOrder = [
       "Disease",
-      "Diseases_PMC_ID",
-      "Disease_Title",
-      "Disease_Mechanism",
       "Disease_Microbes",
-      "Drug_PMC_ID",
-      "Drug_Title",
-      "Drug_Mechanism",
+      "Disease_Mechanism",
+      // "Drug_Title",
       "Drug_Microbes",
+      "Drug_Mechanism",
       "Justification_for_Drug_Use",
+      "Disease_Source",
+      // "Disease_Title",
+      "Drug_Source",
     ]
     const orderedTabs = columnOrder.filter((tab) => uniqueSelectedTabs.includes(tab))
     setOrderedTabs(orderedTabs)
@@ -514,44 +514,42 @@ export default function DrugFormulation() {
 
           <CardContent className="p-0">
             <div className="border-t">
-              <ScrollArea className="h-[500px]">
-                <div className="w-full">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-[#f5f8e8] sticky top-0 z-10">
-                        {orderedTabs.map((topic) => (
-                          <th
-                            key={topic}
-                            className="p-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap text-gray-700"
-                            style={{ minWidth: "180px" }}
-                          >
-                            {topic.replace(/_/g, " ")}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredTableData.length > 0 ? (
-                        filteredTableData.map((record, rowIndex) => (
-                          <tr key={rowIndex} className="border-b border-border hover:bg-[#f9faf5] transition-colors">
-                            {orderedTabs.map((topic) => (
-                              <td key={topic} className="p-4 align-top w-[400px] max-w-[400px] text-sm">
-                                {topic === 'Disease' ? capitalizeName(renderCellContent(record, topic)) : renderCellContent(record, topic)}
-                              </td>
-                            ))}
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={orderedTabs.length} className="p-6 text-center text-muted-foreground">
-                            {isLoading ? "Loading data..." : "No data available for the selected filters."}
-                          </td>
+              <div className="h-[500px] overflow-x-auto">
+                <table className="w-full min-w-max border-collapse">
+                  <thead>
+                    <tr className="bg-[#f5f8e8] sticky top-0 z-10">
+                      {orderedTabs.map((topic) => (
+                        <th
+                          key={topic}
+                          className="p-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap text-gray-700"
+                          style={{ minWidth: "180px" }}
+                        >
+                          {topic.replace(/_/g, " ")}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTableData.length > 0 ? (
+                      filteredTableData.map((record, rowIndex) => (
+                        <tr key={rowIndex} className="border-b border-border hover:bg-[#f9faf5] transition-colors">
+                          {orderedTabs.map((topic) => (
+                            <td key={topic} className="p-4 align-top w-[400px] max-w-[400px] text-sm">
+                              {topic === 'Disease' ? capitalizeName(renderCellContent(record, topic)) : renderCellContent(record, topic)}
+                            </td>
+                          ))}
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </ScrollArea>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={orderedTabs.length} className="p-6 text-center text-muted-foreground">
+                          {isLoading ? "Loading data..." : "No data available for the selected filters."}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </CardContent>
         </Card>
