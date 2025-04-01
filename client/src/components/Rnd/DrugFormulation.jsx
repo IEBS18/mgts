@@ -476,7 +476,7 @@
 //     </div>
 //   );
 // }
- 
+
 
 
 // "use client";
@@ -648,7 +648,7 @@
 //     </div>
 //   );
 // }
- 
+
 
 
 // "use client";
@@ -875,11 +875,16 @@ function renderCellContent(record, topic) {
   return <TruncatedMarkdown content={String(content)} />
 }
 
+import { Cell, Pie, PieChart, Tooltip } from 'recharts';
+
 // Pie Chart Component
-function PieChart() {
+function PieChartComp() {
   const [pieChartData, setPieChartData] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF']
+ 
 
   useEffect(() => {
     setIsLoading(true)
@@ -890,7 +895,7 @@ function PieChart() {
         if (data.error) {
           setError(data.error)
         } else {
-          setPieChartData(data.pie_chart)
+          setPieChartData(data.pie_chart_data)
         }
       })
       .catch((error) => {
@@ -917,12 +922,30 @@ function PieChart() {
     <div className="bg-white p-4 rounded-lg shadow-md h-full">
       <h2 className="text-xl font-bold mb-4 text-gray-800">Top 5 Diseases to Explore</h2>
       {pieChartData && (
-        <div className="flex justify-center">
-          <img
+        <div className="flex h-full justify-center">
+
+          {/* <img
             src={`data:image/png;base64,${pieChartData}`}
             alt="Top 5 Diseases Pie Chart"
             className="max-w-full max-h-[300px]"
-          />
+          /> */}
+          <PieChart width={200} height={200}>
+            <Pie
+              data={pieChartData}
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+              label
+            >
+              {pieChartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+
         </div>
       )}
     </div>
@@ -961,10 +984,12 @@ function BenchmarkTable() {
       .then((response) => response.json())
       .then((data) => {
         setIsLoading(false)
+        console.log("data: ", data);
         if (data.error) {
           setError(data.error)
         } else {
           setBenchmarkData(data.benchmark_table)
+          console.log("benchmark data", benchmarkData);
         }
       })
       .catch((error) => {
@@ -1121,8 +1146,8 @@ function BenchmarkTable() {
           <tbody>
             {benchmarkData.map((item, index) => (
               <tr key={index} className="border-b hover:bg-gray-50">
-                <td className="px-2 py-2">{item.Disease}</td>
-                <td className="px-2 py-2">{item["Benchmark Score"].toFixed(2)}</td>
+                <td className="px-2 py-2">{item.disease}</td>
+                <td className="px-2 py-2">{item.benchmark_score}</td>
                 <td className="px-2 py-2 text-xs">
                   {item.Weights && (
                     <div className="grid grid-cols-2 gap-x-2">
@@ -1214,7 +1239,7 @@ export default function DrugFormulation() {
       {/* Analytics Dashboard Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="h-[350px]">
-          <PieChart />
+          <PieChartComp />
         </div>
         <div className="h-[350px]">
           <BenchmarkTable />

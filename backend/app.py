@@ -1584,9 +1584,13 @@ def get_processed_results():
     #     return jsonify({"error": str(e)}), 400
 
 
-import matplotlib.pyplot as plt    
+import matplotlib
+matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
 import io
 import base64
+import pandas as pd
 from RnD.benchmark import benchmark_score_llama, run_benchmark_from_excel, get_user_weights
 
 EXCEL_FILE_PATH = r"gutmicrobiome​_scored_disease_output.xlsx"
@@ -1650,114 +1654,170 @@ def get_rnd_formulation_drug():
     
 
 #==== BENCHMARK TABLE SCORE API ROUTE ====
+# Default Weights (initial weights for the benchmark score calculation)
+current_weights = {
+    "No_of_Patient_Treated": 0.20,
+    "Gut_Microbiome_Association": 0.15,
+    "Rifaximin_Treatment": 0.20,
+    "Prevalence": 0.20,
+    "Bausch_Presence": 0.15,
+    "Safety_Efficacy": 0.10
+}
+
+# Route to handle the benchmark table (Excel-based or recalculated if weights are updated)
 @app.route('/api/benchmark-table', methods=['GET'])
 def get_benchmark_table():
     try:
-        # User-defined Weights (you can replace this part with dynamic input from user interface)
-        # custom_weights = get_user_weights()  # User-defined weights input
-        
-        # Read the Excel file
-        xl = pd.ExcelFile(EXCEL_FILE_PATH)
-        
-        # Read the sheet into a DataFrame
-        df = xl.parse('Sheet1')
-        print("cols:",df.columns)
-        # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
-        df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+        # Check if weights need to be updated
+        if request.args.get('update_weights', default='false') == 'true':
+            # When the user updates the weights, recalculate benchmark scores using Llama
+            xl = pd.ExcelFile(EXCEL_FILE_PATH)
+            df = xl.parse('Sheet1')
 
-        # Calculate benchmark scores for each disease
-        benchmark_scores = []
-        for index, row in df.iterrows():
-            scores, total = benchmark_score_llama(
-                enrollment=row['enrollment'],
-                mechanism_text=row['disease_mechanism'],
-                justification=row['justification_for_drug_use'],
-                prevalence=row['prevalence'],
-                bausch_presence_text=row['bausch_presence'],
-                safety=row['safety'],
-                efficacy=row['efficacy'],
-                weights=default_weights  # Use default weights initially
-            )
-            benchmark_scores.append({"Disease": row['disease'], "Benchmark Score": total, "Weights": default_weights})
+            # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
+            df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
 
-        # Create the Benchmark Table with diseases, default weights, and benchmark scores
-        benchmark_table = pd.DataFrame(benchmark_scores)
+            benchmark_scores = []
+            for index, row in df.iterrows():
+                scores, total = benchmark_score_llama(
+                    enrollment=row['enrollment'],
+                    mechanism_text=row['disease_mechanism'],
+                    justification=row['justification_for_drug_use'],
+                    prevalence=row['prevalence'],
+                    bausch_presence_text=row['bausch_presence'],
+                    safety=row['safety'],
+                    efficacy=row['efficacy'],
+                    weights=current_weights  # Use the updated weights
+                )
+                print(benchmark_scores)
+                benchmark_scores.append({
+                    "Disease": row['disease'],
+                    "Benchmark Score": total,
+                    "Weights": current_weights
+                })
+            
+            benchmark_table = pd.DataFrame(benchmark_scores)
+            response_data = {
+                "benchmark_table": benchmark_table.to_dict(orient='records'),
+                "message": "Benchmark Table recalculated successfully"
+            }
+        else:
+            # Fetch pre-calculated data from the Excel sheet
+            xl = pd.ExcelFile(EXCEL_FILE_PATH)
+            df = xl.parse('Sheet1')
 
-        # Send back the benchmark table
-        response_data = {
-            "benchmark_table": benchmark_table.to_dict(orient='records'),
-            "message": "Benchmark Table retrieved successfully"
-        }
+            # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
+            df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+
+            # Sort by 'Benchmark_Score' to get the top 5 diseases
+            top_scores = df.nlargest(5, 'benchmark_score')  # Top 5 diseases based on benchmark score
+            top_scores =top_scores.drop_duplicates(subset='disease', keep='first')
+
+            # Create the benchmark table with diseases, benchmark scores, and score breakdown
+            benchmark_table = top_scores[['disease', 'benchmark_score', 'score_breakdown_distribution']]
+
+            response_data = {
+                "benchmark_table": benchmark_table.to_dict(orient='records'),
+                "message": "Benchmark Table retrieved successfully from Excel"
+            }
+
         return jsonify(response_data), 200
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 
-#==== Top 5 Diseases to expolore in PIE CHART ====
+# Route to handle pie chart for top benchmark scores (Excel-based or recalculated if weights are updated)
 @app.route('/api/pie-chart', methods=['GET'])
 def get_pie_chart():
     try:
-        # User-defined Weights (you can replace this part with dynamic input from user interface)
-        custom_weights = get_user_weights()  # User-defined weights input
-        
-        # Read the Excel file
-        xl = pd.ExcelFile(EXCEL_FILE_PATH)
-        
-        # Read the sheet into a DataFrame
-        df = xl.parse('Sheet1')
-        
-        # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
-        # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
-        df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+        if request.args.get('update_weights', default='false') == 'true':
+            # Recalculate the pie chart when weights are updated
+            xl = pd.ExcelFile(EXCEL_FILE_PATH)
+            df = xl.parse('Sheet1')
 
-        # Calculate benchmark scores for each disease
-        benchmark_scores = []
-        for index, row in df.iterrows():
-            scores, total = benchmark_score_llama(
-                enrollment=row['enrollment'],
-                mechanism_text=row['disease_mechanism'],
-                justification=row['justification_for_drug_use'],
-                prevalence=row['prevalence'],
-                bausch_presence_text=row['bausch_presence'],
-                safety=row['safety'],
-                efficacy=row['efficacy'],
-                weights=default_weights  # Use default weights initially
-            )
-            benchmark_scores.append({"Disease": row['disease'], "Benchmark Score": total, "Weights": default_weights})
+            df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+            benchmark_scores = []
 
-        # Create the Benchmark Table with diseases, default weights, and benchmark scores
-        benchmark_df = pd.DataFrame(benchmark_scores)
-        # Drop duplicates based on 'Disease' column (keeping the first occurrence)
-        benchmark_df = benchmark_df.drop_duplicates(subset='Disease', keep='first')
+            for index, row in df.iterrows():
+                scores, total = benchmark_score_llama(
+                    enrollment=row['enrollment'],
+                    mechanism_text=row['disease_mechanism'],
+                    justification=row['justification_for_drug_use'],
+                    prevalence=row['prevalence'],
+                    bausch_presence_text=row['bausch_presence'],
+                    safety=row['safety'],
+                    efficacy=row['efficacy'],
+                    weights=current_weights  # Use updated weights
+                )
+                benchmark_scores.append({
+                    "Disease": row['disease'],
+                    "Benchmark Score": total,
+                    "Weights": current_weights
+                })
 
-        # Get the top 5 diseases based on benchmark score
-        top_scores = benchmark_df.nlargest(5, 'Benchmark Score')  # Get top 5 diseases
-        pie_data = top_scores['Benchmark Score'].values
-        labels = top_scores['Disease'].values
+            benchmark_df = pd.DataFrame(benchmark_scores)
+            benchmark_df= benchmark_df.drop_duplicates(subset='disease', keep='first')
+            top_scores = benchmark_df.nlargest(5, 'Benchmark Score')  # Get top 5 diseases
 
-        # Generate Pie Chart
-        fig, ax = plt.subplots(figsize=(8, 8))  # Aspect ratio for a square pie chart
-        ax.pie(pie_data, labels=labels, autopct='%1.1f%%', startangle=90, wedgeprops={'edgecolor': 'black'})
-        ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+            pie_data = top_scores['Benchmark Score'].values
+            labels = top_scores['Disease'].values
+        else:
+            # Use pre-calculated data from the Excel sheet
+            xl = pd.ExcelFile(EXCEL_FILE_PATH)
+            df = xl.parse('Sheet1')
 
-        # Save the pie chart to a BytesIO object
-        img_bytes = io.BytesIO()
-        plt.savefig(img_bytes, format='png')
-        plt.close(fig)  # Close the plot to free memory
-        img_bytes.seek(0)
+            df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+            top_scores = df.nlargest(5, 'benchmark_score')
 
-        # Convert image to base64 for sending to the frontend
-        img_base64 = base64.b64encode(img_bytes.read()).decode('utf-8')
+            pie_data = top_scores['benchmark_score'].values
+            labels = top_scores['disease'].values
 
+        # Prepare data for frontend (Recharts / Shadcn Pie Chart)
+        pie_chart_data = [
+            {"name": row['disease'], "value": row['benchmark_score']}
+            for _, row in top_scores.iterrows()
+        ]
+       
+        print("pie chart data:", pie_chart_data)
+ 
         return jsonify({
-            "pie_chart": img_base64,
-            "message": "Pie chart generated successfully"
+            "pie_chart_data": pie_chart_data,
+            "message": "Pie chart data generated successfully"
         }), 200
+ 
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+
+# Route to handle updating weights and recalculating benchmark scores
+@app.route('/api/update-weights', methods=['POST'])
+def update_weights():
+    try:
+        updated_weights = request.get_json()  # Expecting JSON with new weights
+        print(updated_weights)
+        required_keys = ["No_of_Patient_Treated", "Gut_Microbiome_Association", "Rifaximin_Treatment",
+                         "Prevalence", "Bausch_Presence", "Safety_Efficacy"]
+        for key in required_keys:
+            if key not in updated_weights:
+                return jsonify({"error": f"Missing weight for {key}"}), 400
+
+        # Update the current weights
+        global current_weights
+        current_weights = updated_weights
+
+        # Return the updated weights
+        response_data = {
+            "updated_weights": current_weights,
+            "message": "Weights updated successfully"
+        }
+
+        return jsonify(response_data), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    
 
 # def rnd_formulation_drug():
 #     """
