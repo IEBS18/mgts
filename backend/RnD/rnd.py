@@ -5,14 +5,20 @@ import logging
 from openpyxl import Workbook
 import io
 import sys
+import ast
+import matplotlib.pyplot as plt
+import pandas as pd
 
 try:
     from .rnd_util import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search, getAIColumn
     from .searchbyDrug import fetch_results, stream_drug, processed_cache
+    from .searchbyDrug_util import benchmark_score_llama, run_benchmark_from_excel, get_user_weights
+
 except:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
     from rnd_util import fetch_raw_results, stream_llm_results, processed_data_cache, fuzzy_search, getAIColumn
     from searchbyDrug import fetch_results, stream_drug, processed_cache
+    from searchbyDrug_util import benchmark_score_llama, run_benchmark_from_excel, get_user_weights
 
 
 rnd_blueprint = Blueprint('rnd', __name__)
@@ -63,82 +69,234 @@ def get_processed_results():
     return jsonify({"results": processed_data_cache[user_query]}), 200
     
 ## SEARCH BY DRUG RND Formulation    
+try:
+    EXCEL_FILE_PATH = "./gutmicrobiome​_scored_disease_output.xlsx"
+except:
+    EXCEL_FILE_PATH = "backend/gutmicrobiome​_scored_disease_output.xlsx"
+# EXCEL_FILE_PATH = r"gutmicrobiome​_scored_disease_output.xlsx"
+print(EXCEL_FILE_PATH)
+# Default Weights
+default_weights = {
+    "No_of_Patient_Treated": 0.20,
+    "Gut_Microbiome_Association": 0.15,
+    "Rifaximin_Treatment": 0.20,
+    "Prevalence": 0.20,
+    "Bausch_Presence": 0.15,
+    "Safety_Efficacy": 0.10
+}
+
+@rnd_blueprint.route('/api/rnd-formulation-drug', methods=['GET'])
+def get_rnd_formulation_drug():
+    try:
+        # Retrieve the selected_tabs parameter from the request
+        requested_tabs_raw = request.args.get('selected_tabs')  # Expecting a comma-separated string
+        print("Raw requested_tabs:", requested_tabs_raw)
+        
+        if not requested_tabs_raw:
+            raise ValueError("Missing 'selected_tabs' parameter in request")
+
+        # Split the selected_tabs string by commas and sanitize
+        requested_tabs = [tab.strip().lower().replace(" ", "_") for tab in requested_tabs_raw.split(',')]
+        print("Sanitized requested_tabs:", requested_tabs)
+
+        if not os.path.exists(EXCEL_FILE_PATH):
+            raise ValueError("Excel file does not exist in backend")
+        
+        # Read the Excel file
+        xl = pd.ExcelFile(EXCEL_FILE_PATH)
+        
+        # Read the single sheet into a DataFrame
+        df = xl.parse('Sheet1')
+        
+        # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
+        df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+        
+        print("Sanitized columns in the Excel file:", df.columns)
+
+        # Ensure the requested columns exist in the DataFrame (case insensitive)
+        missing_columns = [col for col in requested_tabs if col not in df.columns]
+        if missing_columns:
+            raise ValueError(f"Missing columns in the Excel file: {', '.join(missing_columns)}")
+
+        # Extract the requested columns
+        data = df[requested_tabs].to_dict(orient='records')
+
+        # Send back the relevant data
+        response_data = {
+            "data": data,
+            "message": "Columns retrieved successfully"
+        }
+        
+        return jsonify(response_data), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    
+
+#==== BENCHMARK TABLE SCORE API ROUTE ====
+# Default Weights (initial weights for the benchmark score calculation)
+current_weights = {
+    "No_of_Patient_Treated": 0.20,
+    "Gut_Microbiome_Association": 0.15,
+    "Rifaximin_Treatment": 0.20,
+    "Prevalence": 0.20,
+    "Bausch_Presence": 0.15,
+    "Safety_Efficacy": 0.10
+}
+
+# Route to handle the benchmark table (Excel-based or recalculated if weights are updated)
+@rnd_blueprint.route('/api/benchmark-table', methods=['GET', 'POST'])
+def get_benchmark_table():
+    try:
+        # Check if weights need to be updated
+        if request.method == 'POST':
+            # When the user updates the weights, recalculate benchmark scores using Llama
+            xl = pd.ExcelFile(EXCEL_FILE_PATH)
+            df = xl.parse('Sheet1')
+
+            # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
+            df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+            
+            data = request.get_json()
+            updated_weights = {
+                "No_of_Patient_Treated": data['weights'].get('enrollment', 0.2),
+                "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.15),
+                "Rifaximin_Treatment": data['weights'].get('justification', 0.2),
+                "Prevalence": data['weights'].get('prevalence', 0.2),
+                "Bausch_Presence": data['weights'].get('bausch_presence', 0.15),
+                "Safety_Efficacy": data['weights'].get('safety_efficacy', 0.1)
+            }
+
+            benchmark_scores = []
+            for index, row in df.iterrows():
+                scores, total = benchmark_score_llama(
+                    enrollment=row['enrollment'],
+                    mechanism_text=row['disease_mechanism'],
+                    justification=row['justification_for_drug_use'],
+                    prevalence=row['prevalence'],
+                    bausch_presence_text=row['bausch_presence'],
+                    safety=row['safety'],
+                    efficacy=row['efficacy'],
+                    weights=updated_weights  # Use the updated weights
+                )
+                # print(benchmark_scores)
+                benchmark_scores.append({
+                    "disease": row['disease'],
+                    "benchmark_score": total,
+                    "score_breakdown_distribution": updated_weights
+                })
+            
+            # benchmark_table = pd.DataFrame(benchmark_scores)
+            benchmark_table = pd.DataFrame(benchmark_scores).sort_values(by="benchmark_score", ascending=False)
+            response_data = {
+                "benchmark_table": benchmark_table.to_dict(orient='records'),
+                "message": "Benchmark Table recalculated successfully"
+            }
+        else:
+            # Fetch pre-calculated data from the Excel sheet
+            xl = pd.ExcelFile(EXCEL_FILE_PATH)
+            df = xl.parse('Sheet1')
+
+            # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
+            df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+
+            # Sort by 'Benchmark_Score' to get the top 5 diseases
+            # top_scores = df.nlargest(5, 'benchmark_score')  # Top 5 diseases based on benchmark score
+            df=pd.DataFrame(df).sort_values(by="benchmark_score", ascending=False)
+            top_scores =df.drop_duplicates(subset='disease', keep='first')
+
+            # Create the benchmark table with diseases, benchmark scores, and score breakdown
+            
+
+# Assuming 'score_breakdown_distribution' is a string representation of a dictionary
+            top_scores['score_breakdown_distribution'] = top_scores['score_breakdown_distribution'].apply(ast.literal_eval)
+
+            benchmark_table = top_scores[['disease', 'benchmark_score', 'score_breakdown_distribution']]
+
+            response_data = {
+                "benchmark_table": benchmark_table.to_dict(orient='records'),
+                "message": "Benchmark Table retrieved successfully from Excel"
+            }
+
+        return jsonify(response_data), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+# Route to handle pie chart for top benchmark scores (Excel-based or recalculated if weights are updated)
+@rnd_blueprint.route('/api/pie-chart', methods=['GET', 'POST'])
+def get_pie_chart():
+    try:
+        if request.method == 'POST':
+            # Recalculate the pie chart when weights are updated
+            xl = pd.ExcelFile(EXCEL_FILE_PATH)
+            df = xl.parse('Sheet1')
+
+            df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+            
+            data = request.get_json()
+            updated_weights = {
+                "No_of_Patient_Treated": data['weights'].get('enrollment', 0.2),
+                "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.15),
+                "Rifaximin_Treatment": data['weights'].get('justification', 0.2),
+                "Prevalence": data['weights'].get('prevalence', 0.2),
+                "Bausch_Presence": data['weights'].get('bausch_presence', 0.15),
+                "Safety_Efficacy": data['weights'].get('safety_efficacy', 0.1)
+            }
+            benchmark_scores = []
+
+            for index, row in df.iterrows():
+                scores, total = benchmark_score_llama(
+                    enrollment=row['enrollment'],
+                    mechanism_text=row['disease_mechanism'],
+                    justification=row['justification_for_drug_use'],
+                    prevalence=row['prevalence'],
+                    bausch_presence_text=row['bausch_presence'],
+                    safety=row['safety'],
+                    efficacy=row['efficacy'],
+                    weights=updated_weights  # Use updated weights
+                )
+                benchmark_scores.append({
+                    "disease": row['disease'],
+                    "benchmark_score": total,
+                    "Weights": updated_weights
+                })
+
+            benchmark_df = pd.DataFrame(benchmark_scores)
+            benchmark_df= benchmark_df.drop_duplicates(subset='disease', keep='first')
+            top_scores = benchmark_df.nlargest(5, 'benchmark_score')  # Get top 5 diseases
+            print(benchmark_df)
+            pie_data = top_scores['benchmark_score'].values
+            labels = top_scores['disease'].values
+        else:
+            # Use pre-calculated data from the Excel sheet
+            xl = pd.ExcelFile(EXCEL_FILE_PATH)
+            df = xl.parse('Sheet1')
+            df = df.drop_duplicates(subset='Disease', keep='first')
+
+            df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+            top_scores = df.nlargest(5, 'benchmark_score')
+
+            pie_data = top_scores['benchmark_score'].values
+            labels = top_scores['disease'].values
+
+        # Prepare data for frontend (Recharts / Shadcn Pie Chart)
+        pie_chart_data = [
+            {"name": row['disease'], "value": row['benchmark_score']}
+            for _, row in top_scores.iterrows()
+        ]
+       
+        print("pie chart data:", pie_chart_data)
  
-@rnd_blueprint.route('/rnd-formulation-drug', methods=['GET'])
-def rnd_formulation_drug():
-    """
-    SSE endpoint that streams LLaMA results for R&D Formulations.
-    """
-    user_query = request.args.get('user_query')
-    size = request.args.get('size', default=2, type=int)
-    # Accept requested fields as a comma-separated list
-    requested_fields = request.args.get('requested_fields', '')
-    # Log the raw input
-    print("Raw requested_fields:", repr(requested_fields))
-    print("Type of requested_fields:", type(requested_fields))
-
-    # Convert requested fields into a list
-    if isinstance(requested_fields, list):
-        processed_fields = [field.strip() for field in requested_fields if field.strip()]
-    else:
-        processed_fields = [field.strip() for field in requested_fields.split(',') if field.strip()]
-
-    print("Processed requested_fields:", processed_fields)
-    print("Type after processing:", type(processed_fields))
-
-    if not user_query:
-        return jsonify({"error": "Missing 'user_query'"}), 400
-
-    # Fetch Elasticsearch results
-    raw_results = fetch_results(user_query, size=size)
-
-    # Stream results as SSE (pass processed fields)
-    return Response(
-        stream_drug(raw_results, user_query, processed_fields),
-        content_type="text/event-stream",
-        status=200
-    )
-  
-
+        return jsonify({
+            "pie_chart_data": pie_chart_data,
+            "message": "Pie chart data generated successfully"
+        }), 200
  
-@rnd_blueprint.route('/rnd-formulation-drug-results', methods=['GET'])
-def get_results():
-    """Endpoint to fetch processed LLaMA-3.3 results."""
-    user_query = request.args.get("user_query")
-    if not user_query or user_query not in processed_cache:
-        return jsonify({"error": "Results not ready yet"}), 404
 
-    return jsonify({"results": processed_cache[user_query]}), 200
-
-@rnd_blueprint.route('/add-ai-column-rnd', methods=['POST'])
-def add_ai_column_rnd():
-    """
-    Receives JSON with:
-      - userQuery
-      - columnName
-      - columnDescription
-
-    Returns JSON with:
-      - updated_ai_responses: an array of strings,
-        each one corresponding (by index) to an SSE record in the frontend.
-    """
-    data = request.get_json()
-
-    user_query = data.get('userQuery')
-    column_name = data.get('columnName')
-    column_description = data.get('columnDescription')
-
-    # Retrieve or replicate the SSE data in the same order
-    results = fuzzy_search(user_query)
-
-    # Generate or fetch the new AI field for each item
-    updated_ai_responses = getAIColumn(results, column_name, column_description)
-
-    # Return the array so the frontend can merge it by index
-    return jsonify({
-        "updated_ai_responses": updated_ai_responses
-    })
-
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 @rnd_blueprint.route('/rnd-excel-export', methods=['POST'])
