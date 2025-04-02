@@ -143,7 +143,7 @@ export function DrugComparisonTable() {
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.href = url;
-                link.setAttribute("download", "visible_data.xlsx");
+                link.setAttribute("download", "TPP_of_drugs.xlsx");
                 document.body.appendChild(link);
                 link.click();
                 link.parentNode.removeChild(link);

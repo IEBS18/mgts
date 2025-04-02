@@ -1,312 +1,791 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { Loader2 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { toast, ToastContainer } from "react-toastify";
+import { useState, useEffect } from "react"
+import { useLocation } from "react-router-dom"
+import { Loader2, Info, Settings, BarChart3 } from "lucide-react"
+import ReactMarkdown from "react-markdown"
+import { ToastContainer, toast } from "react-toastify"
+import { Cell, Pie, PieChart, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Progress } from "@/components/ui/progress"
+import { Slider } from "@/components/ui/slider"
 
-// Reuse the same helper components as in RNDFormulation
-function LoadingDots() {
+const LoadingDots = () => {
+  return <span className="loading-dots">...</span>
+}
+
+function capitalizeName(name) {
+  return name
+    .split(' ')  // Split the name into words
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())  // Capitalize first letter of each word
+    .join(' ');  // Join the words back into a single string
+}
+
+const TruncatedMarkdown = ({ content, maxLength = 200 }) => {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  if (!content) return null
+
+  const displayContent = isExpanded ? content : content.slice(0, maxLength)
+  const shouldTruncate = content.length > maxLength
+
   return (
-    <div className="flex items-center justify-center">
-      <div className="animate-pulse flex space-x-1">
-        <div className="w-2 h-2 bg-[#a6ce39] rounded-full"></div>
-        <div className="w-2 h-2 bg-[#a6ce39] rounded-full"></div>
-        <div className="w-2 h-2 bg-[#a6ce39] rounded-full"></div>
+    <div className="prose prose-sm max-w-none dark:prose-invert">
+      <ReactMarkdown>{displayContent}</ReactMarkdown>
+      {shouldTruncate && (
+        <Button onClick={() => setIsExpanded(!isExpanded)} variant="link" className="p-0 h-auto text-primary">
+          {isExpanded ? "Show less" : "...Show more"}
+        </Button>
+      )}
+    </div>
+  )
+}
+
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value }) => {
+  const RADIAN = Math.PI / 180
+  const radius = outerRadius * 1.1
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#333333"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      fontSize={12}
+      fontWeight={500}
+    >
+      {`(${(percent * 100).toFixed(0)}%)`}
+    </text>
+  )
+}
+
+function PieChartComp({ onDataUpdate }) {
+  const [pieChartData, setPieChartData] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AF19FF"]
+
+  const fetchPieChartData = async (weights = null) => {
+    setIsLoading(true)
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/pie-chart`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      const data = await response.json()
+      if (data.error) {
+        setError(data.error)
+        toast.error(data.error)
+      } else {
+        setPieChartData(data.pie_chart_data)
+        if (onDataUpdate) onDataUpdate(data.pie_chart_data)
+      }
+    } catch (error) {
+      console.error("Error fetching pie chart:", error)
+      setError("Error fetching pie chart data.")
+      toast.error("Failed to update pie chart")
+    }
+    setIsLoading(false)
+  }
+
+  useEffect(() => {
+    fetchPieChartData()
+  }, [])
+
+  // Add this function to PieChartComp
+  const updateData = (newData) => {
+    if (newData) {
+      setPieChartData(newData)
+    }
+  }
+
+  // Expose the updateData method to the parent component
+  useEffect(() => {
+    if (onDataUpdate) {
+      // This allows the parent to call updateData
+      const element = document.querySelector('[data-component="pie-chart"]')
+      if (element) {
+        element.updateData = updateData
+      }
+    }
+  }, [onDataUpdate])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="animate-spin mr-2 h-5 w-5 text-primary" />
+        <span>Loading pie chart...</span>
       </div>
-    </div>
-  );
-}
-
-function TruncatedMarkdown({ content, maxWords = 30 }) {
-  const [showMore, setShowMore] = useState(false);
-
-  if (!content) {
-    return <span className="text-gray-400 italic">Not mentioned</span>;
+    )
   }
 
-  const words = content.split(/\s+/);
-  if (words.length <= maxWords) {
-    return <ReactMarkdown>{content}</ReactMarkdown>;
+  if (error) {
+    return <div className="text-destructive p-4">Error: {error}</div>
   }
 
-  const truncated = words.slice(0, maxWords).join(" ") + "...";
   return (
-    <div>
-      <ReactMarkdown>{showMore ? content : truncated}</ReactMarkdown>
-      <button
-        onClick={() => setShowMore(!showMore)}
-        className="text-blue-600 underline mt-2"
-      >
-        {showMore ? "Show Less" : "Show More"}
-      </button>
-    </div>
-  );
+    <Card className="h-full shadow-md" data-component="pie-chart">
+      <CardHeader className="pb-2 bg-[#f9faf5]">
+        <CardTitle className="text-xl font-semibold flex items-center gap-2">
+          Top 5 Diseases to Explore
+          <TooltipProvider>
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="w-[200px] text-xs">These are the top diseases based on current weight configuration</p>
+              </TooltipContent>
+            </UITooltip>
+          </TooltipProvider>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {pieChartData && (
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  // data={pieChartData}
+                  // cx="55%"
+                  // cy="50%"
+                  // outerRadius={80}
+                  // fill="#8884d8"
+                  // dataKey="value"
+                  // label={({ name, percent }) => `${capitalizeName(name)} ${(percent * 100).toFixed(0)}%`}
+                  // labelLine={false}
+                  data={pieChartData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  innerRadius={40}
+                  fill="#8884d8"
+                  dataKey="value"
+                  labelLine={false}
+                  label={renderCustomizedLabel}
+                  paddingAngle={2}
+                >
+                  {pieChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                {/* <Tooltip formatter={(value) => [`Score: ${value}`, "Value"]} /> */}
+                <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ paddingLeft: "20px" }} />
+                {/* <Legend layout="vertical" verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: "10px" }} /> */}
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
 }
 
-function ensureStableKey(data) {
-  if (data.__stableKey) return data.__stableKey;
-  if (data["Publication Number"] && data["Publication Number"] !== "N/A") {
-    data.__stableKey = data["Publication Number"];
-    return data.__stableKey;
+function BenchmarkTable({ onWeightsUpdate }) {
+  const [benchmarkData, setBenchmarkData] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [weights, setWeights] = useState({
+    enrollment: 0.2,
+    mechanism: 0.15,
+    justification: 0.2,
+    prevalence: 0.2,
+    bausch_presence: 0.15,
+    safety_efficacy: 0.1,
+  })
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [activeTab, setActiveTab] = useState("dashboard")
+  const [sortBy, setSortBy] = useState("score")
+  const [sortOrder, setSortOrder] = useState("desc")
+
+  const fetchBenchmarkData = async (weights = null) => {
+    setIsLoading(true)
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/benchmark-table`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      const data = await response.json()
+      if (data.error) {
+        setError(data.error)
+        toast.error(data.error)
+      } else {
+        setBenchmarkData(data.benchmark_table)
+      }
+    } catch (error) {
+      console.error("Error fetching benchmark table:", error)
+      setError("Error fetching benchmark data.")
+      toast.error("Failed to update benchmark table")
+    }
+    setIsLoading(false)
   }
-  if (data["Title"] && data["Title"] !== "N/A") {
-    data.__stableKey = data["Title"];
-    return data.__stableKey;
+
+  useEffect(() => {
+    fetchBenchmarkData()
+  }, [])
+
+  const handleWeightChange = (key, value) => {
+    const numValue = Array.isArray(value) ? value[0] : Number.parseFloat(value)
+    if (isNaN(numValue) || numValue < 0 || numValue > 1) return
+
+    setWeights({
+      ...weights,
+      [key]: numValue,
+    })
   }
-  data.__stableKey = "Unknown_" + Math.random().toString(36).substring(7);
-  return data.__stableKey;
+
+  const updateBenchmark = async () => {
+    setIsUpdating(true)
+    try {
+      // Update both pie chart and benchmark table
+      const [pieChartResponse, benchmarkResponse] = await Promise.all([
+        fetch(`${import.meta.env.VITE_API_URL}/api/pie-chart`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ weights }),
+        }),
+        fetch(`${import.meta.env.VITE_API_URL}/api/benchmark-table`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ weights }),
+        }),
+      ])
+
+      // Parse the JSON responses
+      const pieChartData = await pieChartResponse.json()
+      const benchmarkData = await benchmarkResponse.json()
+
+      // Update benchmark data
+      setBenchmarkData(benchmarkData.benchmark_table)
+
+      // Pass the updated pie chart data to the parent component
+      if (onWeightsUpdate && pieChartData.pie_chart_data) {
+        onWeightsUpdate(weights, pieChartData.pie_chart_data)
+      }
+
+      toast.success("Scores updated successfully")
+      setActiveTab("dashboard")
+    } catch (error) {
+      console.error("Error updating scores:", error)
+      toast.error("Failed to update scores")
+    }
+    setIsUpdating(false)
+  }
+
+  const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0)
+  const isValidWeights = Math.abs(totalWeight - 1) < 0.01
+
+  const getScoreColor = (score) => {
+    if (score >= 0.8) return "bg-[#e8f5e9] text-[#2e7d32] border-[#a5d6a7]"
+    if (score >= 0.7) return "bg-[#f1f8e9] text-[#558b2f] border-[#c5e1a5]"
+    if (score >= 0.6) return "bg-[#f9fbe7] text-[#827717] border-[#e6ee9c]"
+    if (score >= 0.5) return "bg-[#fff8e1] text-[#ff8f00] border-[#ffe082]"
+    return "bg-[#fff3e0] text-[#ef6c00] border-[#ffcc80]"
+  }
+
+  const getProgressColor = (score) => {
+    // Convert score to 0-5 scale if it's in 0-1 scale
+    const normalizedScore = score <= 1 ? score * 5 : score
+
+    if (normalizedScore >= 4.5) return "bg-[#4caf50]"
+    if (normalizedScore >= 3.5) return "bg-[#8bc34a]"
+    if (normalizedScore >= 2.5) return "bg-[#cddc39]"
+    if (normalizedScore >= 1.5) return "bg-[#ffc107]"
+    return "bg-[#ff9800]"
+  }
+
+  const sortedData = [...benchmarkData].sort((a, b) => {
+    if (sortBy === "score") {
+      return sortOrder === "desc" ? b.benchmark_score - a.benchmark_score : a.benchmark_score - b.benchmark_score
+    } else {
+      return sortOrder === "desc" ? b.disease.localeCompare(a.disease) : a.disease.localeCompare(b.disease)
+    }
+  })
+
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortBy(field)
+      setSortOrder("desc")
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="animate-spin mr-2 h-5 w-5 text-primary" />
+        <span>Loading benchmark analysis...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="h-full shadow-md">
+        <CardHeader className="pb-2 bg-[#f9faf5]">
+          <CardTitle className="text-xl font-semibold">Benchmark Analysis</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="text-destructive p-4 bg-destructive/10 rounded-md flex items-center gap-2">
+            <span className="text-destructive">Error: {error}</span>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className="h-full shadow-md border-slate-200">
+      <CardHeader className="pb-2 bg-[#f9faf5]">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-[#a6ce39]" />
+            <CardTitle className="text-xl font-semibold">Benchmark Analysis</CardTitle>
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Info className="h-4 w-4 text-slate-500" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p className="text-xs">
+                  Benchmark scores are calculated based on weighted criteria. Adjust weights in the settings tab.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="px-6 pt-4">
+            <TabsList className="grid w-full grid-cols-2 bg-[#f5f8e8]">
+              <TabsTrigger
+                value="dashboard"
+                className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-white flex items-center gap-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger
+                value="weights"
+                className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-white flex items-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                Adjust Weights
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="dashboard" className="mt-0">
+            <div className="p-4 flex justify-between items-center border-b">
+              <div className="text-sm font-medium text-slate-700">{sortedData.length} Disease Benchmarks</div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-500">Sort by:</span>
+                <Select
+                  value={`${sortBy}-${sortOrder}`}
+                  onValueChange={(value) => {
+                    const [field, order] = value.split("-")
+                    setSortBy(field)
+                    setSortOrder(order)
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[180px] bg-white">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent className='bg-white'>
+                    <SelectItem value="score-desc">Score (High to Low)</SelectItem>
+                    <SelectItem value="score-asc">Score (Low to High)</SelectItem>
+                    <SelectItem value="name-asc">Disease Name (A-Z)</SelectItem>
+                    <SelectItem value="name-desc">Disease Name (Z-A)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <ScrollArea className="h-[120px]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                {sortedData.map((item, index) => (
+                  <Card key={index} className="overflow-hidden border-slate-200 hover:shadow-md transition-shadow">
+                    <CardHeader className="p-4 pb-2 bg-[#f9faf5] border-b">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-base font-medium text-slate-800 truncate">
+                          {capitalizeName(item.disease)}
+                        </CardTitle>
+                        <Badge variant="outline" className={`font-mono ${getScoreColor(item.benchmark_score)}`}>
+                          {item.benchmark_score}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-slate-500">Benchmark Score</span>
+                            <span className="text-xs font-medium">{item.benchmark_score}</span>
+                          </div>
+                          <Progress
+                            value={(Number.parseFloat(item.benchmark_score) * 100)}
+                            className={`h-2 ${getProgressColor(item.benchmark_score)}`}
+                          />
+                        </div>
+
+                        {item.score_breakdown_distribution && (
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-2">
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-xs text-slate-500">Enrollment: </span>
+                                <span className="text-xs font-medium">
+                                  {item.score_breakdown_distribution.No_of_Patient_Treated}
+                                </span>
+                              </div>
+                              <Progress
+                                value={
+                                  Number.parseFloat(item.score_breakdown_distribution.No_of_Patient_Treated) * 100 * 5
+                                }
+                                className="h-1 bg-slate-100"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-xs text-slate-500">Mechanism: </span>
+                                <span className="text-xs font-medium">
+                                  {item.score_breakdown_distribution.Gut_Microbiome_Association}
+                                </span>
+                              </div>
+                              <Progress
+                                value={
+                                  Number.parseFloat(item.score_breakdown_distribution.Gut_Microbiome_Association) *
+                                  100 *
+                                  5
+                                }
+                                className="h-1 bg-slate-100"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-xs text-slate-500">Justification: </span>
+                                <span className="text-xs font-medium">
+                                  {item.score_breakdown_distribution.Rifaximin_Treatment}
+                                </span>
+                              </div>
+                              <Progress
+                                value={
+                                  Number.parseFloat(item.score_breakdown_distribution.Rifaximin_Treatment) * 100 * 5
+                                }
+                                className="h-1 bg-slate-100"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-xs text-slate-500">Prevalence: </span>
+                                <span className="text-xs font-medium">
+                                  {item.score_breakdown_distribution.Prevalence}
+                                </span>
+                              </div>
+                              <Progress
+                                value={Number.parseFloat(item.score_breakdown_distribution.Prevalence) * 100 * 5}
+                                className="h-1 bg-slate-100"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-xs text-slate-500">Bausch: </span>
+                                <span className="text-xs font-medium">
+                                  {item.score_breakdown_distribution.Bausch_Presence}
+                                </span>
+                              </div>
+                              <Progress
+                                value={Number.parseFloat(item.score_breakdown_distribution.Bausch_Presence) * 100 * 5}
+                                className="h-1 bg-slate-100"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-xs text-slate-500">Safety: </span>
+                                <span className="text-xs font-medium">
+                                  {item.score_breakdown_distribution.Safety_Efficacy}
+                                </span>
+                              </div>
+                              <Progress
+                                value={Number.parseFloat(item.score_breakdown_distribution.Safety_Efficacy) * 100 * 5}
+                                className="h-1 bg-slate-100"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="weights" className="mt-0">
+            <div className="px-6 py-4 h-[210px]">
+              <div className="mb-4 bg-[#f5f8e8] p-4 rounded-md border border-[#e7f0d1]">
+                <h3 className="text-sm font-medium text-[#4b6a1e] mb-2">Weight Configuration</h3>
+                <p className="text-sm text-[#5c7a2e]">
+                  Adjust the weight factors below to recalculate disease scores. The sum of all weights must equal 1.0
+                  for accurate benchmarking.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                {Object.entries(weights).map(([key, value]) => (
+                  <div key={key} className="space-y-1">
+                    <div className="flex justify-between">
+                      <label className="text-xs text-muted-foreground capitalize">{key.replace("_", " ")}</label>
+                      <span className="text-xs text-slate-500">{value.toFixed(2)}</span>
+                    </div>
+                    <Slider
+                      value={[value]}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      onValueChange={(val) => handleWeightChange(key, val)}
+                      className="py-2 [&>span]:bg-white [&>span]:border-white [&>span]:shadow-md [&>span:before]:bg-[#a6ce39]"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between bg-[#f9faf5] p-3 rounded-md">
+                <div className={`text-xs ${isValidWeights ? "text-green-600" : "text-destructive"}`}>
+                  Total: {totalWeight.toFixed(2)} {isValidWeights ? "✓" : "(should equal 1.0)"}
+                </div>
+                <Button
+                  onClick={updateBenchmark}
+                  disabled={!isValidWeights || isUpdating}
+                  size="sm"
+                  className="bg-[#a6ce39] hover:bg-[#95b933] text-white font-medium"
+                >
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Scores"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  )
 }
 
-function renderCellContent(record, topic) {
-  const content = record[topic];
-  if (content === undefined) {
-    return <LoadingDots />;
+const renderCellContent = (record, topic) => {
+  const key = topic.toLowerCase()
+  const content = record[key]
+
+  if (!content) return null
+
+  if (typeof content === "string" && content.includes("\n")) {
+    return <TruncatedMarkdown content={content} />
   }
-  if (!content || content.trim().length === 0 || content === "Not mentioned") {
-    return <span className="text-gray-400 italic">Not mentioned</span>;
-  }
-  return <TruncatedMarkdown content={String(content)} />;
+
+  return content
 }
 
 export default function DrugFormulation() {
-  const location = useLocation();
-  const { userQuery = "", selectedTabs = [] } = location.state || {};
+  const location = useLocation()
+  const { selectedTabs = [] } = location.state || {}
 
-  // Default topics. Adjust if needed.
-  const defaultTopics = ["Title", "Publication Number"];
+  const [tableData, setTableData] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [sseError, setSseError] = useState(null)
+  const [orderedTabs, setOrderedTabs] = useState([])
+  const [selectedDisease, setSelectedDisease] = useState("all")
+  const [diseases, setDiseases] = useState([])
 
-  const [tableData, setTableData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [sseError, setSseError] = useState(null);
+  const fetchTableData = async (requestedFields, disease = "all") => {
+    setIsLoading(true)
+    try {
+      const endpoint =
+        `${import.meta.env.VITE_API_URL}/api/rnd-formulation-drug` +
+        `?selected_tabs=${encodeURIComponent(requestedFields)}` +
+        `&disease=${encodeURIComponent(disease)}`
 
-  // For AI column generation
-  const [aiColumnDialogOpen, setAiColumnDialogOpen] = useState(false);
-  const [aiColumnName, setAiColumnName] = useState("");
-  const [aiColumnDescription, setAiColumnDescription] = useState("");
-  const [aiColumns, setAiColumns] = useState([]);
-  const [isAiColumnLoading, setIsAiColumnLoading] = useState(false);
+      const response = await fetch(endpoint)
+      const data = await response.json()
 
-  const topics = [...defaultTopics, ...selectedTabs, ...aiColumns];
+      if (data.error) {
+        setSseError(data.error)
+        toast.error(data.error)
+      } else {
+        setTableData(data.data)
+        // Extract unique diseases for the dropdown
+        const uniqueDiseases = Array.from(new Set(data.data.map((item) => item.disease)))
+        setDiseases(uniqueDiseases)
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error)
+      setSseError("Error fetching data.")
+      toast.error("Failed to fetch table data")
+    }
+    setIsLoading(false)
+  }
 
   useEffect(() => {
-    if (!userQuery) return;
-    setIsLoading(true);
+    const uniqueSelectedTabs = Array.from(new Set(selectedTabs))
+    const columnOrder = [
+      "Disease",
+      "Disease_Microbes",
+      "Disease_Mechanism",
+      // "Drug_Title",
+      "Drug_Microbes",
+      "Drug_Mechanism",
+      "Justification_for_Drug_Use",
+      "Disease_Source",
+      // "Disease_Title",
+      "Drug_Source",
+    ]
+    const orderedTabs = columnOrder.filter((tab) => uniqueSelectedTabs.includes(tab))
+    setOrderedTabs(orderedTabs)
 
-    const requestedFields = topics.join(",");
+    const requestedFields = orderedTabs.join(",")
+    fetchTableData(requestedFields, selectedDisease)
+  }, [selectedTabs, selectedDisease])
 
-    // This is the critical difference:
-    // We call /api/rnd-formulation-drug (instead of /api/rnd-formulation-llama).
-    const endpoint =
-      `${import.meta.env.VITE_API_URL}/rnd-formulation-drug` +
-      `?user_query=${encodeURIComponent(userQuery)}` +
-      `&size=5` +
-      `&requested_fields=${encodeURIComponent(requestedFields)}`;
-
-    const eventSource = new EventSource(endpoint);
-
-    eventSource.onmessage = (event) => {
-      setIsLoading(false);
-      if (!event.data) return;
-      try {
-        const partialData = JSON.parse(event.data);
-        const stableKey = ensureStableKey(partialData);
-
-        setTableData((prev) => {
-          const existingIndex = prev.findIndex(
-            (col) => ensureStableKey(col) === stableKey
-          );
-          if (existingIndex !== -1) {
-            const updated = [...prev];
-            updated[existingIndex] = {
-              ...updated[existingIndex],
-              ...partialData,
-            };
-            return updated;
-          } else {
-            return [...prev, partialData];
-          }
-        });
-      } catch (err) {
-        console.error("Error parsing SSE data:", err);
-      }
-    };
-
-    eventSource.addEventListener("done", (e) => {
-      console.log("SSE complete:", e.data);
-      eventSource.close();
-      setIsLoading(false);
-    });
-
-    eventSource.onerror = (error) => {
-      console.error("SSE Error:", error);
-      setSseError("Error receiving updates from the server.");
-      eventSource.close();
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, [userQuery, topics]);
-
-  const handleSubmitAiColumn = () => {
-    if (!aiColumnName || !aiColumnDescription) {
-      toast.warn("Please fill out both fields before adding an AI column.");
-      return;
+  const handleWeightsUpdate = (weights, pieChartData) => {
+    // If pie chart data is provided, update the pie chart component
+    const pieChartElement = document.querySelector('[data-component="pie-chart"]')
+    if (pieChartElement && pieChartElement.updateData && pieChartData) {
+      pieChartElement.updateData(pieChartData)
     }
+  }
 
-    setIsAiColumnLoading(true);
-
-    fetch(`${import.meta.env.VITE_API_URL}/add-ai-column-rnd`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        columnName: aiColumnName,
-        columnDescription: aiColumnDescription,
-        userQuery,
-      }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to add AI column");
-        }
-        return response.json();
-      })
-      .then((responseData) => {
-        const { updated_ai_responses } = responseData;
-        if (!updated_ai_responses) {
-          throw new Error("No updated_ai_responses found in the response");
-        }
-
-        const mergedTableData = tableData.map((col, i) => {
-          if (updated_ai_responses[i]) {
-            return {
-              ...col,
-              [aiColumnName]: updated_ai_responses[i],
-            };
-          }
-          return col;
-        });
-
-        setTableData(mergedTableData);
-        setAiColumns((prev) => [...prev, aiColumnName]);
-        setAiColumnDialogOpen(false);
-        setIsAiColumnLoading(false);
-        toast.success("AI column added successfully!");
-      })
-      .catch((error) => {
-        console.error("Error adding AI column:", error);
-        toast.warn("Error adding AI column");
-        setIsAiColumnLoading(false);
-      });
-  };
+  // Filter table data based on selected disease
+  const filteredTableData =
+    selectedDisease === "all" ? tableData : tableData.filter((record) => record.disease === selectedDisease)
 
   return (
-    <div className="p-4 bg-gray-100 min-h-screen">
+    <div className="p-6 bg-background min-h-screen">
       <ToastContainer position="top-right" autoClose={5000} />
 
-      <h1 className="text-2xl font-bold mb-4 text-gray-800">
-        Drug Formulation Results for "{userQuery}"
-      </h1>
+      <div className="max-w-[1400px] mx-auto">
+        <header className="mb-6">
+          <h1 className="text-3xl font-bold text-foreground">Drug Formulation Results</h1>
+          <p className="text-muted-foreground mt-1">Analysis and benchmarking of drug formulations</p>
+        </header>
 
-      <div className="flex items-center gap-4 mb-4">
-        {sseError && <p className="text-red-500">{sseError}</p>}
-        {isLoading && (
-          <div className="flex items-center gap-2 text-gray-500">
-            <Loader2 className="animate-spin" />
-            <span>Loading real-time LLM data...</span>
-          </div>
-        )}
-
-        {/* <Button
-          onClick={() => setAiColumnDialogOpen(true)}
-          variant="outline"
-          className="bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] rounded-lg ml-auto"
-          disabled={isAiColumnLoading}
-        >
-          {isAiColumnLoading ? "Loading..." : "Add AI Column"}
-        </Button> */}
-      </div>
-
-      <div className="overflow-x-auto border border-gray-300 rounded-lg bg-white shadow-md">
-        <table className="min-w-max text-sm text-gray-700">
-          <tbody>
-            {topics.map((topic) => {
-              const isTitleRow = topic === "Title";
-              return (
-                <tr key={topic} className="border-b hover:bg-gray-50">
-                  <th
-                    className="sticky left-0 bg-[#a6ce39] px-2 py-3 font-medium text-white whitespace-nowrap z-10"
-                    style={{ minWidth: "180px" }}
-                  >
-                    {topic}
-                  </th>
-                  {tableData.map((record, colIndex) => (
-                    <td
-                      key={colIndex}
-                      className={`px-2 py-3 align-top w-[400px] max-w-[400px] break-words ${
-                        isTitleRow ? "font-bold" : ""
-                      }`}
-                    >
-                      {renderCellContent(record, topic)}
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* AI Column Dialog */}
-      <Dialog open={aiColumnDialogOpen} onOpenChange={setAiColumnDialogOpen}>
-        <DialogContent className="bg-white">
-          <DialogTitle>Add AI Column</DialogTitle>
-          <DialogDescription>
-            Enter a name and description for the new AI column.
-          </DialogDescription>
-          <div className="space-y-4 mt-4">
-            <Input
-              value={aiColumnName}
-              onChange={(e) => setAiColumnName(e.target.value)}
-              placeholder="Column Name"
-              className="w-full p-2 border border-gray-200 rounded-lg text-gray-800"
-            />
-            <Input
-              value={aiColumnDescription}
-              onChange={(e) => setAiColumnDescription(e.target.value)}
-              placeholder="Column Description"
-              className="w-full p-2 border border-gray-200 rounded-lg text-gray-800"
+        {/* Analytics Dashboard Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="h-[350px]">
+            <PieChartComp
+              onDataUpdate={() => { }} // We're using the DOM method instead
             />
           </div>
-          <DialogFooter className="mt-4">
-            <Button
-              onClick={handleSubmitAiColumn}
-              disabled={isAiColumnLoading}
-              className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-lg"
-            >
-              {isAiColumnLoading ? "Adding..." : "Add Column"}
-            </Button>
-            <Button
-              onClick={() => setAiColumnDialogOpen(false)}
-              variant="outline"
-              className="bg-white text-[#a6ce39] border border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2"
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div className="h-[350px]">
+            <BenchmarkTable onWeightsUpdate={handleWeightsUpdate} />
+          </div>
+        </div>
+
+        <Card className="mb-8 shadow-md">
+          <CardHeader className="pb-3 bg-[#f9faf5]">
+            <div className="flex items-center justify-between">
+              <CardTitle>Disease Data</CardTitle>
+
+              <div className="flex items-center gap-4">
+                {/* Disease Filter Dropdown */}
+                <Select value={selectedDisease} onValueChange={setSelectedDisease}>
+                  <SelectTrigger className="w-[180px] border-[#a6ce39] focus:ring-[#a6ce39]">
+                    <SelectValue placeholder="Select disease" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All Diseases</SelectItem>
+                    {diseases.map((disease) => (
+                      <SelectItem key={disease} value={disease}>
+                        {capitalizeName(disease)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Loading and error states */}
+            <div className="flex items-center gap-4 mt-2">
+              {sseError && <p className="text-destructive text-sm">{sseError}</p>}
+              {isLoading && (
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <Loader2 className="animate-spin h-4 w-4" />
+                  <span>Loading data...</span>
+                </div>
+              )}
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-0">
+            <div className="border-t">
+              <div className="h-[500px] overflow-x-auto">
+                <table className="w-full min-w-max border-collapse">
+                  <thead>
+                    <tr className="bg-[#f5f8e8] sticky top-0 z-10">
+                      {orderedTabs.map((topic) => (
+                        <th
+                          key={topic}
+                          className="p-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap text-gray-700"
+                          style={{ minWidth: "180px" }}
+                        >
+                          {topic.replace(/_/g, " ")}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTableData.length > 0 ? (
+                      filteredTableData.map((record, rowIndex) => (
+                        <tr key={rowIndex} className="border-b border-border hover:bg-[#f9faf5] transition-colors">
+                          {orderedTabs.map((topic) => (
+                            <td key={topic} className="p-4 align-top w-[400px] max-w-[400px] text-sm">
+                              {topic === 'Disease' ? capitalizeName(renderCellContent(record, topic)) : renderCellContent(record, topic)}
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={orderedTabs.length} className="p-6 text-center text-muted-foreground">
+                          {isLoading ? "Loading data..." : "No data available for the selected filters."}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  );
+  )
 }
+

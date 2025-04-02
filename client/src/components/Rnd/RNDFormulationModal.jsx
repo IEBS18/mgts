@@ -544,7 +544,10 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
   // State for "Search by Drug"
   const [drugName, setDrugName] = useState("");
   // Preselect "Disease Name" and "Source" by default
-  const [selectedTabsDrug, setSelectedTabsDrug] = useState(["Disease Name", "Source"]);
+  const [selectedTabsDrug, setSelectedTabsDrug] = useState(["Disease",
+    "Diseases_PMC_ID",
+    "Drug_PMC_ID",
+    "Justification for Drug Use"]);
 
   // Existing optional tabs for the "Search by Ingredient" tab
   const optionalTabsIngredient = [
@@ -564,19 +567,30 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
     "IEB Comment (Summary)",
   ];
 
+  // // New optional tabs for the "Search by Drug" tab
+  // const optionalTabsDrug = [
+  //   "Disease Name",
+  //   "Source",
+  //   "Mechanism of Association",
+  //   "Bacteria or Microbe",
+  //   "Role/Pathway",
+  //   "Potential of Drug",
+  //   "Constipation as Comorbidity",
+  //   "Analyst Comment (Disease Association to Gut Microbiome)",
+  //   "Scientific Evidence",
+  //   "Studies by",
+  //   "Drug Studied player",
+  // ];
   // New optional tabs for the "Search by Drug" tab
   const optionalTabsDrug = [
-    "Disease Name",
-    "Source",
-    "Mechanism of Association",
-    "Bacteria or Microbe",
-    "Role/Pathway",
-    "Potential of Drug",
-    "Constipation as Comorbidity",
-    "Analyst Comment (Disease Association to Gut Microbiome)",
-    "Scientific Evidence",
-    "Studies by",
-    "Drug Studied player",
+    "Disease",
+    "Justification_for_Drug_Use",
+    "Disease_Mechanism",
+    "Disease_Microbes",
+    "Drug_Mechanism",
+    "Drug_Microbes",
+    "Disease_Source",
+    "Drug_Source",
   ];
 
   // Toggle selection of a topic in "Search by Ingredient"
@@ -610,10 +624,10 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
       });
     } else {
       // Searching by Drug
-      if (!drugName.trim()) return;
+      // if (!drugName.trim()) return;
       navigate("/rnd-formulation-drugs", {
         state: {
-          userQuery: drugName,
+          // userQuery: drugName,
           selectedTabs: selectedTabsDrug,
         },
       });
@@ -644,11 +658,11 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
                     className="w-6 h-6 object-contain"
                   />
                 </div>
-                <p className="text-lg font-medium">R&D Formulation</p>
+                <p className="text-lg font-medium">BioFormulate</p>
               </DialogTitle>
             </div>
             <p className="text-sm text-white">
-              A brief description about what R&D and Formulations do and their basic functionality.
+            Analyze pharmaceutical ingredients and uncover new therapeutic applications using patents and research insights.
             </p>
           </div>
         </DialogHeader>
@@ -738,7 +752,7 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
           <TabsContent value="drug">
             <div className="bg-white p-4 rounded-[20px] mt-4 space-y-4">
               {/* Drug Name Input */}
-              <div>
+              {/* <div>
                 <Label htmlFor="drug-name" className="text-gray-700">
                   Drug Name
                 </Label>
@@ -750,7 +764,7 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
                   placeholder="Type Drug Name"
                   className="mt-1 rounded-lg"
                 />
-              </div>
+              </div> */}
 
               {/* Optional Topics (Tabs) for the "Drug" tab */}
               <div>

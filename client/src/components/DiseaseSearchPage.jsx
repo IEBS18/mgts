@@ -172,7 +172,7 @@ const DiseaseSearchPage = () => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", "selected_data.xlsx");
+        link.setAttribute("download", "disease_details.xlsx");
         document.body.appendChild(link);
         link.click();
         link.parentNode.removeChild(link);
@@ -248,7 +248,7 @@ const DiseaseSearchPage = () => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", "selected_cards.xlsx");
+        link.setAttribute("download", "Relevant_drugs.xlsx");
         document.body.appendChild(link);
         link.click();
         link.parentNode.removeChild(link);

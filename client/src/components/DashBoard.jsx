@@ -36,8 +36,8 @@ const reportTypes = [
     key: "formulary",
   },
   {
-    title: "R&D Formulation",
-    description: "A brief description about what R&D and Formulations do and its basic functionality",
+    title: "BioFormulate",
+    description: "Analyze pharmaceutical ingredients and uncover new therapeutic applications using patents and research insights.",
     image: RnD,
     key: "rndFormulation",
   },
