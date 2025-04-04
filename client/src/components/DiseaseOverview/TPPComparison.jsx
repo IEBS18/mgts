@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { useLocation, useNavigate } from "react-router-dom"
 import { PlusCircle } from "lucide-react"
 import { toast, ToastContainer } from "react-toastify"
-import FormatText from "./FormatText"
+import FormatText from "../util/FormatText"
 
 const topics = [
     "Drug",

@@ -9,10 +9,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Select from "react-select";
-import outputData from '../assets/data/competitiveLandscape/disease.json';
+import outputData from '../../assets/data/competitiveLandscape/disease.json';
 import { useNavigate } from "react-router-dom";
-
-import Competitor from '../assets/dashboard/competitorAnalysis.png'
+import Competitor from '../../assets/dashboard/competitorAnalysis.png'
 
 export default function CompetitiveLandscapeModal({ isOpen, onOpenChange }) {
   const [diseaseName, setDiseaseName] = useState('');

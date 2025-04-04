@@ -38,7 +38,7 @@ openai_client = AzureOpenAI(
 )
 
 tokenizer = AutoTokenizer.from_pretrained('dmis-lab/biobert-v1.1') 
-
+                     
 
 def get_model():
     global _model

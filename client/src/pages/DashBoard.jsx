@@ -6,9 +6,10 @@ import Disease from '../assets/dashboard/diseaseOverview.png'
 import Price from '../assets/dashboard/pricePrediction.png'
 import Formulary from '../assets/dashboard/formulary.png'
 import RnD from '../assets/dashboard/research-and-development.png'
-import CompetitiveLandscapeModal from './CompetitiveLandscapeModal';
-import DiseaseOverviewModal from './DiseaseOverviewModal';
-import DrugCostPredictionModal from './DrugCostPredictionModal';
+import CompetitiveLandscapeModal from '@/components/CompetitiveAnalysis/CompetitiveLandscapeModal';
+// import CompetitiveLandscapeModal from './CompetitiveAnalysis/CompetitiveLandscapeModal';
+import DiseaseOverviewModal from '@/components/DiseaseOverview/DiseaseOverviewModal';
+import DrugCostPredictionModal from '@/components/PricePrediction/DrugCostPredictionModal';
 import RNDFormulationModal from '../components/Rnd/RNDFormulationModal';
 const reportTypes = [
   {

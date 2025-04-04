@@ -1,13 +1,11 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Card } from "./ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button"; // Adjust to your imports
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Download, Filter, PlusCircle, X } from 'lucide-react'; // Adjust imports based on your setup
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog";
-
-import { Input } from "./ui/input";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast, ToastContainer } from 'react-toastify';
 
 const DrugResultsPage = () => {

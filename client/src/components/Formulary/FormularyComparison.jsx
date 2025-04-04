@@ -3,17 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useLocation, useNavigate } from "react-router-dom";
-import { PlusCircle } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
-import FormatText from "../FormatText";
+import FormatText from "../util/FormatText";
 import ReactMarkdown from "react-markdown";
 /**
  * Example topics you'd like to compare.

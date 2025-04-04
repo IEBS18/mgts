@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useLocation } from "react-router-dom"
 import { Loader2, Info, Settings, BarChart3 } from "lucide-react"
 import ReactMarkdown from "react-markdown"
+import ReactSelect from "react-select"
 import { ToastContainer, toast } from "react-toastify"
 import { Cell, Pie, PieChart, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -379,14 +380,14 @@ function BenchmarkTable({ onWeightsUpdate }) {
             <TabsList className="grid w-full grid-cols-2 bg-[#f5f8e8]">
               <TabsTrigger
                 value="dashboard"
-                className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-white flex items-center gap-2"
+                className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-white flex items-center gap-2 rounded-[12px]"
               >
                 <BarChart3 className="h-4 w-4" />
                 Dashboard
               </TabsTrigger>
               <TabsTrigger
                 value="weights"
-                className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-white flex items-center gap-2"
+                className="data-[state=active]:bg-[#a6ce39] data-[state=active]:text-white flex items-center gap-2 rounded-[12px]"
               >
                 <Settings className="h-4 w-4" />
                 Adjust Weights
@@ -407,7 +408,7 @@ function BenchmarkTable({ onWeightsUpdate }) {
                     setSortOrder(order)
                   }}
                 >
-                  <SelectTrigger className="h-8 w-[180px] bg-white">
+                  <SelectTrigger className="h-8 w-[180px] bg-white rounded-[12px] border-[#a6ce39] focus:ring-[#a6ce39]">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent className='bg-white'>
@@ -614,6 +615,53 @@ const renderCellContent = (record, topic) => {
   return content
 }
 
+
+// DiseaseFilterDropdown component
+const DiseaseFilterDropdown = ({ diseases, selectedDisease, setSelectedDisease }) => {
+  const diseaseOptions = [
+    { value: "all", label: "All Diseases" },
+    ...diseases
+      .sort((a, b) => a.localeCompare(b))  // Sort diseases alphabetically
+      .map((disease) => ({ value: disease, label: capitalizeName(disease) }))
+  ];
+
+  const handleChange = (selectedOption) => {
+    setSelectedDisease(selectedOption.value);
+  };
+
+  return (
+    <ReactSelect
+      value={diseaseOptions.find((option) => option.value === selectedDisease)}  // Set the selected disease
+      onChange={handleChange}
+      options={diseaseOptions}
+      className="w-[280px] rounded-[12px] border-[#a6ce39] focus:ring-[#a6ce39] z-12"  // Maintain old green border and z-index fix
+      placeholder="Select disease"
+      isSearchable={true}  // Make it searchable
+      styles={{
+        menu: (provided) => ({
+          ...provided,
+          zIndex: 20,  // Fix the dropdown behind the header issue
+        }),
+        control: (provided, state) => ({
+          ...provided,
+          borderColor: '#a6ce39',  // Green border for the input
+          backgroundColor: 'transparent',  // Make the background transparent
+          borderRadius: '16px',  // More rounded corners
+          outline: 'none',  // Remove the default blue outline on focus
+          '&:hover': { borderColor: '#a6ce39' },  // Hover effect for green border
+          boxShadow: state.isFocused ? '0 0 0 3px rgba(166, 206, 57, 0.2)' : 'none', // Add a subtle green shadow on focus
+        }),
+        option: (provided, state) => ({
+          ...provided,
+          backgroundColor: state.isSelected ? '#a6ce39' : state.isFocused ? '#f1f8e9' : 'transparent',  // Green background when selected
+          color: state.isSelected ? 'white' : 'black',  // White text on selected option
+          '&:hover': { backgroundColor: '#a6ce39', color: 'white' },  // Green background on hover with white text
+        }),
+      }}
+    />
+  );
+};
+
 export default function DrugFormulation() {
   const location = useLocation()
   const { selectedTabs = [] } = location.state || {}
@@ -686,21 +734,27 @@ export default function DrugFormulation() {
   const filteredTableData =
     selectedDisease === "all" ? tableData : tableData.filter((record) => record.disease === selectedDisease)
 
+
+
   return (
     <div className="p-6 bg-background min-h-screen">
       <ToastContainer position="top-right" autoClose={5000} />
 
       <div className="max-w-[1400px] mx-auto">
         <header className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Drug Formulation Results</h1>
-          <p className="text-muted-foreground mt-1">Analysis and benchmarking of drug formulations</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            Drug Formulation Results
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Analysis and benchmarking of drug formulations
+          </p>
         </header>
 
         {/* Analytics Dashboard Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="h-[350px]">
             <PieChartComp
-              onDataUpdate={() => { }} // We're using the DOM method instead
+              onDataUpdate={() => {}} // We're using the DOM method instead
             />
           </div>
           <div className="h-[350px]">
@@ -713,10 +767,9 @@ export default function DrugFormulation() {
             <div className="flex items-center justify-between">
               <CardTitle>Disease Data</CardTitle>
 
-              <div className="flex items-center gap-4">
-                {/* Disease Filter Dropdown */}
+              {/* <div className="flex items-center gap-4">
                 <Select value={selectedDisease} onValueChange={setSelectedDisease}>
-                  <SelectTrigger className="w-[180px] border-[#a6ce39] focus:ring-[#a6ce39]">
+                  <SelectTrigger className="w-[180px] border-[#a6ce39] focus:ring-[#a6ce39] rounded-[12px]">
                     <SelectValue placeholder="Select disease" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
@@ -728,12 +781,22 @@ export default function DrugFormulation() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div> */}
+              <div className="flex items-center gap-4">
+                {/* Use the new Disease Filter Dropdown component */}
+                <DiseaseFilterDropdown
+                  diseases={diseases}
+                  selectedDisease={selectedDisease}
+                  setSelectedDisease={setSelectedDisease}
+                />
               </div>
             </div>
 
             {/* Loading and error states */}
             <div className="flex items-center gap-4 mt-2">
-              {sseError && <p className="text-destructive text-sm">{sseError}</p>}
+              {sseError && (
+                <p className="text-destructive text-sm">{sseError}</p>
+              )}
               {isLoading && (
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <Loader2 className="animate-spin h-4 w-4" />
@@ -763,18 +826,33 @@ export default function DrugFormulation() {
                   <tbody>
                     {filteredTableData.length > 0 ? (
                       filteredTableData.map((record, rowIndex) => (
-                        <tr key={rowIndex} className="border-b border-border hover:bg-[#f9faf5] transition-colors">
+                        <tr
+                          key={rowIndex}
+                          className="border-b border-border hover:bg-[#f9faf5] transition-colors"
+                        >
                           {orderedTabs.map((topic) => (
-                            <td key={topic} className="p-4 align-top w-[400px] max-w-[400px] text-sm">
-                              {topic === 'Disease' ? capitalizeName(renderCellContent(record, topic)) : renderCellContent(record, topic)}
+                            <td
+                              key={topic}
+                              className="p-4 align-top w-[400px] max-w-[400px] text-sm"
+                            >
+                              {topic === "Disease"
+                                ? capitalizeName(
+                                    renderCellContent(record, topic)
+                                  )
+                                : renderCellContent(record, topic)}
                             </td>
                           ))}
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={orderedTabs.length} className="p-6 text-center text-muted-foreground">
-                          {isLoading ? "Loading data..." : "No data available for the selected filters."}
+                        <td
+                          colSpan={orderedTabs.length}
+                          className="p-6 text-center text-muted-foreground"
+                        >
+                          {isLoading
+                            ? "Loading data..."
+                            : "No data available for the selected filters."}
                         </td>
                       </tr>
                     )}
@@ -786,6 +864,6 @@ export default function DrugFormulation() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
 

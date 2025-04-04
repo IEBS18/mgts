@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import Select from "react-select"
-import outputData from "../assets/data/priceprediction.json"
+import outputData from "../../assets/data/priceprediction.json"
 import { useNavigate } from "react-router-dom"
-import PriceImg from "../assets/dashboard/pricePrediction.png"
+import PriceImg from "../../assets/dashboard/pricePrediction.png"
 
 export default function DrugCostPredictionForm({ isOpen, onOpenChange }) {
   const [formData, setFormData] = useState({

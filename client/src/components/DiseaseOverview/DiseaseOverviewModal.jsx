@@ -2,7 +2,6 @@
 // src/components/DiseaseOverviewModal.jsx
 
 import { useState, useEffect } from "react";
-import "../index.css";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,10 +15,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 
-import DiseaseImg from "../assets/dashboard/diseaseOverview.png";
+import DiseaseImg from "../../assets/dashboard/diseaseOverview.png";
 
 // --------- IMPORT TPP-RELATED DATA ---------
-import inputData from "../assets/data/drugDiseaseData.json";
+import inputData from "../../assets/data/drugDiseaseData.json";
 
 // ---------- UTILITY FUNCTIONS (FROM TPPModal) ----------
 const fetchDrugInfo = async (drugName) => {

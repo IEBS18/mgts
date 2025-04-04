@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import PropTypes from "prop-types";
 import { XCircle, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ReactMarkdown from "react-markdown";
-import BotIcon from "../assets/BotIcon.png";
+import BotIcon from "../../assets/BotIcon.png";
 
 function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggle }) {
   const [newMessage, setNewMessage] = useState("");

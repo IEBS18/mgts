@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
-import ChatBot from "./ChatBot";
+import ChatBot from "../Chatbot/ChatBot";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

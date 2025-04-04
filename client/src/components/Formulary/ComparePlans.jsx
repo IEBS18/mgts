@@ -14,7 +14,7 @@ import { useLocation } from "react-router-dom";
 import { PlusCircle } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // Import react-toastify styles
-import FormatText from "../FormatText";
+import FormatText from "../util/FormatText";
 
 const topics = [
   "Disease Name",

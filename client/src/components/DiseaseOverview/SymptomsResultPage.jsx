@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { X } from 'lucide-react';
-import { Input } from './ui/input';
+import { Input } from '@/components/ui/input';
 
 const SymptomResultsPage = () => {
   const location = useLocation();
