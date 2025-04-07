@@ -635,8 +635,8 @@ const FormularyDrugPage = () => {
               />
               <div className="mt-2">
                 <p className="text-black font-bold">
-                  {/* {displayName } */}
-                  {"Specialty"}
+                  {displayName }
+                  {/* {"Specialty"} */}
                   {displayTier ? ` (${displayTier})` : ""}
                 </p>
                 {/* If present, show Drug Type */}

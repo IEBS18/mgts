@@ -49,9 +49,11 @@ def fetch_data(disease_name):
 
             for hit in hits:
                 drug_name = hit.get("Drug Name", "Not Available")
+                #print(drug_name)
                 if drug_name not in unique_drugs:
                     unique_drugs.add(drug_name)
-                    drug_detail = next((d for d in drug_details if d["Drug"].lower() == drug_name.lower()), {}) if drug_details != "No matching drug details found" else {}
+                #    print("unique",unique_drugs)
+                    drug_detail = next((d for d in drug_details if d["Drug"].lower() == drug_name.lower()), {})
 
                     fetched[disease].append({
                         "Drug Name": drug_name,
@@ -81,15 +83,15 @@ def fetch_drug_details_from_excel(drug_names):
         df = pd.read_excel("backend/tpp_database.xlsx")    
 
         # Ensure drug_names is a list and convert to lowercase
-        drug_names = [drug.strip().lower() for drug in drug_names]  
+    drug_names = [drug.strip().lower() for drug in drug_names]  
 
         # Filter the dataframe where 'Drug' matches any in the list
-        drug_info = df[df['Drug'].str.lower().isin(drug_names)]
+    drug_info = df[df['Drug'].str.lower().isin(drug_names)]
 
-        if not drug_info.empty:
-            return drug_info[['Drug', 'Modality', 'Efficacy', 'Safety']].to_dict(orient='records')
-        else:
-            return "No matching drug details found"
+    if not drug_info.empty:
+        return drug_info[['Drug', 'Modality', 'Efficacy', 'Safety']].to_dict(orient='records')
+    else:
+        return "No matching drug details found"
 
 
 

@@ -39,6 +39,8 @@ openai_client = AzureOpenAI(
 
 tokenizer = AutoTokenizer.from_pretrained('dmis-lab/biobert-v1.1') 
                      
+# Lazy loading for the model
+_model = None
 
 def get_model():
     global _model
@@ -48,7 +50,7 @@ def get_model():
         
         # Construct the absolute path to chatbot.pkl
         chatbot_model_path = os.path.join(current_dir, 'chatbot.pkl')
-
+        print(chatbot_model_path)
         try:
             with open(chatbot_model_path, "rb") as f:
                 _model = QueryClassifierModel()
