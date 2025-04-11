@@ -7,7 +7,7 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import RadialChart from "./RadialChart"
 import BenchmarkTable from "./BenchmarkTable"
-import "./custom.css" // Import custom CSS for the radial chart
+import "./custom.css"
 
 export default function BenchmarkAnalysisPage() {
   const navigate = useNavigate()
@@ -76,10 +76,10 @@ export default function BenchmarkAnalysisPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div className="h-[500px]">
+            <div className="h-[400px]">
               <RadialChart data={pieChartData} />
             </div>
-            <div className="h-[500px]">
+            <div className="h-[450px]">
               <BenchmarkTable onWeightsUpdate={handleWeightsUpdate} />
             </div>
           </div>

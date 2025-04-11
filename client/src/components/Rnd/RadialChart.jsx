@@ -449,7 +449,7 @@ function RadialChart({ data, onDataUpdate }) {
 
   return (
     <Card className="flex flex-col h-full shadow-md bg-white">
-      <CardHeader className="items-center pb-0 bg-[#f9faf5]">
+      <CardHeader className="items-center pb-2 bg-[#f9faf5]">
         <div className="flex justify-between items-center w-full">
           <CardTitle className="text-xl font-semibold">Top 5 Diseases to Explore</CardTitle>
           <div className="flex gap-2">
@@ -468,17 +468,19 @@ function RadialChart({ data, onDataUpdate }) {
             </Button>
           </div>
         </div>
-        <CardDescription>Disease Distribution</CardDescription>
+        {/* <CardDescription>Disease Distribution</CardDescription> */}
       </CardHeader>
-      <CardContent className="flex-1 pb-0 chart-container">
+      <CardContent className="flex-1 pb-0 chart-container flex items-center justify-center">
         {reversedData && reversedData.length > 0 && (
-          <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
+          <ChartContainer config={chartConfig} className="mx-auto w-[250px] h-[250px] aspect-square max-h-[250px] mt-10">
             <RadialBarChart
               data={transformedData}
+              width={250}            /* ← NEW */
+              height={250}           /* ← NEW */
               startAngle={0}
               endAngle={180}
               innerRadius={30}
-              outerRadius={110}
+              outerRadius={130}
               barSize={20}
             >
                 <PolarAngleAxis type="number" domain={[0, 5]} tick={false} />
@@ -501,7 +503,7 @@ function RadialChart({ data, onDataUpdate }) {
           </ChartContainer>
         )}
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
+      <CardFooter className="flex-col gap-2 text-sm mt-[-80px]">
         <div className="flex items-center gap-2 font-medium leading-none">
           Top diseases by score <TrendingUp className="h-4 w-4" />
         </div>
@@ -530,8 +532,8 @@ function RadialChart({ data, onDataUpdate }) {
                 </Button>
               </div>
             </div>
-            <div className="p-6 h-[500px] chart-container">
-              <ChartContainer config={chartConfig} className="mx-auto aspect-square h-full">
+            <div className="p-6 h-[460px] chart-container">
+              <ChartContainer config={chartConfig} className="mx-auto aspect-square h-full mt-16">
                 <RadialBarChart
                   data={transformedData}
                   startAngle={0}

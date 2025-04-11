@@ -1281,7 +1281,7 @@ export default function BenchmarkTable({ onWeightsUpdate }) {
                   <Info className="h-4 w-4 text-slate-500" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
+              <TooltipContent className="max-w-xs rounded-[12px]">
                 <p className="text-xs">Benchmark scores are calculated based on weighted criteria. Adjust weights in the settings tab.</p>
               </TooltipContent>
             </Tooltip>
@@ -1376,8 +1376,8 @@ export default function BenchmarkTable({ onWeightsUpdate }) {
               </div>
               <div className="flex items-center justify-between bg-[#f9faf5] p-3 rounded-md">
                 <div className={`text-xs ${isValidWeights ? "text-green-600" : "text-destructive"}`}>Total: {totalWeight.toFixed(2)} {isValidWeights ? "✓" : "(should equal 1.0)"}</div>
-                <Button onClick={updateBenchmark} disabled={!isValidWeights || isUpdating} size="sm" className="bg-[#a6ce39] hover:bg-[#95b933] text-white font-medium">
-                  {isUpdating ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Updating...</>) : "Update Scores"}
+                <Button onClick={updateBenchmark} disabled={!isValidWeights || isUpdating} size="sm" className="bg-[#a6ce39] hover:bg-[#95b933] text-white font-medium rounded-[12px]">
+                  {isUpdating ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin " />Updating...</>) : "Update Scores"}
                 </Button>
               </div>
             </div>

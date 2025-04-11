@@ -317,8 +317,8 @@ function BenchmarkTableSummary({ onWeightsUpdate, onViewFullBenchmark, pieChartD
                     <Info className="h-4 w-4 text-slate-500" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <p className="text-xs">
+                <TooltipContent className="max-w-xs rounded-[12px]">
+                  <p className="text-xs ">
                     Showing top 5 diseases based on benchmark scores. View full analysis to adjust weights.
                   </p>
                 </TooltipContent>
