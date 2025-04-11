@@ -24,6 +24,7 @@ import RNDFormulation from "./components/Rnd/RNDFormulation";
 import DrugFormulation from './components/Rnd/DrugFormulation'
 import FormularyDrugPage from "./components/Formulary/FormularyDrugPage";
 import { FormularyComparison } from "./components/Formulary/FormularyComparison";
+import BenchmarkAnalysisPage from "./components/Rnd/BenchMarkAnalysis";
 
 function App() {
   return (
@@ -67,6 +68,7 @@ function App() {
         <Route path="/compare-plans" element={<PrivateRoute><Layout><ComparePlans/></Layout></PrivateRoute>} />
         <Route path="/rnd-formulation-ingredients" element={<PrivateRoute><Layout><RNDFormulation/></Layout></PrivateRoute>} />
         <Route path="/rnd-formulation-drugs" element={<PrivateRoute><Layout><DrugFormulation/></Layout></PrivateRoute>} />
+        <Route path="/benchmark-analysis" element={<PrivateRoute><Layout><BenchmarkAnalysisPage/></Layout></PrivateRoute>} />
       </Routes>
     </Router>
   );

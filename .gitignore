@@ -35,7 +35,6 @@ backend/embeddings/__pycache__/*
 backend/PlayerLandscape/__pycache__/*
 backend/PricePrediction/__pycache__/*
 backend/Calculations/__pycache__/*
-backend/users.json
 */nltk_data
 backend/Utilities/chatbot.pkl
 ensure.txt
