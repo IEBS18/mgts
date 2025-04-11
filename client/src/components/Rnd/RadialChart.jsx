@@ -477,8 +477,8 @@ function RadialChart({ data, onDataUpdate }) {
               data={transformedData}
               width={250}            /* ← NEW */
               height={250}           /* ← NEW */
-              startAngle={0}
-              endAngle={180}
+              startAngle={180}
+              endAngle={0}
               innerRadius={30}
               outerRadius={130}
               barSize={20}
@@ -536,8 +536,8 @@ function RadialChart({ data, onDataUpdate }) {
               <ChartContainer config={chartConfig} className="mx-auto aspect-square h-full mt-16">
                 <RadialBarChart
                   data={transformedData}
-                  startAngle={0}
-                  endAngle={180} // Changed from 380 to 180 to not make a full circle
+                  startAngle={180}
+                  endAngle={0} // Changed from 380 to 180 to not make a full circle
                   innerRadius={60}
                   outerRadius={220}
                   barSize={30}

@@ -76,10 +76,10 @@ export default function BenchmarkAnalysisPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div className="h-[400px]">
+            <div className="h-[500px]">
               <RadialChart data={pieChartData} />
             </div>
-            <div className="h-[450px]">
+            <div className="h-[500px]">
               <BenchmarkTable onWeightsUpdate={handleWeightsUpdate} />
             </div>
           </div>
