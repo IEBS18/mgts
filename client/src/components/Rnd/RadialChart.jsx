@@ -1,21 +1,22 @@
+
 // "use client"
 
 // import { useState } from "react"
 // import { TrendingUp, Maximize2, X, Download, Loader2 } from "lucide-react"
-// import { LabelList, RadialBar, RadialBarChart } from "recharts"
+// import { LabelList, RadialBar, RadialBarChart, PolarAngleAxis } from "recharts"
 // import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 // import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 // import { Button } from "@/components/ui/button"
-// import './custom.css' // Import your custom CSS file
 
 // function RadialChart({ data, onDataUpdate }) {
 //   const [isModalOpen, setIsModalOpen] = useState(false)
 //   const [isLoading, setIsLoading] = useState(false)
 //   const [error, setError] = useState(null)
-
+// //   reverse the data
+//   const reversedData = data ? [...data].reverse() : []
 //   // Transform the data for the radial chart
-//   const transformedData = data
-//     ? data.map((item, index) => {
+//   const transformedData = reversedData
+//     ? reversedData.map((item, index) => {
 //         // Define chart colors inline based on your global CSS
 //         const chartColors = [
 //           "hsl(139, 65%, 20%)", // --chart-1
@@ -38,7 +39,7 @@
 //     visitors: {
 //       label: "Score",
 //     },
-//     ...(data?.reduce((config, item, index) => {
+//     ...(reversedData?.reduce((config, item, index) => {
 //       // Define chart colors inline
 //       const chartColors = [
 //         "hsl(139, 65%, 20%)", // --chart-1
@@ -69,60 +70,111 @@
 //     return null
 //   }
 
-//   // Function to download the chart as an image
+//   // Function to download the chart as an image with labels
 //   const downloadChart = () => {
-//     console.log('Download clicked')
-  
 //     // Find the SVG element
 //     const svgElement = document.querySelector(".chart-container svg")
 //     if (!svgElement) {
-//       console.log("empty svg")
+//       console.error("SVG element not found")
 //       return
 //     }
-  
+
+//     // Create a clone of the SVG to modify
+//     const svgClone = svgElement.cloneNode(true)
+
+//     // Add a white background to the SVG
+//     svgClone.setAttribute("style", "background-color: white;")
+
+//     // Add a title to the SVG
+//     const titleElement = document.createElementNS("http://www.w3.org/2000/svg", "text")
+//     titleElement.setAttribute("x", "50%")
+//     titleElement.setAttribute("y", "20")
+//     titleElement.setAttribute("text-anchor", "middle")
+//     titleElement.setAttribute("font-family", "Arial")
+//     titleElement.setAttribute("font-size", "16")
+//     titleElement.setAttribute("font-weight", "bold")
+//     titleElement.textContent = "Top 5 Diseases by Score"
+//     svgClone.appendChild(titleElement)
+
+//     // Ensure all text elements are visible
+//     const textElements = svgClone.querySelectorAll("text")
+//     textElements.forEach((text) => {
+//       text.setAttribute("fill", "black")
+//       text.setAttribute("style", "font-family: Arial; visibility: visible;")
+//     })
+
+//     // Ensure labels are visible
+//     const labelElements = svgClone.querySelectorAll(".recharts-label")
+//     labelElements.forEach((label) => {
+//       label.setAttribute("fill", "white")
+//       label.setAttribute("style", "font-family: Arial; visibility: visible;")
+//     })
+
 //     // Serialize the SVG element to string
-//     const svgData = new XMLSerializer().serializeToString(svgElement)
-  
+//     const svgData = new XMLSerializer().serializeToString(svgClone)
+
 //     // Create a new canvas to render the SVG
 //     const canvas = document.createElement("canvas")
 //     const ctx = canvas.getContext("2d")
-    
+
 //     // Create an image object
 //     const img = new Image()
-  
+
 //     // Set the image onload handler
 //     img.onload = () => {
 //       // Set canvas width and height based on the image dimensions
 //       canvas.width = img.width
 //       canvas.height = img.height
-  
+
 //       // Draw the image onto the canvas
+//       ctx.fillStyle = "white"
+//       ctx.fillRect(0, 0, canvas.width, canvas.height)
 //       ctx.drawImage(img, 0, 0)
-  
+
+//       // Add legend at the bottom
+//       if (reversedData && reversedData.length > 0) {
+//         const legendY = canvas.height - 80
+//         ctx.font = "12px Arial"
+//         ctx.fillStyle = "black"
+//         ctx.fillText("Legend:", 20, legendY)
+
+//         reversedData.forEach((item, index) => {
+//           const chartColors = [
+//             "hsl(139, 65%, 20%)", // --chart-1
+//             "hsl(140, 74%, 44%)", // --chart-2
+//             "hsl(142, 88%, 28%)", // --chart-3
+//             "hsl(137, 55%, 15%)", // --chart-4
+//             "hsl(141, 40%, 9%)", // --chart-5
+//           ]
+
+//           const y = legendY + 20 + index * 20
+
+//           // Convert HSL to RGB for canvas
+//           const color = chartColors[index % chartColors.length]
+//           ctx.fillStyle = color
+//           ctx.fillRect(20, y - 10, 15, 15)
+
+//           ctx.fillStyle = "black"
+//           ctx.fillText(`${item.name}: ${item.value}`, 45, y)
+//         })
+//       }
+
 //       // Convert canvas to PNG format
 //       const pngFile = canvas.toDataURL("image/png")
-//       console.log('PNG created')
-  
+
 //       // Create a download link and trigger the download
 //       const downloadLink = document.createElement("a")
 //       downloadLink.download = "disease-chart.png"
 //       downloadLink.href = pngFile
 //       downloadLink.click()
 //     }
-  
-//     // Ensure the SVG is well-formed with a white background
-//     const svgWithBackground = svgData.replace(
-//       '<svg',
-//       `<svg xmlns="http://www.w3.org/2000/svg" style="background-color: white;" `
-//     )
-  
+
 //     // Encode the SVG string and set the image source
-//     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgWithBackground)))
-  
+//     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)))
+
 //     // Set cross-origin attributes for the image
 //     img.crossOrigin = "anonymous"
 //   }
-  
 
 //   if (isLoading) {
 //     return (
@@ -139,27 +191,41 @@
 
 //   return (
 //     <Card className="flex flex-col h-full shadow-md bg-white">
-//       <CardHeader className="items-center pb-0 bg-[#f9faf5]">
+//       <CardHeader className="items-center pb-2 bg-[#f9faf5]">
 //         <div className="flex justify-between items-center w-full">
 //           <CardTitle className="text-xl font-semibold">Top 5 Diseases to Explore</CardTitle>
-//           <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full" onClick={() => setIsModalOpen(true)}>
-//             <Maximize2 className="h-4 w-4" />
-//             <span className="sr-only">Maximize</span>
-//           </Button>
+//           <div className="flex gap-2">
+//             <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full" onClick={downloadChart}>
+//               <Download className="h-4 w-4" />
+//               <span className="sr-only">Download</span>
+//             </Button>
+//             <Button
+//               variant="outline"
+//               size="sm"
+//               className="h-8 w-8 p-0 rounded-full"
+//               onClick={() => setIsModalOpen(true)}
+//             >
+//               <Maximize2 className="h-4 w-4" />
+//               <span className="sr-only">Maximize</span>
+//             </Button>
+//           </div>
 //         </div>
-//         <CardDescription>Disease Distribution</CardDescription>
+//         {/* <CardDescription>Disease Distribution</CardDescription> */}
 //       </CardHeader>
-//       <CardContent className="flex-1 pb-0 chart-container">
-//         {data && data.length > 0 && (
-//           <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
+//       <CardContent className="flex-1 pb-0 chart-container flex items-center justify-center">
+//         {reversedData && reversedData.length > 0 && (
+//           <ChartContainer config={chartConfig} className="mx-auto w-[250px] h-[250px] aspect-square max-h-[250px] mt-10">
 //             <RadialBarChart
 //               data={transformedData}
-//               startAngle={-90}
-//               endAngle={180} // Changed from 380 to 180 to not make a full circle
+//               width={250}            /* ← NEW */
+//               height={250}           /* ← NEW */
+//               startAngle={180}
+//               endAngle={0}
 //               innerRadius={30}
-//               outerRadius={110}
+//               outerRadius={130}
 //               barSize={20}
 //             >
+//                 <PolarAngleAxis type="number" domain={[0, 5]} tick={false} />
 //               <ChartTooltip cursor={false} content={<CustomTooltipContent />} />
 //               <RadialBar dataKey="visitors" background={{ fill: "#fff" }} cornerRadius={5}>
 //                 <LabelList
@@ -179,7 +245,7 @@
 //           </ChartContainer>
 //         )}
 //       </CardContent>
-//       <CardFooter className="flex-col gap-2 text-sm">
+//       <CardFooter className="flex-col gap-2 text-sm mt-[-80px]">
 //         <div className="flex items-center gap-2 font-medium leading-none">
 //           Top diseases by score <TrendingUp className="h-4 w-4" />
 //         </div>
@@ -208,18 +274,24 @@
 //                 </Button>
 //               </div>
 //             </div>
-//             <div className="p-6 h-[500px] chart-container">
-//               <ChartContainer config={chartConfig} className="mx-auto aspect-square h-full">
+//             <div className="p-6 h-[460px] chart-container">
+//               <ChartContainer config={chartConfig} className="mx-auto aspect-square h-full mt-16">
 //                 <RadialBarChart
 //                   data={transformedData}
-//                   startAngle={-90}
-//                   endAngle={180} // Changed from 380 to 180 to not make a full circle
+//                   startAngle={180}
+//                   endAngle={0} // Changed from 380 to 180 to not make a full circle
 //                   innerRadius={60}
 //                   outerRadius={220}
 //                   barSize={30}
 //                 >
+//                     <PolarAngleAxis type="number" domain={[0, 5]} tick={false} />
 //                   <ChartTooltip cursor={false} content={<CustomTooltipContent />} />
-//                   <RadialBar dataKey="visitors" background={{ fill: "white" }} cornerRadius={8} className="bg-white text-white">
+//                   <RadialBar
+//                     dataKey="visitors"
+//                     background={{ fill: "white" }}
+//                     cornerRadius={8}
+//                     className="bg-white text-white"
+//                   >
 //                     <LabelList
 //                       position="insideStart"
 //                       dataKey="browser"
@@ -256,34 +328,38 @@
 // export default RadialChart
 
 
-
 "use client"
 
 import { useState } from "react"
 import { TrendingUp, Maximize2, X, Download, Loader2 } from "lucide-react"
 import { LabelList, RadialBar, RadialBarChart, PolarAngleAxis } from "recharts"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import { Button } from "@/components/ui/button"
 
-function RadialChart({ data, onDataUpdate }) {
+function RadialChart({
+  data,
+  onDataUpdate,
+  width = 250,         // Default width
+  height = 250,        // Default height
+  innerRadius = 30,    // Default inner radius
+  outerRadius = 130,   // Default outer radius
+  barSize = 20,        // Default bar size
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
-//   reverse the data
   const reversedData = data ? [...data].reverse() : []
-  // Transform the data for the radial chart
+
   const transformedData = reversedData
     ? reversedData.map((item, index) => {
-        // Define chart colors inline based on your global CSS
         const chartColors = [
           "hsl(139, 65%, 20%)", // --chart-1
           "hsl(140, 74%, 44%)", // --chart-2
           "hsl(142, 88%, 28%)", // --chart-3
           "hsl(137, 55%, 15%)", // --chart-4
-          "hsl(141, 40%, 9%)", // --chart-5
+          "hsl(141, 40%, 9%)",  // --chart-5
         ]
-
         return {
           browser: item.name,
           visitors: item.value,
@@ -292,21 +368,18 @@ function RadialChart({ data, onDataUpdate }) {
       })
     : []
 
-  // Create dynamic chart config based on the data
   const chartConfig = {
     visitors: {
       label: "Score",
     },
     ...(reversedData?.reduce((config, item, index) => {
-      // Define chart colors inline
       const chartColors = [
         "hsl(139, 65%, 20%)", // --chart-1
         "hsl(140, 74%, 44%)", // --chart-2
         "hsl(142, 88%, 28%)", // --chart-3
         "hsl(137, 55%, 15%)", // --chart-4
-        "hsl(141, 40%, 9%)", // --chart-5
+        "hsl(141, 40%, 9%)",  // --chart-5
       ]
-
       config[index + 1] = {
         label: item.name,
         color: chartColors[index % chartColors.length],
@@ -315,7 +388,6 @@ function RadialChart({ data, onDataUpdate }) {
     }, {}) || {}),
   }
 
-  // Custom tooltip content to show disease name and score
   const CustomTooltipContent = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
@@ -328,22 +400,16 @@ function RadialChart({ data, onDataUpdate }) {
     return null
   }
 
-  // Function to download the chart as an image with labels
   const downloadChart = () => {
-    // Find the SVG element
     const svgElement = document.querySelector(".chart-container svg")
     if (!svgElement) {
       console.error("SVG element not found")
       return
     }
 
-    // Create a clone of the SVG to modify
     const svgClone = svgElement.cloneNode(true)
-
-    // Add a white background to the SVG
     svgClone.setAttribute("style", "background-color: white;")
 
-    // Add a title to the SVG
     const titleElement = document.createElementNS("http://www.w3.org/2000/svg", "text")
     titleElement.setAttribute("x", "50%")
     titleElement.setAttribute("y", "20")
@@ -354,42 +420,31 @@ function RadialChart({ data, onDataUpdate }) {
     titleElement.textContent = "Top 5 Diseases by Score"
     svgClone.appendChild(titleElement)
 
-    // Ensure all text elements are visible
     const textElements = svgClone.querySelectorAll("text")
     textElements.forEach((text) => {
       text.setAttribute("fill", "black")
       text.setAttribute("style", "font-family: Arial; visibility: visible;")
     })
 
-    // Ensure labels are visible
     const labelElements = svgClone.querySelectorAll(".recharts-label")
     labelElements.forEach((label) => {
       label.setAttribute("fill", "white")
       label.setAttribute("style", "font-family: Arial; visibility: visible;")
     })
 
-    // Serialize the SVG element to string
     const svgData = new XMLSerializer().serializeToString(svgClone)
 
-    // Create a new canvas to render the SVG
     const canvas = document.createElement("canvas")
     const ctx = canvas.getContext("2d")
 
-    // Create an image object
     const img = new Image()
-
-    // Set the image onload handler
     img.onload = () => {
-      // Set canvas width and height based on the image dimensions
       canvas.width = img.width
       canvas.height = img.height
-
-      // Draw the image onto the canvas
       ctx.fillStyle = "white"
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       ctx.drawImage(img, 0, 0)
 
-      // Add legend at the bottom
       if (reversedData && reversedData.length > 0) {
         const legendY = canvas.height - 80
         ctx.font = "12px Arial"
@@ -402,12 +457,9 @@ function RadialChart({ data, onDataUpdate }) {
             "hsl(140, 74%, 44%)", // --chart-2
             "hsl(142, 88%, 28%)", // --chart-3
             "hsl(137, 55%, 15%)", // --chart-4
-            "hsl(141, 40%, 9%)", // --chart-5
+            "hsl(141, 40%, 9%)",  // --chart-5
           ]
-
           const y = legendY + 20 + index * 20
-
-          // Convert HSL to RGB for canvas
           const color = chartColors[index % chartColors.length]
           ctx.fillStyle = color
           ctx.fillRect(20, y - 10, 15, 15)
@@ -417,20 +469,14 @@ function RadialChart({ data, onDataUpdate }) {
         })
       }
 
-      // Convert canvas to PNG format
       const pngFile = canvas.toDataURL("image/png")
-
-      // Create a download link and trigger the download
       const downloadLink = document.createElement("a")
       downloadLink.download = "disease-chart.png"
       downloadLink.href = pngFile
       downloadLink.click()
     }
 
-    // Encode the SVG string and set the image source
     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)))
-
-    // Set cross-origin attributes for the image
     img.crossOrigin = "anonymous"
   }
 
@@ -468,20 +514,19 @@ function RadialChart({ data, onDataUpdate }) {
             </Button>
           </div>
         </div>
-        {/* <CardDescription>Disease Distribution</CardDescription> */}
       </CardHeader>
       <CardContent className="flex-1 pb-0 chart-container flex items-center justify-center">
         {reversedData && reversedData.length > 0 && (
           <ChartContainer config={chartConfig} className="mx-auto w-[250px] h-[250px] aspect-square max-h-[250px] mt-10">
             <RadialBarChart
               data={transformedData}
-              width={250}            /* ← NEW */
-              height={250}           /* ← NEW */
+              width={width}
+              height={height}
               startAngle={180}
               endAngle={0}
-              innerRadius={30}
-              outerRadius={130}
-              barSize={20}
+              innerRadius={innerRadius}
+              outerRadius={outerRadius}
+              barSize={barSize}
             >
                 <PolarAngleAxis type="number" domain={[0, 5]} tick={false} />
               <ChartTooltip cursor={false} content={<CustomTooltipContent />} />
