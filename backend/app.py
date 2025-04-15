@@ -1594,7 +1594,7 @@ import base64
 import pandas as pd
 from RnD.benchmark import benchmark_score_llama, run_benchmark_from_excel, get_user_weights
 
-EXCEL_FILE_PATH = r"gutmicrobiome​_scored_output.xlsx"
+EXCEL_FILE_PATH = r"gut_microbiome_documents_output_file.xlsx"
 
 # Default Weights
 default_weights = {
@@ -1690,29 +1690,29 @@ def get_benchmark_table():
 
             benchmark_scores = []
             for index, row in df.iterrows():
-                scores, total = benchmark_score_llama(
-                    enrollment=row['enrollment'],
-                    mechanism_text=row['disease_mechanism'],
-                    justification=row['justification_for_drug_use'],
-                    prevalence=row['prevalence'],
-                    bausch_presence_text=row['bausch_presence'],
-                    safety=row['safety'],
-                    efficacy=row['efficacy'],
-                    weights=updated_weights  # Use the updated weights
-                )
-                # print(benchmark_scores)
+                try:
+                    score_str = row['score_breakdown_distribution']
+                    score_json = json.loads(score_str.replace("'", '"')) if isinstance(score_str, str) else score_str
+
+                    total_score = sum(score_json[key] * updated_weights[key] for key in updated_weights)
+
+                except Exception as e:
+                    print(f"⚠️ Error parsing score breakdown on row {index}: {e}")
+                    total_score = 0
+
                 benchmark_scores.append({
                     "disease": row['disease'],
-                    "benchmark_score": total,
+                    "benchmark_score": round(total_score, 2),
                     "score_breakdown_distribution": updated_weights
                 })
-            
-            # benchmark_table = pd.DataFrame(benchmark_scores)
+
             benchmark_table = pd.DataFrame(benchmark_scores).sort_values(by="benchmark_score", ascending=False)
+
             response_data = {
                 "benchmark_table": benchmark_table.to_dict(orient='records'),
-                "message": "Benchmark Table recalculated successfully"
+                "message": "✅ Benchmark Table recalculated with new weights."
             }
+
         else:
             # Fetch pre-calculated data from the Excel sheet
             xl = pd.ExcelFile(EXCEL_FILE_PATH)
@@ -1745,6 +1745,63 @@ def get_benchmark_table():
         return jsonify({"error": str(e)}), 400
 
 
+#             for index, row in df.iterrows():
+#                 scores, total = benchmark_score_llama(
+#                     enrollment=row['enrollment'],
+#                     mechanism_text=row['disease_mechanism'],
+#                     justification=row['justification_for_drug_use'],
+#                     prevalence=row['prevalence'],
+#                     bausch_presence_text=row['bausch_presence'],
+#                     safety=row['safety'],
+#                     efficacy=row['efficacy'],
+#                     weights=updated_weights  # Use the updated weights
+#                 )
+#                 # print(benchmark_scores)
+#                 benchmark_scores.append({
+#                     "disease": row['disease'],
+#                     "benchmark_score": total,
+#                     "score_breakdown_distribution": updated_weights
+#                 })
+            
+#             # benchmark_table = pd.DataFrame(benchmark_scores)
+#             benchmark_table = pd.DataFrame(benchmark_scores).sort_values(by="benchmark_score", ascending=False)
+#             response_data = {
+#                 "benchmark_table": benchmark_table.to_dict(orient='records'),
+#                 "message": "Benchmark Table recalculated successfully"
+#             }
+#         else:
+#             # Fetch pre-calculated data from the Excel sheet
+#             xl = pd.ExcelFile(EXCEL_FILE_PATH)
+#             df = xl.parse('Sheet1')
+
+#             # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
+#             df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+
+#             # Sort by 'Benchmark_Score' to get the top 5 diseases
+#             # top_scores = df.nlargest(5, 'benchmark_score')  # Top 5 diseases based on benchmark score
+#             df=pd.DataFrame(df).sort_values(by="benchmark_score", ascending=False)
+#             top_scores =df.drop_duplicates(subset='disease', keep='first')
+
+#             # Create the benchmark table with diseases, benchmark scores, and score breakdown
+            
+
+# # Assuming 'score_breakdown_distribution' is a string representation of a dictionary
+#             top_scores['score_breakdown_distribution'] = top_scores['score_breakdown_distribution'].apply(ast.literal_eval)
+
+#             benchmark_table = top_scores[['disease', 'benchmark_score', 'score_breakdown_distribution']]
+
+#             response_data = {
+#                 "benchmark_table": benchmark_table.to_dict(orient='records'),
+#                 "message": "Benchmark Table retrieved successfully from Excel"
+#             }
+
+#         return jsonify(response_data), 200
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 400
+
+
+
 # Route to handle pie chart for top benchmark scores (Excel-based or recalculated if weights are updated)
 @app.route('/api/pie-chart', methods=['GET', 'POST'])
 def get_pie_chart():
@@ -1767,22 +1824,39 @@ def get_pie_chart():
             }
             benchmark_scores = []
 
+            # for index, row in df.iterrows():
+            #     scores, total = benchmark_score_llama(
+            #         enrollment=row['enrollment'],
+            #         mechanism_text=row['disease_mechanism'],
+            #         justification=row['justification_for_drug_use'],
+            #         prevalence=row['prevalence'],
+            #         bausch_presence_text=row['bausch_presence'],
+            #         safety=row['safety'],
+            #         efficacy=row['efficacy'],
+            #         weights=updated_weights  # Use updated weights
+            #     )
+            #     benchmark_scores.append({
+            #         "disease": row['disease'],
+            #         "benchmark_score": total,
+            #         "Weights": updated_weights
+            #     })
             for index, row in df.iterrows():
-                scores, total = benchmark_score_llama(
-                    enrollment=row['enrollment'],
-                    mechanism_text=row['disease_mechanism'],
-                    justification=row['justification_for_drug_use'],
-                    prevalence=row['prevalence'],
-                    bausch_presence_text=row['bausch_presence'],
-                    safety=row['safety'],
-                    efficacy=row['efficacy'],
-                    weights=updated_weights  # Use updated weights
-                )
+                try:
+                    score_str = row['score_breakdown_distribution']
+                    score_json = json.loads(score_str.replace("'", '"')) if isinstance(score_str, str) else score_str
+
+                    total_score = sum(score_json[key] * updated_weights[key] for key in updated_weights)
+
+                except Exception as e:
+                    print(f"⚠️ Error parsing score breakdown on row {index}: {e}")
+                    total_score = 0
+
                 benchmark_scores.append({
                     "disease": row['disease'],
-                    "benchmark_score": total,
-                    "Weights": updated_weights
+                    "benchmark_score": round(total_score, 2),
+                    "score_breakdown_distribution": updated_weights
                 })
+
 
             benchmark_df = pd.DataFrame(benchmark_scores)
             benchmark_df= benchmark_df.drop_duplicates(subset='disease', keep='first')

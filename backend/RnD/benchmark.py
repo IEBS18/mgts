@@ -3,30 +3,21 @@ import json
 import pandas as pd
 from openai import AzureOpenAI
 from dotenv import load_dotenv
-from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import UserMessage
-from azure.core.credentials import AzureKeyCredential
-from azure.core.pipeline.transport import RequestsTransport
 
 # Load .env with LLaMA credentials
 load_dotenv()
 
 MODEL = "gpt-4o-mini"
 
+# Azure OpenAI Client Initialization
 openai_client = AzureOpenAI(
     api_key=os.getenv("AZURE_API"),
     api_version=os.getenv("AZURE_API_VERSION"),
     azure_endpoint=os.getenv("AZURE_BASE_URL")
 )
 
-
-def ask_llama(prompt: str):
-    response = openai_client.chat.completions.create(
-        model=MODEL,
-        messages=[UserMessage(content=prompt)]
-    )
-    return response.choices[0].message.content.strip()
-
+# LLM benchmark scoring (used only in initial run)
 def benchmark_score_llama(enrollment, mechanism_text, justification, prevalence, bausch_presence_text, safety, efficacy, weights):
     bausch_presence = bausch_presence_text.strip().lower() == "yes"
 
@@ -75,10 +66,6 @@ Output this JSON format:
     )
 
     response_content = response.choices[0].message.content.strip()
-    # print("resp:",response_content)
-    # print(justification)
-    # Fixing double quotes issue and ensuring proper JSON format
-    # response_content = response_content.replace('""', '"')
 
     try:
         score_json = json.loads(response_content)
@@ -89,6 +76,8 @@ Output this JSON format:
     weighted_score = sum(score_json[key] * weights[key] for key in score_json)
     return score_json, round(weighted_score, 2)
 
+
+# Initial run: scoring each row with LLM
 def run_benchmark_from_excel(input_path, output_path, weights):
     df = pd.read_excel(input_path)
     scores_list = []
@@ -99,52 +88,79 @@ def run_benchmark_from_excel(input_path, output_path, weights):
             scores, total = benchmark_score_llama(
                 enrollment=row['Enrollment'],
                 mechanism_text=row['Disease_Mechanism'],
-                
                 justification=row['Justification_for_Drug_Use'],
                 prevalence=row['Prevalence'],
                 bausch_presence_text=row['Bausch Presence'],
                 safety=row['Safety'],
                 efficacy=row['Efficacy'],
                 weights=weights
-
-                
             )
         except Exception as e:
             print(f"❌ Error processing row {index}: {e}")
             scores = {k: 0 for k in weights}
             total = 0
-        
+
         scores_list.append(scores)
         total_scores.append(total)
 
-    df['Benchmark Score'] = total_scores
     df['Score Breakdown'] = scores_list
+    df['Benchmark Score'] = total_scores
     df.to_excel(output_path, index=False)
-    print(f"✅ Output saved to: {output_path}")
+    print(f"✅ Initial scoring done. Output saved to: {output_path}")
 
+
+# Recompute only the weighted score using stored JSON scores
+def recompute_weighted_score_from_stored_scores(excel_path, output_path, weights):
+    df = pd.read_excel(excel_path)
+    new_scores = []
+
+    for index, row in df.iterrows():
+        try:
+            score_str = row['score_breakdown_distribution']
+            if isinstance(score_str, str):
+                score_json = json.loads(score_str.replace("'", '"'))
+            else:
+                score_json = row['Score Breakdown']
+
+            weighted_score = sum(score_json[key] * weights[key] for key in weights)
+        except Exception as e:
+            print(f"❌ Error on row {index}: {e}")
+            weighted_score = 0
+
+        new_scores.append(round(weighted_score, 2))
+
+    df['Benchmark Score'] = new_scores
+    df.to_excel(output_path, index=False)
+    print(f"✅ Recomputed scores saved to: {output_path}")
+
+
+# Allow user to input weights
 def get_user_weights():
-    # You can also modify this function to take weights from an Excel file
     print("Please input the weights for the following parameters:")
-    weights = {}
-    
-    # Allow user to input weights for each parameter
-    weights['No_of_Patient_Treated'] = float(input("No of Patient Treated (Default 0.20): ") or 0.20)
-    weights['Gut_Microbiome_Association'] = float(input("Gut Microbiome Association (Default 0.15): ") or 0.15)
-    weights['Rifaximin_Treatment'] = float(input("Rifaximin Treatment (Default 0.20): ") or 0.20)
-    weights['Prevalence'] = float(input("Prevalence (Default 0.15): ") or 0.15)
-    weights['Bausch_Presence'] = float(input("Bausch Presence (Default 0.10): ") or 0.10)
-    weights['Safety_Efficacy'] = float(input("Safety & Efficacy (Default 0.20): ") or 0.20)
-    
+    weights = {
+        'No_of_Patient_Treated': float(input("No of Patient Treated (Default 0.20): ") or 0.20),
+        'Gut_Microbiome_Association': float(input("Gut Microbiome Association (Default 0.15): ") or 0.15),
+        'Rifaximin_Treatment': float(input("Rifaximin Treatment (Default 0.20): ") or 0.20),
+        'Prevalence': float(input("Prevalence (Default 0.15): ") or 0.15),
+        'Bausch_Presence': float(input("Bausch Presence (Default 0.10): ") or 0.10),
+        'Safety_Efficacy': float(input("Safety & Efficacy (Default 0.20): ") or 0.20)
+    }
     print(f"Custom Weights: {weights}")
     return weights
 
 
+# === Main execution ===
 if __name__ == "__main__":
-    # === User Input ===
-    input_file = r"C:\Users\nirmiti.deshmukh\marketX\mgts\backend\RnD\gutmicrobiome​_updated_bausch_presence.xlsx"  # Specify the Excel file path
-    output_file = r"C:\Users\nirmiti.deshmukh\marketX\mgts\backend\RnD\gutmicrobiome​_scored_disease_output.xlsx"  # Specify the output file path
+    input_file = r"C:\Users\nirmiti.deshmukh\marketX\mgts\backend\RnD\gutmicrobiome​_updated_bausch_presence.xlsx"
+    output_file = r"C:\Users\nirmiti.deshmukh\marketX\mgts\backend\RnD\scored_100.xlsx"
 
-    # === User-defined Weights ===
-    custom_weights = get_user_weights()  # User-defined weights input
+    custom_weights = get_user_weights()
 
-    run_benchmark_from_excel(input_file, output_file, custom_weights)
+    df = pd.read_excel(input_file)
+
+    if 'Score Breakdown' in df.columns:
+        print("📊 Detected Score Breakdown column. Recomputing weighted scores only...")
+        recompute_weighted_score_from_stored_scores(input_file, output_file, custom_weights)
+    else:
+        print("🧠 No Score Breakdown column found. Running full LLM-based scoring...")
+        run_benchmark_from_excel(input_file, output_file, custom_weights)
