@@ -23,8 +23,9 @@ import { ComparePlans } from "./components/Formulary/ComparePlans";
 import RNDFormulation from "./components/Rnd/RNDFormulation";
 import DrugFormulation from './components/Rnd/DrugFormulation'
 import FormularyDrugPage from "./components/Formulary/FormularyDrugPage";
-import { FormularyComparison } from "./components/Formulary/FormularyComparison";
-import BenchmarkAnalysisPage from "./components/Rnd/BenchMarkAnalysis";
+import { FormularyComparison } from "@/components/Formulary/FormularyComparison";
+import BenchmarkAnalysisPage from "@/components/Rnd/BenchmarkAnalysis";
+
 
 function App() {
   return (
