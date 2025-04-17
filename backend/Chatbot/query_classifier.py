@@ -1,10 +1,11 @@
 import os
 import torch
+import re
 import pickle
 from elasticsearch import Elasticsearch
 from openai import AzureOpenAI
 from transformers import AutoTokenizer
-from DiseaseOverview.disease_overview_util import get_elasticsearch_results
+from ..DiseaseOverview.disease_overview_util import get_elasticsearch_results
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -18,16 +19,20 @@ es = Elasticsearch(
 try:
     from .train_query_classifier import QueryClassifierModel
     from .utils import(
-        preprocess,
-        create_prompt
-    )  
+    preprocess,
+    create_prompt, 
+    clinicallink,
+    pubmedlink
+)    
 except:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))   
     from train_query_classifier import QueryClassifierModel
     from utils import(
-        preprocess,
-        create_prompt
-    )  
+    preprocess,
+    create_prompt, 
+    clinicallink,
+    pubmedlink
+)  
 
 MODEL = "gpt-4o-mini"
 
@@ -71,6 +76,7 @@ keys = [
     'Type_of_Drug', 'Country'
 ]
 
+## 1 Predict query category
 def predict_query(query, model=None, tokenizer=tokenizer, max_len=64, threshold=0.5, label_map=None):
     model = get_model()
     encoding = tokenizer.encode_plus(
@@ -98,21 +104,60 @@ def predict_query(query, model=None, tokenizer=tokenizer, max_len=64, threshold=
 
 label_map = {0: "PubMed", 1: "Clinical Trials", 2: "Patent"}  
 
+## 2. creating source links for user to understand what source it is {Make it in link format for the link}
+def sources(pmid, nctid):
+    """
+    Generate a string of sources based on the provided PMIDs and NCTIDs.
+ 
+    Parameters:
+        pmid (list): A list of PubMed IDs.
+        nctid (list): A list of Clinical Trial IDs.
+ 
+    Returns:
+        str: A formatted string containing the sources.
+    """
+    source_str = ""
+    if not pmid and not nctid:
+        return "No sources available."
+    if pmid and nctid:
+        source_str += "PubMed Sources: " + ", ".join(pubmedlink(pmid)) + "\n"
+        source_str += "Clinical Trial Sources: " + ", ".join(clinicallink(nctid)) + "\n"
+    elif pmid:
+        source_str += "PubMed Sources: " + ", ".join(pubmedlink(pmid)) + "\n"
+    elif nctid: 
+        source_str += "Clinical Trial Sources: " + ", ".join(clinicallink(nctid)) + "\n"
+    return source_str
+
+
 def generate_openai_completion(question):
     if not isinstance(question, str):
         question = str(question)
-    
+
     conversation_history.append({"role": "user", "content": question})
+
     response = openai_client.chat.completions.create(
         model=MODEL,
         messages=conversation_history,
         temperature=0.7,
-        top_p=1.0
+        top_p=1.0,
+        stream=True
     )
-    
-    assistant_response = response.choices[0].message.content
+
+    assistant_response = ""
+    print("BOT: ", end='', flush=True)
+
+    for chunk in response:
+        if chunk.choices and hasattr(chunk.choices[0], "delta"):
+            delta = chunk.choices[0].delta
+            if hasattr(delta, "content") and delta.content is not None:
+                token = delta.content
+                print(token, end='', flush=True)
+                assistant_response += token
+
+    print()  # move to next line after response
     conversation_history.append({"role": "assistant", "content": assistant_response})
     return assistant_response
+ 
 
 def route_to_chatbot(user_query, search_results, conversation_history):
     model = get_model()
@@ -183,6 +228,16 @@ def process_question(results, question, conversation_history):
     print(context_prompt)
     conversation_history.append({"role": "system", "content": context_prompt})
     answer = generate_openai_completion(question)
+    pubmed_ids = re.findall(r'\*\*PMID\*\*:\s*(\S+)', answer)
+    if not pubmed_ids:
+        pubmed_ids = re.findall(r'\*\*PMC ID\*\*:\s*(\S+)', answer)
+    clinical_ids = re.findall(r'\*\*NCT Number\*\*:\s*(\S+)', answer) or re.findall(r'\*\*NCTID\*\*:\s*(\S+)', answer)
+
+    # For debugging:
+    print("Extracted PMIDs from answer:", pubmed_ids)
+    print("Extracted Clinical IDs from answer:", clinical_ids)
+
+    answer += "\n\nSources:\n\n" + sources(pubmed_ids, clinical_ids)
     return answer
 
 # if __name__ == "__main__":

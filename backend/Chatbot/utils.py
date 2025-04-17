@@ -119,12 +119,14 @@ def preprocess(text, dn):
 #         aggregated_response += f"- {response}\n"
     
 #     return aggregated_response
-## SOURCE QUOTATION
-def clinicallink(nctid):
-    return "https://clinicaltrials.gov/study/" + str(nctid)
 
-def pubmedlink(pmid):
-    return "https://pubmed.ncbi.nlm.nih.gov/" + str(pmid)
+
+## SOURCE QUOTATION
+def clinicallink(nctids):
+    return [f"https://clinicaltrials.gov/study/{str(nctid)}" for nctid in nctids]
+
+def pubmedlink(pmids):
+    return [f"https://pubmed.ncbi.nlm.nih.gov/{str(pmid)}" for pmid in pmids]
 
 def create_prompt(search_results, keys):
     """

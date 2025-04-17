@@ -7,7 +7,6 @@ try:
     from .query_classifier import route_to_chatbot, conversation_history
 except:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
     from query_classifier import route_to_chatbot, conversation_history
 # from .query_classifier import route_to_chatbot, conversation_history
 
