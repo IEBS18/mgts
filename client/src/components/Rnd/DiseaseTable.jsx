@@ -69,17 +69,6 @@ const renderCellContent = (record, topic) => {
   const content = record[key];
   if (!content) return null;
 
-  // Handle highlighting of text surrounded by [[ ]]
-  // if (typeof content === "string") {
-  //   // Match text inside [[ ]] and wrap it in a span with background color
-  //   const highlightedContent = content.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
-  //     return `<span class="bg-yellow-100 px-1 py-0.5 rounded">${p1}</span>`; // Apply mild background
-  //   });
-  //   // If there is any highlighting, return the content as HTML
-  //   if (highlightedContent !== content) {
-  //     return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
-  //   }
-  // }
 
   // Handle comma‑separated list of URLs (PMC links or otherwise)
   if (typeof content === "string" && content.includes("http")) {

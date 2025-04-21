@@ -965,9 +965,9 @@ const fetchTableData = async (requestedFields, disease = "all") => {
       "Drug_Microbes",
       "Drug_Mechanism",
       "Justification_for_Drug_Use",
-      "Disease_Source",
+      "Disease_Sources",
       // "Disease_Title",
-      "Drug_Source",
+      "Drug_Sources",
     ]
     const orderedTabs = columnOrder.filter((tab) => uniqueSelectedTabs.includes(tab))
     setOrderedTabs(orderedTabs)

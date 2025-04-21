@@ -349,8 +349,8 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
     "Disease_Microbes",
     "Drug_Mechanism",
     "Drug_Microbes",
-    "Disease_Source",
-    "Drug_Source",
+    "Disease_Sources",
+    "Drug_Sources",
   ];
 
   // Toggle selection of a topic in "Search by Ingredient"
@@ -470,7 +470,7 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
 
           {/* CONTENT for "Search by Ingredient" tab */}
           <TabsContent value="ingredient">
-            <div className="bg-white p-4 rounded-[20px] mt-4 space-y-4">
+            <div className="bg-white border-0 p-4 rounded-[20px] mt-4 space-y-4 outline-none">
               {/* Ingredient Name Input */}
               <div>
                 <Label htmlFor="ingredient-name" className="text-gray-700">
@@ -487,7 +487,7 @@ export default function RNDFormulationModal({ isOpen, onOpenChange }) {
               </div>
 
               {/* Optional Topics (Tabs) */}
-              <div>
+              <div >
                 <Label className="text-gray-700 mb-2 block">
                   Select Additional Topics (Tabs)
                 </Label>
