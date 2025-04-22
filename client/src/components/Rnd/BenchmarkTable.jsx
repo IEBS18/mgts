@@ -629,7 +629,7 @@ export default function BenchmarkTable({ onWeightsUpdate }) {
       const bench = await benchRes.json()
       setBenchmarkData(bench.benchmark_table)
       if (onWeightsUpdate && pie.pie_chart_data) onWeightsUpdate(weights, pie.pie_chart_data)
-      toast.success("Scores updated successfully")
+      // toast.success("Scores updated successfully")
       setActiveTab("dashboard")
     } catch (e) {
       console.error(e)
