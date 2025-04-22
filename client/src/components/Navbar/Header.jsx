@@ -82,7 +82,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 const Header = () => {
-  const [firstName, setFirstName] = useState("Ayush"); // Default to Ayush if not available
+  const [firstName, setFirstName] = useState("User"); // Default to Ayush if not available
   const navigate = useNavigate();
 
   useEffect(() => {

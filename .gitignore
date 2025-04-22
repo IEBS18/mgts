@@ -28,7 +28,6 @@ backend/*/__pycache__/*
 backend/__pycache__/*
 backend/models/__pycache__/*
 backend/PricePrediction/__pycache__/*
-backend/Auth/users.json
 */nltk_data
 backend/Chatbot/chatbot.pkl
 ensure.txt

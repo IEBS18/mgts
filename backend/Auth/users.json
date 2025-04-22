@@ -26,5 +26,12 @@
         "last_name": "d",
         "email": "nirmiti.dna@gmail.com",
         "password_hash": "pbkdf2:sha256:1000000$lIXNN7qcaNKAlubJ$96ce0083d49534086d6f271d692347e2fe07e890e24eac6e5ac4f9453a1bba07"
+    },
+    {
+        "id": 5,
+        "first_name": "rk",
+        "last_name": "bausch",
+        "email": "rk@bauschhealth.com",
+        "password_hash": "pbkdf2:sha256:1000000$GvTdNhjcmFq2o21f$1cc929e9c2270510df01671f798f19f15943cf8f205443eff994354285323cb3"
     }
 ]

@@ -41,6 +41,7 @@ function Login({ onSwitchToSignup }) {
                 localStorage.setItem('user_pharmax_id', data.user_pharmax_id);
                 // console.log(localStorage.getItem('user_id'));
                 localStorage.setItem('first_name_pharmax_user', data.first_name);
+                // navigate('/bioformulate');
                 navigate('/dashboard');
                 // Redirect or handle successful login
             } else {

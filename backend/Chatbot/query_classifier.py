@@ -5,7 +5,7 @@ import pickle
 from elasticsearch import Elasticsearch
 from openai import AzureOpenAI
 from transformers import AutoTokenizer
-from ..DiseaseOverview.disease_overview_util import get_elasticsearch_results
+from DiseaseOverview.disease_overview_util import get_elasticsearch_results
 from dotenv import load_dotenv
 load_dotenv()
 

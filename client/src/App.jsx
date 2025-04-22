@@ -2,36 +2,81 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "@/pages/Layout";
-import Dashboard from "@/pages/Dashboard";
-import DiseaseSearchPage from "./components/DiseaseOverview/DiseaseSearchPage";
-import DrugResultsPage from "./components/DiseaseOverview/DrugResultPage";
-import SymptomResultsPage from "./components/DiseaseOverview/SymptomsResultPage";
-import DiseaseAnalysis from "./components/CompetitiveAnalysis/CompetitiveLandscapeSearchPage";
+// import Dashboard from "@/pages/Dashboard";
+// import DiseaseSearchPage from "./components/DiseaseOverview/DiseaseSearchPage";
+// import DrugResultsPage from "./components/DiseaseOverview/DrugResultPage";
+// import SymptomResultsPage from "./components/DiseaseOverview/SymptomsResultPage";
+// import DiseaseAnalysis from "./components/CompetitiveAnalysis/CompetitiveLandscapeSearchPage";
 import PrivateRoute from "./components/Authenticate/PrivateRoute";
 import Authenticate from "./components/Authenticate/Authenticate";
-import { DrugComparisonTable } from "./components/DiseaseOverview/DrugComparisonTable";
-import CompetitorAnalysis from "./components/PricePrediction/PricePrediction";
-import CompetitiveLandscapeDrugPage from "./components/CompetitiveAnalysis/CompetitiveLandscapeDrugPage";
-import { FormularyDashboard } from "./components/Formulary/FormularyDashboard";
-import TPPDrugPage from "./components/DiseaseOverview/TPPDrugPage";
-import { TPPComparison } from "./components/DiseaseOverview/TPPComparison";
-import { ComparePlans } from "./components/Formulary/ComparePlans";
-import RNDFormulation from "./components/Rnd/RNDFormulation";
+// import { DrugComparisonTable } from "./components/DiseaseOverview/DrugComparisonTable";
+// import CompetitorAnalysis from "./components/PricePrediction/PricePrediction";
+// import CompetitiveLandscapeDrugPage from "./components/CompetitiveAnalysis/CompetitiveLandscapeDrugPage";
+// import { FormularyDashboard } from "./components/Formulary/FormularyDashboard";
+// import TPPDrugPage from "./components/DiseaseOverview/TPPDrugPage";
+// import { TPPComparison } from "./components/DiseaseOverview/TPPComparison";
+// import { ComparePlans } from "./components/Formulary/ComparePlans";
+// import RNDFormulation from "./components/Rnd/RNDFormulation";
 import DrugFormulation from './components/Rnd/DrugFormulation'
-import FormularyDrugPage from "./components/Formulary/FormularyDrugPage";
-import { FormularyComparison } from "./components/Formulary/FormularyComparison";
+// import FormularyDrugPage from "./components/Formulary/FormularyDrugPage";
+// import { FormularyComparison } from "./components/Formulary/FormularyComparison";
+// import SettingsPage from "./components/Settings/Settings";
+// import HomePage from "./pages/HomePage";
+import BioFormulate from "./pages/BioFormulate";
+import BioFormulateLayout from "./pages/BioFormulateLayout";
+import BenchmarkAnalysisPage from "./components/Rnd/BenchmarkAnalysis";
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Authenticate />} />
-        <Route
+        {/* <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Layout type="dashboard">
+                <HomePage />
+              </Layout>
+            </PrivateRoute>
+          }
+        /> */}
+        {/* <Route
           path="/dashboard"
           element={
             <PrivateRoute>
               <Layout type="dashboard">
                 <Dashboard />
+              </Layout>
+            </PrivateRoute>
+          }
+        /> */}
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <BioFormulateLayout type="dashboard">
+                <BioFormulate />
+              </BioFormulateLayout>
+            </PrivateRoute>
+          }
+        />
+        {/* <Route
+          path="/settings/:tab"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <SettingsPage />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <SettingsPage />
               </Layout>
             </PrivateRoute>
           }
@@ -135,7 +180,7 @@ function App() {
               </Layout>
             </PrivateRoute>
           }
-        />
+        /> 
         <Route
           path="/tpp-by-drug"
           element={
@@ -176,12 +221,33 @@ function App() {
             </PrivateRoute>
           }
         />
+        */}
         <Route
+          path="/rnd-formulation-drugs"
+          element={
+            <PrivateRoute>
+              <BioFormulateLayout>
+                <DrugFormulation />
+              </BioFormulateLayout>
+            </PrivateRoute>
+          }
+        />
+        {/* <Route
           path="/rnd-formulation-drugs"
           element={
             <PrivateRoute>
               <Layout>
                 <DrugFormulation />
+              </Layout>
+            </PrivateRoute>
+          }
+        /> */}
+        <Route
+          path="/benchmark-analysis"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <BenchmarkAnalysisPage />
               </Layout>
             </PrivateRoute>
           }
