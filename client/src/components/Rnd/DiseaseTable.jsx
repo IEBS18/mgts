@@ -1,446 +1,16 @@
-// "use client";
-// import React from "react";
-// import { Loader2 } from "lucide-react";
-// import ReactSelect from "react-select";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import TruncatedMarkdown from "./TruncatedMarkdown";
-
-// const capitalizeName = (name) => {
-//   if (typeof name !== "string") {
-//     return name; // or return an empty string, or some other fallback behavior
-//   }
-
-//   return name
-//     .split(" ")
-//     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-//     .join(" ");
-// };
-
-// /* ------------------------------------------------------------------ */
-// /*  Dropdown                                                          */
-// /* ------------------------------------------------------------------ */
-// const DiseaseFilterDropdown = ({ diseases, selectedDisease, setSelectedDisease }) => {
-//   const diseaseOptions = [
-//     { value: "all", label: "All Diseases" },
-//     ...diseases
-//       .sort((a, b) => a.localeCompare(b))
-//       .map((d) => ({ value: d, label: capitalizeName(d) })),
-//   ];
-
-//   return (
-//     <ReactSelect
-//       value={diseaseOptions.find((o) => o.value === selectedDisease)}
-//       onChange={(o) => setSelectedDisease(o.value)}
-//       options={diseaseOptions}
-//       className="w-[480px] rounded-[12px] border-[#a6ce39] focus:ring-[#a6ce39] z-12"
-//       placeholder="Select disease"
-//       isSearchable
-//       styles={{
-//         menu: (p) => ({ ...p, zIndex: 20 }),
-//         control: (p, s) => ({
-//           ...p,
-//           borderColor: "#a6ce39",
-//           backgroundColor: "transparent",
-//           borderRadius: "16px",
-//           "&:hover": { borderColor: "#a6ce39" },
-//           boxShadow: s.isFocused ? "0 0 0 3px rgba(166,206,57,.2)" : "none",
-//         }),
-//         option: (p, s) => ({
-//           ...p,
-//           backgroundColor: s.isSelected
-//             ? "#a6ce39"
-//             : s.isFocused
-//             ? "#f1f8e9"
-//             : "transparent",
-//           color: s.isSelected ? "#fff" : "#000",
-//           "&:hover": { backgroundColor: "#a6ce39", color: "#fff" },
-//         }),
-//       }}
-//     />
-//   );
-// };
-
-// /* ------------------------------------------------------------------ */
-// /*  Cell renderer                                                      */
-// /* ------------------------------------------------------------------ */
-// const renderCellContent = (record, topic) => {
-//   const key = topic.toLowerCase();
-//   const content = record[key];
-//   if (!content) return null;
-
-//   // Handle highlighting of text surrounded by [[ ]]
-//   // if (typeof content === "string") {
-//   //   // Match text inside [[ ]] and wrap it in a span with background color
-//   //   const highlightedContent = content.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
-//   //     return `<span class="bg-yellow-100 px-1 py-0.5 rounded">${p1}</span>`; // Apply mild background
-//   //   });
-//   //   // If there is any highlighting, return the content as HTML
-//   //   if (highlightedContent !== content) {
-//   //     return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
-//   //   }
-//   // }
-
-//   // Handle comma‑separated list of URLs (PMC links or otherwise)
-//   if (typeof content === "string" && content.includes("http")) {
-//     const urls = content.split(",").map((u) => u.trim()).filter(Boolean);
-//     return urls.map((url, idx) => {
-//       const match = url.match(/PMC\d+/i); // extract PMC ID if present
-//       const label = match ? match[0] : url.replace(/^https?:\/\//, "");
-//       return (
-//         <React.Fragment key={idx}>
-//           <a
-//             href={url}
-//             target="_blank"
-//             rel="noopener noreferrer"
-//             className="text-blue-600 hover:underline"
-//           >
-//             {label}
-//           </a>
-//           {idx < urls.length - 1 && ", "}
-//         </React.Fragment>
-//       );
-//     });
-//   }
-
-//   // Multi‑line markdown → truncated preview
-//   // if (typeof content === "string" && content.includes("\n")) {
-//   //   return <TruncatedMarkdown content={content} />;
-//   // }
-//   if (typeof content === "string" && (content.includes("\n") || content.includes("<mark>"))) {
-//     return <TruncatedMarkdown content={content} />
-//   }
-
-//   return content;
-// };
-
-
-
-// /* ------------------------------------------------------------------ */
-// /*  Main table component                                               */
-// /* ------------------------------------------------------------------ */
-// export default function DiseaseTable({
-//   tableData,
-//   isLoading,
-//   sseError,
-//   orderedTabs,
-//   selectedDisease,
-//   setSelectedDisease,
-//   diseases,
-// }) {
-//   const filtered = selectedDisease === "all"
-//     ? tableData
-//     : tableData.filter((r) => r.disease === selectedDisease);
-
-//   return (
-//     <Card className="mb-8 shadow-md">
-//       <CardHeader className="pb-3 bg-[#f9faf5]">
-//         <div className="flex items-center justify-between">
-//           <CardTitle>Disease Data</CardTitle>
-//           <DiseaseFilterDropdown
-//             diseases={diseases}
-//             selectedDisease={selectedDisease}
-//             setSelectedDisease={setSelectedDisease}
-//           />
-//         </div>
-
-//         <div className="flex items-center gap-4 mt-2">
-//           {sseError && <p className="text-destructive text-sm">{sseError}</p>}
-//           {isLoading && (
-//             <div className="flex items-center gap-2 text-muted-foreground text-sm">
-//               <Loader2 className="animate-spin h-4 w-4" />
-//               <span>Loading data...</span>
-//             </div>
-//           )}
-//         </div>
-//       </CardHeader>
-
-//       <CardContent className="p-0">
-//         <div className="border-t">
-//           <div className="h-[500px] overflow-x-auto">
-//             <table className="w-full min-w-max border-collapse">
-//               <thead>
-//                 <tr className="bg-[#f5f8e8] sticky top-0 z-10">
-//                   {orderedTabs.map((t) => (
-//                     <th
-//                       key={t}
-//                       className="p-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap text-gray-700"
-//                       style={{ minWidth: "180px" }}
-//                     >
-//                       {t.replace(/_/g, " ")}
-//                     </th>
-//                   ))}
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 {filtered.length ? (
-//                   filtered.map((rec, rIdx) => (
-//                     <tr
-//                       key={rIdx}
-//                       className="border-b border-border hover:bg-[#f9faf5] transition-colors"
-//                     >
-//                       {orderedTabs.map((topic) => (
-//                         <td
-//                           key={topic}
-//                           className="p-4 align-top w-[400px] max-w-[400px] text-sm"
-//                         >
-//                           {topic === "Disease"
-//                             ? capitalizeName(renderCellContent(rec, topic))
-//                             : renderCellContent(rec, topic)}
-//                         </td>
-//                       ))}
-//                     </tr>
-//                   ))
-//                 ) : (
-//                   <tr>
-//                     <td
-//                       colSpan={orderedTabs.length}
-//                       className="p-6 text-center text-muted-foreground"
-//                     >
-//                       {isLoading
-//                         ? "Loading data..."
-//                         : "No data available for the selected filters."}
-//                     </td>
-//                   </tr>
-//                 )}
-//               </tbody>
-//             </table>
-//           </div>
-//         </div>
-//       </CardContent>
-//     </Card>
-//   );
-// }
-
-"use client"
-import React from "react"
-import { Loader2, ChevronDown } from "lucide-react"
-import ReactSelect from "react-select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import TruncatedMarkdown from "./TruncatedMarkdown"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-
-const capitalizeName = (name) => {
-  if (typeof name !== "string") {
-    return name // or return an empty string, or some other fallback behavior
-  }
-
-  return name
-    .split(" ")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(" ")
-}
-
-/* ------------------------------------------------------------------ */
-/*  Dropdown                                                          */
-/* ------------------------------------------------------------------ */
-const DiseaseFilterDropdown = ({ diseases, selectedDisease, setSelectedDisease }) => {
-  const diseaseOptions = [
-    { value: "all", label: "All Diseases" },
-    ...diseases.sort((a, b) => a.localeCompare(b)).map((d) => ({ value: d, label: capitalizeName(d) })),
-  ]
-
-  return (
-    <ReactSelect
-      value={diseaseOptions.find((o) => o.value === selectedDisease)}
-      onChange={(o) => setSelectedDisease(o.value)}
-      options={diseaseOptions}
-      className="w-[280px] md:w-[480px] rounded-[12px] border-[#a6ce39] focus:ring-[#a6ce39] z-12"
-      placeholder="Select disease"
-      isSearchable
-      styles={{
-        menu: (p) => ({ ...p, zIndex: 20 }),
-        control: (p, s) => ({
-          ...p,
-          borderColor: "#a6ce39",
-          backgroundColor: "transparent",
-          borderRadius: "16px",
-          "&:hover": { borderColor: "#a6ce39" },
-          boxShadow: s.isFocused ? "0 0 0 3px rgba(166,206,57,.2)" : "none",
-        }),
-        option: (p, s) => ({
-          ...p,
-          backgroundColor: s.isSelected ? "#a6ce39" : s.isFocused ? "#f1f8e9" : "transparent",
-          color: s.isSelected ? "#fff" : "#000",
-          "&:hover": { backgroundColor: "#a6ce39", color: "#fff" },
-        }),
-      }}
-    />
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/*  Column Visibility Dropdown                                        */
-/* ------------------------------------------------------------------ */
-const ColumnVisibilityDropdown = ({ orderedTabs, visibleColumns, toggleColumnVisibility }) => {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="ml-2 border-[#a6ce39] text-[#6b8e23] rounded-[12px] focus:outline-none">
-          Columns <ChevronDown className="ml-2 h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[200px] bg-white">
-        {orderedTabs.map((column) => (
-          <DropdownMenuCheckboxItem
-            key={column}
-            checked={visibleColumns.includes(column)}
-            onCheckedChange={() => toggleColumnVisibility(column)}
-            disabled={visibleColumns.length === 1 && visibleColumns.includes(column)}
-          >
-            {column.replace(/_/g, " ")}
-          </DropdownMenuCheckboxItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/*  Cell renderer                                                      */
-/* ------------------------------------------------------------------ */
-const renderCellContent = (record, topic) => {
-  const key = topic.toLowerCase()
-  const content = record[key]
-  if (!content) return null
-
-  // Handle comma‑separated list of URLs (PMC links or otherwise)
-  if (typeof content === "string" && content.includes("http")) {
-    const urls = content
-      .split(",")
-      .map((u) => u.trim())
-      .filter(Boolean)
-    return urls.map((url, idx) => {
-      const match = url.match(/PMC\d+/i) // extract PMC ID if present
-      const label = match ? match[0] : url.replace(/^https?:\/\//, "")
-      return (
-        <React.Fragment key={idx}>
-          <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-            {label}
-          </a>
-          {idx < urls.length - 1 && ", "}
-        </React.Fragment>
-      )
-    })
-  }
-
-  // Multi‑line markdown → truncated preview
-  if (typeof content === "string" && (content.includes("\n") || content.includes("<mark>"))) {
-    return <TruncatedMarkdown content={content} />
-  }
-
-  return content
-}
-
-/* ------------------------------------------------------------------ */
-/*  Main table component                                               */
-/* ------------------------------------------------------------------ */
-export default function DiseaseTable({
-  tableData,
-  isLoading,
-  sseError,
-  orderedTabs,
-  visibleColumns,
-  toggleColumnVisibility,
-  selectedDisease,
-  setSelectedDisease,
-  diseases,
-}) {
-  const filtered = selectedDisease === "all" ? tableData : tableData.filter((r) => r.disease === selectedDisease)
-
-  // Filter orderedTabs by visibleColumns to maintain the original column order
-  const orderedVisibleColumns = orderedTabs.filter((column) => visibleColumns.includes(column))
-
-  return (
-    <Card className="mb-8 shadow-md">
-      <CardHeader className="pb-3 bg-[#f9faf5]">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <CardTitle>Disease Data</CardTitle>
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
-            <DiseaseFilterDropdown
-              diseases={diseases}
-              selectedDisease={selectedDisease}
-              setSelectedDisease={setSelectedDisease}
-            />
-            <ColumnVisibilityDropdown
-              orderedTabs={orderedTabs}
-              visibleColumns={visibleColumns}
-              toggleColumnVisibility={toggleColumnVisibility}
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 mt-2">
-          {sseError && <p className="text-destructive text-sm">{sseError}</p>}
-          {isLoading && (
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <Loader2 className="animate-spin h-4 w-4" />
-              <span>Loading data...</span>
-            </div>
-          )}
-        </div>
-      </CardHeader>
-
-      <CardContent className="p-0">
-        <div className="border-t">
-          <div className="h-[500px] overflow-x-auto">
-            <table className="w-full min-w-max border-collapse">
-              <thead>
-                <tr className="bg-[#f5f8e8] sticky top-0 z-10">
-                  {orderedVisibleColumns.map((t) => (
-                    <th
-                      key={t}
-                      className="p-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap text-gray-700"
-                      style={{ minWidth: "180px" }}
-                    >
-                      {t.replace(/_/g, " ")}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length ? (
-                  filtered.map((rec, rIdx) => (
-                    <tr key={rIdx} className="border-b border-border hover:bg-[#f9faf5] transition-colors">
-                      {orderedVisibleColumns.map((topic) => (
-                        <td key={topic} className="p-4 align-top w-[400px] max-w-[400px] text-sm">
-                          {topic === "Disease"
-                            ? capitalizeName(renderCellContent(rec, topic))
-                            : renderCellContent(rec, topic)}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={orderedVisibleColumns.length} className="p-6 text-center text-muted-foreground">
-                      {isLoading ? "Loading data..." : "No data available for the selected filters."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 // "use client"
-// import React, { useState } from "react"
+// import React from "react"
 // import { Loader2, ChevronDown } from "lucide-react"
 // import ReactSelect from "react-select"
 // import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 // import TruncatedMarkdown from "./TruncatedMarkdown"
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuCheckboxItem,
+//   DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu"
 // import { Button } from "@/components/ui/button"
-// import { Checkbox } from "@/components/ui/checkbox"
-// import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
 // const capitalizeName = (name) => {
 //   if (typeof name !== "string") {
@@ -492,127 +62,29 @@ export default function DiseaseTable({
 // }
 
 // /* ------------------------------------------------------------------ */
-// /*  Column Visibility Dialog                                          */
-// /* ------------------------------------------------------------------ */
-// const ColumnVisibilityDialog = ({ orderedTabs, visibleColumns, toggleColumnVisibility, isOpen, onClose }) => {
-//   const [tempVisibleColumns, setTempVisibleColumns] = useState([...visibleColumns])
-
-//   // Reset temp state when dialog opens
-//   React.useEffect(() => {
-//     if (isOpen) {
-//       setTempVisibleColumns([...visibleColumns])
-//     }
-//   }, [isOpen, visibleColumns])
-
-//   const handleToggle = (column) => {
-//     if (tempVisibleColumns.includes(column)) {
-//       // Don't allow removing the last column
-//       if (tempVisibleColumns.length > 1) {
-//         setTempVisibleColumns(tempVisibleColumns.filter((col) => col !== column))
-//       }
-//     } else {
-//       setTempVisibleColumns([...tempVisibleColumns, column])
-//     }
-//   }
-
-//   const handleSelectAll = () => {
-//     setTempVisibleColumns([...orderedTabs])
-//   }
-
-//   const handleDeselectAll = () => {
-//     // Keep at least one column selected
-//     setTempVisibleColumns([orderedTabs[0]])
-//   }
-
-//   const handleApply = () => {
-//     // Instead of trying to toggle columns one by one, we'll directly set the visible columns
-//     // by comparing the current state with the temporary state
-
-//     // First, create a Set of the current visible columns for easy lookup
-//     const currentVisibleSet = new Set(visibleColumns)
-//     const tempVisibleSet = new Set(tempVisibleColumns)
-
-//     // Process all columns that need to be toggled
-//     orderedTabs.forEach((column) => {
-//       const isCurrentlyVisible = currentVisibleSet.has(column)
-//       const shouldBeVisible = tempVisibleSet.has(column)
-
-//       // Only toggle if there's a change in visibility
-//       if (isCurrentlyVisible !== shouldBeVisible) {
-//         toggleColumnVisibility(column)
-//       }
-//     })
-
-//     onClose()
-//   }
-
-//   return (
-//     <Dialog open={isOpen} onOpenChange={onClose}>
-//       <DialogContent className="sm:max-w-md">
-//         <DialogHeader>
-//           <DialogTitle>Column Visibility</DialogTitle>
-//         </DialogHeader>
-//         <div className="flex justify-between mb-4">
-//           <Button variant="outline" size="sm" onClick={handleSelectAll}>
-//             Select All
-//           </Button>
-//           <Button variant="outline" size="sm" onClick={handleDeselectAll}>
-//             Deselect All
-//           </Button>
-//         </div>
-//         <div className="grid grid-cols-1 gap-4 py-4">
-//           {orderedTabs.map((column) => (
-//             <div key={column} className="flex items-center space-x-2">
-//               <Checkbox
-//                 id={`column-${column}`}
-//                 checked={tempVisibleColumns.includes(column)}
-//                 onCheckedChange={() => handleToggle(column)}
-//                 disabled={tempVisibleColumns.length === 1 && tempVisibleColumns.includes(column)}
-//               />
-//               <label
-//                 htmlFor={`column-${column}`}
-//                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-//               >
-//                 {column.replace(/_/g, " ")}
-//               </label>
-//             </div>
-//           ))}
-//         </div>
-//         <DialogFooter>
-//           <Button variant="outline" onClick={onClose}>
-//             Cancel
-//           </Button>
-//           <Button onClick={handleApply}>Apply</Button>
-//         </DialogFooter>
-//       </DialogContent>
-//     </Dialog>
-//   )
-// }
-
-// /* ------------------------------------------------------------------ */
 // /*  Column Visibility Dropdown                                        */
 // /* ------------------------------------------------------------------ */
 // const ColumnVisibilityDropdown = ({ orderedTabs, visibleColumns, toggleColumnVisibility }) => {
-//   const [dialogOpen, setDialogOpen] = useState(false)
-
 //   return (
-//     <>
-//       <Button
-//         variant="outline"
-//         className="ml-2 border-[#a6ce39] text-[#6b8e23] rounded-[12px] focus:outline-none"
-//         onClick={() => setDialogOpen(true)}
-//       >
-//         Columns <ChevronDown className="ml-2 h-4 w-4" />
-//       </Button>
-
-//       <ColumnVisibilityDialog
-//         orderedTabs={orderedTabs}
-//         visibleColumns={visibleColumns}
-//         toggleColumnVisibility={toggleColumnVisibility}
-//         isOpen={dialogOpen}
-//         onClose={() => setDialogOpen(false)}
-//       />
-//     </>
+//     <DropdownMenu>
+//       <DropdownMenuTrigger asChild>
+//         <Button variant="outline" className="ml-2 border-[#a6ce39] text-[#6b8e23] rounded-[12px] focus:outline-none">
+//           Columns <ChevronDown className="ml-2 h-4 w-4" />
+//         </Button>
+//       </DropdownMenuTrigger>
+//       <DropdownMenuContent align="end" className="w-[200px] bg-white">
+//         {orderedTabs.map((column) => (
+//           <DropdownMenuCheckboxItem
+//             key={column}
+//             checked={visibleColumns.includes(column)}
+//             onCheckedChange={() => toggleColumnVisibility(column)}
+//             disabled={visibleColumns.length === 1 && visibleColumns.includes(column)}
+//           >
+//             {column.replace(/_/g, " ")}
+//           </DropdownMenuCheckboxItem>
+//         ))}
+//       </DropdownMenuContent>
+//     </DropdownMenu>
 //   )
 // }
 
@@ -668,6 +140,9 @@ export default function DiseaseTable({
 // }) {
 //   const filtered = selectedDisease === "all" ? tableData : tableData.filter((r) => r.disease === selectedDisease)
 
+//   // Filter orderedTabs by visibleColumns to maintain the original column order
+//   const orderedVisibleColumns = orderedTabs.filter((column) => visibleColumns.includes(column))
+
 //   return (
 //     <Card className="mb-8 shadow-md">
 //       <CardHeader className="pb-3 bg-[#f9faf5]">
@@ -704,39 +179,33 @@ export default function DiseaseTable({
 //             <table className="w-full min-w-max border-collapse">
 //               <thead>
 //                 <tr className="bg-[#f5f8e8] sticky top-0 z-10">
-//                   {/* Use orderedTabs to maintain column order, but filter by visibleColumns */}
-//                   {orderedTabs
-//                     .filter((tab) => visibleColumns.includes(tab))
-//                     .map((t) => (
-//                       <th
-//                         key={t}
-//                         className="p-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap text-gray-700"
-//                         style={{ minWidth: "180px" }}
-//                       >
-//                         {t.replace(/_/g, " ")}
-//                       </th>
-//                     ))}
+//                   {orderedVisibleColumns.map((t) => (
+//                     <th
+//                       key={t}
+//                       className="p-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap text-gray-700"
+//                       style={{ minWidth: "180px" }}
+//                     >
+//                       {t.replace(/_/g, " ")}
+//                     </th>
+//                   ))}
 //                 </tr>
 //               </thead>
 //               <tbody>
 //                 {filtered.length ? (
 //                   filtered.map((rec, rIdx) => (
 //                     <tr key={rIdx} className="border-b border-border hover:bg-[#f9faf5] transition-colors">
-//                       {/* Use orderedTabs to maintain column order, but filter by visibleColumns */}
-//                       {orderedTabs
-//                         .filter((tab) => visibleColumns.includes(tab))
-//                         .map((topic) => (
-//                           <td key={topic} className="p-4 align-top w-[400px] max-w-[400px] text-sm">
-//                             {topic === "Disease"
-//                               ? capitalizeName(renderCellContent(rec, topic))
-//                               : renderCellContent(rec, topic)}
-//                           </td>
-//                         ))}
+//                       {orderedVisibleColumns.map((topic) => (
+//                         <td key={topic} className="p-4 align-top w-[400px] max-w-[400px] text-sm">
+//                           {topic === "Disease"
+//                             ? capitalizeName(renderCellContent(rec, topic))
+//                             : renderCellContent(rec, topic)}
+//                         </td>
+//                       ))}
 //                     </tr>
 //                   ))
 //                 ) : (
 //                   <tr>
-//                     <td colSpan={visibleColumns.length} className="p-6 text-center text-muted-foreground">
+//                     <td colSpan={orderedVisibleColumns.length} className="p-6 text-center text-muted-foreground">
 //                       {isLoading ? "Loading data..." : "No data available for the selected filters."}
 //                     </td>
 //                   </tr>
@@ -749,3 +218,309 @@ export default function DiseaseTable({
 //     </Card>
 //   )
 // }
+
+
+
+
+"use client"
+import React, { useState } from "react"
+import { Loader2, ChevronDown } from "lucide-react"
+import ReactSelect from "react-select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import TruncatedMarkdown from "./TruncatedMarkdown"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+
+const capitalizeName = (name) => {
+  if (typeof name !== "string") {
+    return name // or return an empty string, or some other fallback behavior
+  }
+
+  return name
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Dropdown                                                          */
+/* ------------------------------------------------------------------ */
+const DiseaseFilterDropdown = ({ diseases, selectedDisease, setSelectedDisease }) => {
+  const diseaseOptions = [
+    { value: "all", label: "All Diseases" },
+    ...diseases.sort((a, b) => a.localeCompare(b)).map((d) => ({ value: d, label: capitalizeName(d) })),
+  ]
+
+  return (
+    <ReactSelect
+      value={diseaseOptions.find((o) => o.value === selectedDisease)}
+      onChange={(o) => setSelectedDisease(o.value)}
+      options={diseaseOptions}
+      className="w-[280px] md:w-[480px] rounded-[12px] border-[#a6ce39] focus:ring-[#a6ce39] z-12"
+      placeholder="Select disease"
+      isSearchable
+      styles={{
+        menu: (p) => ({ ...p, zIndex: 20 }),
+        control: (p, s) => ({
+          ...p,
+          borderColor: "#a6ce39",
+          backgroundColor: "transparent",
+          borderRadius: "16px",
+          "&:hover": { borderColor: "#a6ce39" },
+          boxShadow: s.isFocused ? "0 0 0 3px rgba(166,206,57,.2)" : "none",
+        }),
+        option: (p, s) => ({
+          ...p,
+          backgroundColor: s.isSelected ? "#a6ce39" : s.isFocused ? "#f1f8e9" : "transparent",
+          color: s.isSelected ? "#fff" : "#000",
+          "&:hover": { backgroundColor: "#a6ce39", color: "#fff" },
+        }),
+      }}
+    />
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Column Visibility Dialog                                          */
+/* ------------------------------------------------------------------ */
+const ColumnVisibilityDialog = ({ orderedTabs, visibleColumns, toggleColumnVisibility, isOpen, onClose }) => {
+  const [tempVisibleColumns, setTempVisibleColumns] = useState([...visibleColumns])
+
+  // Reset temp state when dialog opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setTempVisibleColumns([...visibleColumns])
+    }
+  }, [isOpen, visibleColumns])
+
+  const handleToggle = (column) => {
+    if (tempVisibleColumns.includes(column)) {
+      // Don't allow removing the last column
+      if (tempVisibleColumns.length > 1) {
+        setTempVisibleColumns(tempVisibleColumns.filter((col) => col !== column))
+      }
+    } else {
+      setTempVisibleColumns([...tempVisibleColumns, column])
+    }
+  }
+
+  const handleSelectAll = () => {
+    setTempVisibleColumns([...orderedTabs])
+  }
+
+  const handleDeselectAll = () => {
+    // Keep at least one column selected
+    setTempVisibleColumns([orderedTabs[0]])
+  }
+
+  const handleApply = () => {
+    // Instead of toggling columns one by one, directly set the visible columns
+    // to match the temporary state
+    toggleColumnVisibility(tempVisibleColumns)
+    onClose()
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Column Visibility</DialogTitle>
+        </DialogHeader>
+        <div className="flex justify-between mb-4">
+          <Button variant="outline" size="sm" className='rounded-[12px]' onClick={handleSelectAll}>
+            Select All
+          </Button>
+          <Button variant="outline" size="sm" className='rounded-[12px]' onClick={handleDeselectAll}>
+            Deselect All
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 gap-4 py-4">
+          {orderedTabs.map((column) => (
+            <div key={column} className="flex items-center space-x-2">
+              <Checkbox
+                id={`column-${column}`}
+                checked={tempVisibleColumns.includes(column)}
+                onCheckedChange={() => handleToggle(column)}
+                disabled={tempVisibleColumns.length === 1 && tempVisibleColumns.includes(column)}
+              />
+              <label
+                htmlFor={`column-${column}`}
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {column.replace(/_/g, " ")}
+              </label>
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" className='rounded-[12px]' onClick={onClose}>
+            Cancel
+          </Button>
+          <Button className='rounded-[12px]' onClick={handleApply}>Apply</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Column Visibility Dropdown                                        */
+/* ------------------------------------------------------------------ */
+const ColumnVisibilityDropdown = ({ orderedTabs, visibleColumns, toggleColumnVisibility }) => {
+  const [dialogOpen, setDialogOpen] = useState(false)
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        className="ml-2 border-[#a6ce39] text-[#6b8e23] rounded-[12px] focus:outline-none"
+        onClick={() => setDialogOpen(true)}
+      >
+        Columns <ChevronDown className="ml-2 h-4 w-4" />
+      </Button>
+
+      <ColumnVisibilityDialog
+        orderedTabs={orderedTabs}
+        visibleColumns={visibleColumns}
+        toggleColumnVisibility={toggleColumnVisibility}
+        isOpen={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+      />
+    </>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Cell renderer                                                      */
+/* ------------------------------------------------------------------ */
+const renderCellContent = (record, topic) => {
+  const key = topic.toLowerCase()
+  const content = record[key]
+  if (!content) return null
+
+  // Handle comma‑separated list of URLs (PMC links or otherwise)
+  if (typeof content === "string" && content.includes("http")) {
+    const urls = content
+      .split(",")
+      .map((u) => u.trim())
+      .filter(Boolean)
+    return urls.map((url, idx) => {
+      const match = url.match(/PMC\d+/i) // extract PMC ID if present
+      const label = match ? match[0] : url.replace(/^https?:\/\//, "")
+      return (
+        <React.Fragment key={idx}>
+          <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+            {label}
+          </a>
+          {idx < urls.length - 1 && ", "}
+        </React.Fragment>
+      )
+    })
+  }
+
+  // Multi‑line markdown → truncated preview
+  if (typeof content === "string" && (content.includes("\n") || content.includes("<mark>"))) {
+    return <TruncatedMarkdown content={content} />
+  }
+
+  return content
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main table component                                               */
+/* ------------------------------------------------------------------ */
+export default function DiseaseTable({
+  tableData,
+  isLoading,
+  sseError,
+  orderedTabs,
+  visibleColumns,
+  toggleColumnVisibility,
+  selectedDisease,
+  setSelectedDisease,
+  diseases,
+}) {
+  const filtered = selectedDisease === "all" ? tableData : tableData.filter((r) => r.disease === selectedDisease)
+
+  return (
+    <Card className="mb-8 shadow-md">
+      <CardHeader className="pb-3 bg-[#f9faf5]">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <CardTitle>Disease Data</CardTitle>
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
+            <DiseaseFilterDropdown
+              diseases={diseases}
+              selectedDisease={selectedDisease}
+              setSelectedDisease={setSelectedDisease}
+            />
+            <ColumnVisibilityDropdown
+              orderedTabs={orderedTabs}
+              visibleColumns={visibleColumns}
+              toggleColumnVisibility={toggleColumnVisibility}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 mt-2">
+          {sseError && <p className="text-destructive text-sm">{sseError}</p>}
+          {isLoading && (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+              <Loader2 className="animate-spin h-4 w-4" />
+              <span>Loading data...</span>
+            </div>
+          )}
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-0">
+        <div className="border-t">
+          <div className="h-[500px] overflow-x-auto">
+            <table className="w-full min-w-max border-collapse">
+              <thead>
+                <tr className="bg-[#f5f8e8] sticky top-0 z-10">
+                  {/* Use orderedTabs to maintain column order, but filter by visibleColumns */}
+                  {orderedTabs
+                    .filter((tab) => visibleColumns.includes(tab))
+                    .map((t) => (
+                      <th
+                        key={t}
+                        className="p-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap text-gray-700"
+                        style={{ minWidth: "200px" }}
+                      >
+                        {t.replace(/_/g, " ")}
+                      </th>
+                    ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length ? (
+                  filtered.map((rec, rIdx) => (
+                    <tr key={rIdx} className="border-b border-border hover:bg-[#f9faf5] transition-colors">
+                      {/* Use orderedTabs to maintain column order, but filter by visibleColumns */}
+                      {orderedTabs
+                        .filter((tab) => visibleColumns.includes(tab))
+                        .map((topic) => (
+                          <td key={topic} className="p-4 align-top w-[400px] max-w-[400px] text-sm">
+                            {topic === "Disease"
+                              ? capitalizeName(renderCellContent(rec, topic))
+                              : renderCellContent(rec, topic)}
+                          </td>
+                        ))}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={visibleColumns.length} className="p-6 text-center text-muted-foreground">
+                      {isLoading ? "Loading data..." : "No data available for the selected filters."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}

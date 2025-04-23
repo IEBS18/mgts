@@ -71,14 +71,15 @@ def get_processed_results():
     
 ## SEARCH BY DRUG RND Formulation    
 try:
-    EXCEL_FILE_PATH = "./gut_microbiome_documents_output_file.xlsx"
+    EXCEL_FILE_PATH = "./rifa_scored.xlsx"
+    # EXCEL_FILE_PATH = "./gut_microbiome_documents_output_file.xlsx"
 except:
-    EXCEL_FILE_PATH = "backend/gut_microbiome_documents_output_file.xlsx"
-# EXCEL_FILE_PATH = r"gutmicrobiome​_scored_disease_output.xlsx"
+    EXCEL_FILE_PATH = "backend/rifa_scored.xlsx"
+    # EXCEL_FILE_PATH = "backend/gut_microbiome_documents_output_file.xlsx"
+
 print(EXCEL_FILE_PATH)
 # Default Weights
 
-# EXCEL_FILE_PATH = r"gut_microbiome_documents_output_file.xlsx"
 
 # Default Weights
 default_weights = {

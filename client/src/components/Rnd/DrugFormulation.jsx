@@ -122,16 +122,31 @@ const fetchTableData = async (requestedFields, disease = "all") => {
   }
 
 
-  const toggleColumnVisibility = (column) => {
-    if (visibleColumns.includes(column)) {
-      // Don't allow removing the last column
-      if (visibleColumns.length > 1) {
-        setVisibleColumns(visibleColumns.filter((col) => col !== column))
-      }
+  // const toggleColumnVisibility = (column) => {
+  //   if (visibleColumns.includes(column)) {
+  //     // Don't allow removing the last column
+  //     if (visibleColumns.length > 1) {
+  //       setVisibleColumns(visibleColumns.filter((col) => col !== column))
+  //     }
+  //   } else {
+  //     setVisibleColumns([...visibleColumns, column])
+  //   }
+  // }
+
+  const toggleColumnVisibility = (columnOrColumns) => {
+    if (Array.isArray(columnOrColumns)) {
+      // If an array is passed, directly set the visible columns
+      setVisibleColumns(columnOrColumns);
     } else {
-      setVisibleColumns([...visibleColumns, column])
+      // Maintain backward compatibility for toggling a single column
+      const column = columnOrColumns;
+      setVisibleColumns(prev => 
+        prev.includes(column) 
+          ? prev.filter(col => col !== column) 
+          : [...prev, column]
+      );
     }
-  }
+  };
 
   return (
     <div className="p-6 bg-background min-h-screen">
@@ -139,8 +154,10 @@ const fetchTableData = async (requestedFields, disease = "all") => {
 
       <div className="max-w-[1400px] mx-auto">
         <header className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Drug Formulation Results</h1>
-          <p className="text-muted-foreground mt-1">Analysis and benchmarking of drug formulations</p>
+          <h1 className="text-3xl font-bold text-foreground">Rifaximin Formulation Results</h1>
+          {/* <h1 className="text-3xl font-bold text-foreground">Drug Formulation Results</h1> */}
+          <p className="text-muted-foreground mt-1">Analysis and benchmarking of rifaximin formulations</p>
+          {/* <p className="text-muted-foreground mt-1">Analysis and benchmarking of drug formulations</p> */}
         </header>
 
         {/* Analytics Dashboard Section */}
