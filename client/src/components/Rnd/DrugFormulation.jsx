@@ -6,6 +6,7 @@ import { ToastContainer, toast } from "react-toastify"
 import RadialChart from "./RadialChart"
 import BenchmarkTableSummary from "./BenchmarkSummary"
 import DiseaseTable from "./DiseaseTable"
+import "react-toastify/dist/ReactToastify.css"
 import './custom.css' // Import your custom CSS file
 
 export default function DrugFormulation() {

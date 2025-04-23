@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-
+import "react-toastify/dist/ReactToastify.css";
 // UI Components
 import { Button } from "@/components/ui/button";
 import {

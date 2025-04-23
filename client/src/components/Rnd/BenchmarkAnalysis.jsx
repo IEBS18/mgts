@@ -437,6 +437,7 @@ import { LabelList, RadialBar, RadialBarChart, PolarAngleAxis } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import "./custom.css"
+import "react-toastify/dist/ReactToastify.css"
 
 export default function BenchmarkAnalysisPage() {
   const navigate = useNavigate()

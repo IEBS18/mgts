@@ -483,6 +483,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Progress } from "@/components/ui/progress"
 import { Slider } from "@/components/ui/slider"
+import "react-toastify/dist/ReactToastify.css"
 
 function capitalizeName(name) {
   return name
@@ -629,7 +630,7 @@ export default function BenchmarkTable({ onWeightsUpdate }) {
       const bench = await benchRes.json()
       setBenchmarkData(bench.benchmark_table)
       if (onWeightsUpdate && pie.pie_chart_data) onWeightsUpdate(weights, pie.pie_chart_data)
-      // toast.success("Scores updated successfully")
+      toast.success("Scores updated successfully")
       setActiveTab("dashboard")
     } catch (e) {
       console.error(e)
