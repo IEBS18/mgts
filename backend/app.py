@@ -1594,7 +1594,7 @@ import base64
 import pandas as pd
 from RnD.benchmark import benchmark_score_llama, run_benchmark_from_excel, get_user_weights
 
-EXCEL_FILE_PATH = r"gut_microbiome_documents_output_file.xlsx"
+EXCEL_FILE_PATH = r"rifa_scored.xlsx"
 
 # Default Weights
 default_weights = {
