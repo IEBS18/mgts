@@ -4,7 +4,21 @@
         "first_name": "Ayush",
         "last_name": "abad",
         "email": "ayush.abad@iebrain.com",
-        "password_hash": "pbkdf2:sha256:1000000$j3kk1amAipTX4F5a$0c278fa6283b5a3561beda7184a0c154caa813b6eb4c5f47784f1a400efe1802"
+        "password_hash": "pbkdf2:sha256:1000000$j3kk1amAipTX4F5a$0c278fa6283b5a3561beda7184a0c154caa813b6eb4c5f47784f1a400efe1802",
+        "logins": [
+            {
+                "login_time": "2025-04-24T16:57:50.378829",
+                "ip_address": "127.0.0.1",
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+                "session_id": "953599470ef9eca4ce6dbf0e4a1a34b9"
+            }
+        ],
+        "last_login": {
+            "login_time": "2025-04-24T16:57:50.378829",
+            "ip_address": "127.0.0.1",
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+            "session_id": "953599470ef9eca4ce6dbf0e4a1a34b9"
+        }
     },
     {
         "id": 2,

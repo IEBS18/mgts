@@ -71,10 +71,10 @@ def get_processed_results():
     
 ## SEARCH BY DRUG RND Formulation    
 try:
-    EXCEL_FILE_PATH = "./rifaximin_not_highlight_score_wo_safety.xlsx"
+    EXCEL_FILE_PATH = "./rifaximin_highlight(BI)_score.xlsx"
     # EXCEL_FILE_PATH = "./gut_microbiome_documents_output_file.xlsx"
 except:
-    EXCEL_FILE_PATH = "backend/rifaximin_not_highlight_score_wo_safety.xlsx"
+    EXCEL_FILE_PATH = "backend/rifaximin_highlight(BI)_score.xlsx"
     # EXCEL_FILE_PATH = "backend/gut_microbiome_documents_output_file.xlsx"
 
 print(EXCEL_FILE_PATH)

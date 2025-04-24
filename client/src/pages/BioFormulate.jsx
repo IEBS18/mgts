@@ -727,7 +727,7 @@ export default function BioFormulate() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 mt-8">
+          <div className="grid md:grid-cols-2 gap-8 mt-8 mx-20">
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
               <div className="h-12 w-12 rounded-lg bg-[#6b8e23]/10 flex items-center justify-center mb-4">
                 <Database className="h-6 w-6 text-[#6b8e23]" />
