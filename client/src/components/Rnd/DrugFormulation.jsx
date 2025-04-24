@@ -123,17 +123,6 @@ const fetchTableData = async (requestedFields, disease = "all") => {
   }
 
 
-  // const toggleColumnVisibility = (column) => {
-  //   if (visibleColumns.includes(column)) {
-  //     // Don't allow removing the last column
-  //     if (visibleColumns.length > 1) {
-  //       setVisibleColumns(visibleColumns.filter((col) => col !== column))
-  //     }
-  //   } else {
-  //     setVisibleColumns([...visibleColumns, column])
-  //   }
-  // }
-
   const toggleColumnVisibility = (columnOrColumns) => {
     if (Array.isArray(columnOrColumns)) {
       // If an array is passed, directly set the visible columns
