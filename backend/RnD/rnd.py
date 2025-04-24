@@ -71,10 +71,10 @@ def get_processed_results():
     
 ## SEARCH BY DRUG RND Formulation    
 try:
-    EXCEL_FILE_PATH = "./rifaximin_highlight.xlsx"
+    EXCEL_FILE_PATH = "./rifaximin_not_highlight_score_wo_safety.xlsx"
     # EXCEL_FILE_PATH = "./gut_microbiome_documents_output_file.xlsx"
 except:
-    EXCEL_FILE_PATH = "backend/rifaximin_highlight.xlsx"
+    EXCEL_FILE_PATH = "backend/rifaximin_not_highlight_score_wo_safety.xlsx"
     # EXCEL_FILE_PATH = "backend/gut_microbiome_documents_output_file.xlsx"
 
 print(EXCEL_FILE_PATH)
@@ -87,8 +87,7 @@ default_weights = {
     "Gut_Microbiome_Association": 0.15,
     "Rifaximin_Treatment": 0.20,
     "Prevalence": 0.20,
-    "Bausch_Presence": 0.15,
-    "Safety_Efficacy": 0.10
+    "Bausch_Presence": 0.15
 }
 
 @rnd_blueprint.route('/api/rnd-formulation-drug', methods=['GET'])
@@ -146,8 +145,7 @@ current_weights = {
     "Gut_Microbiome_Association": 0.15,
     "Rifaximin_Treatment": 0.20,
     "Prevalence": 0.20,
-    "Bausch_Presence": 0.15,
-    "Safety_Efficacy": 0.10
+    "Bausch_Presence": 0.15
 }
 
 # Route to handle the benchmark table (Excel-based or recalculated if weights are updated)
@@ -166,11 +164,11 @@ def get_benchmark_table():
             data = request.get_json()
             updated_weights = {
                 "No_of_Patient_Treated": data['weights'].get('enrollment', 0.2),
-                "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.15),
-                "Rifaximin_Treatment": data['weights'].get('justification', 0.2),
-                "Prevalence": data['weights'].get('prevalence', 0.2),
-                "Bausch_Presence": data['weights'].get('bausch_presence', 0.15),
-                "Safety_Efficacy": data['weights'].get('safety_efficacy', 0.1)
+                "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.175),
+                "Rifaximin_Treatment": data['weights'].get('justification', 0.25),
+                "Prevalence": data['weights'].get('prevalence', 0.175),
+                "Bausch_Presence": data['weights'].get('bausch_presence', 0.10)
+
             }
 
             benchmark_scores = []
@@ -301,11 +299,11 @@ def get_pie_chart():
             data = request.get_json()
             updated_weights = {
                 "No_of_Patient_Treated": data['weights'].get('enrollment', 0.2),
-                "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.15),
-                "Rifaximin_Treatment": data['weights'].get('justification', 0.2),
-                "Prevalence": data['weights'].get('prevalence', 0.2),
-                "Bausch_Presence": data['weights'].get('bausch_presence', 0.15),
-                "Safety_Efficacy": data['weights'].get('safety_efficacy', 0.1)
+                "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.175),
+                "Rifaximin_Treatment": data['weights'].get('justification', 0.25),
+                "Prevalence": data['weights'].get('prevalence', 0.175),
+                "Bausch_Presence": data['weights'].get('bausch_presence', 0.10)
+
             }
             benchmark_scores = []
 
