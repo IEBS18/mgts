@@ -808,8 +808,7 @@ export default function BioFormulate() {
               <h3 className="text-xl font-bold text-gray-900 mb-3">Clinical Strategy Teams</h3>
               <h2 className="text-[16px] font-bold text-gray-900 mb-3">Discover repurposing paths backed by biology</h2>
               <p className="text-gray-700">
-                Use BioFormulate to explore new therapeutic applications for existing drugs like Rifaximin—grounded in mechanistic insights, disease pathways, and
-                reference-backed associations, not just symptom overlaps.
+              Use BioFormulate to uncover new therapeutic applications for drugs like Rifaximin, grounded in mechanistic insights, microbiome associations, disease pathways, and reference-backed evidence. Go beyond symptoms to formulate data-driven strategies for clinical evaluation and formulation planning.
               </p>
             </div>
 
@@ -820,8 +819,7 @@ export default function BioFormulate() {
               <h3 className="text-xl font-bold text-gray-900 mb-3">R&D Scientists</h3>
               <h2 className="text-[16px] font-bold text-gray-900 mb-3">Validate drug-disease fit with confidence</h2>
               <p className="text-gray-700">
-                Accelerate research by comparing drug mechanisms with disease biology at the molecular level. Gain clarity on where and why a drug may work—or not—using microbiome
-                links, pathways, and supporting evidence.
+              Accelerate research by comparing drug mechanisms with disease biology at the molecular level. Gain clarity on where and why a drug may work—or not—using microbiome links, pathways, and supporting evidence.
               </p>
             </div>
 
@@ -829,11 +827,10 @@ export default function BioFormulate() {
               <div className="h-12 w-12 rounded-lg bg-[#6b8e23]/10 flex items-center justify-center mb-4">
                 <Search className="h-6 w-6 text-[#6b8e23]" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">CDMOs & Translational Teams</h3>
-              <h2 className="text-[16px] font-bold text-gray-900 mb-3">Support smarter development decisions</h2>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Regulatory Affairs Teams</h3>
+              <h2 className="text-[16px] font-bold text-gray-900 mb-3">Make confident, compliant development decisions</h2>
               <p className="text-gray-700">
-                Help partners or clients prioritize repurposing opportunities
-                with end-to-end biological justification, saving time and resources in early-stage R&D.
+              Leverage BioFormulate to support regulatory submissions with scientifically grounded evidence. From microbial associations to mechanistic justifications, ensure repurposing proposals are backed by traceable, peer-reviewed sources and clear biological rationale.
               </p>
             </div>
           </div>
