@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Loader2, Info, Settings, BarChart3, ExternalLink } from "lucide-react"
 import { toast } from "react-toastify"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,20 +17,31 @@ function capitalizeName(name) {
     .join(" ")
 }
 
-function BenchmarkTableSummary({ onWeightsUpdate, onViewFullBenchmark, pieChartData }) {
+function BenchmarkTableSummary({ onWeightsUpdate, onViewFullBenchmark, pieChartData, weightsFromUrl }) {
   const [benchmarkData, setBenchmarkData] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [topDiseases, setTopDiseases] = useState([])
 
-  const fetchBenchmarkData = async () => {
+  const fetchBenchmarkData = async (customWeights = null) => {
     setIsLoading(true)
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/benchmark-table`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
+      let response
+      if (customWeights) {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/benchmark-table`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ weights: customWeights }),
+        })
+      } else {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/benchmark-table`, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      }
 
       const data = await response.json()
       if (data.error) {
@@ -51,9 +62,23 @@ function BenchmarkTableSummary({ onWeightsUpdate, onViewFullBenchmark, pieChartD
     setIsLoading(false)
   }
 
+  // useEffect(() => {
+  //   fetchBenchmarkData()
+  // }, [])
+
   useEffect(() => {
-    fetchBenchmarkData()
-  }, [])
+    if (weightsFromUrl) {
+      try {
+        const parsedWeights = JSON.parse(weightsFromUrl)
+        fetchBenchmarkData(parsedWeights)
+      } catch (error) {
+        console.error("Error parsing weights from URL:", error)
+        fetchBenchmarkData()
+      }
+    } else {
+      fetchBenchmarkData()
+    }
+  }, [weightsFromUrl])
 
   // Update top diseases when pieChartData changes
   useEffect(() => {
@@ -110,7 +135,6 @@ function BenchmarkTableSummary({ onWeightsUpdate, onViewFullBenchmark, pieChartD
       </Card>
     )
   }
-
 
   return (
     <Card className="h-full shadow-md border-slate-200">

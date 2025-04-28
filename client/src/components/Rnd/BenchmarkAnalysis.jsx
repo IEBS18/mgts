@@ -1,13 +1,13 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
-import { useNavigate } from "react-router-dom"
+import { useState, useEffect, useRef } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { ToastContainer, toast } from "react-toastify"
-import { ArrowLeft, Loader2, TrendingUp, Maximize2, X, Download } from "lucide-react"
+import { ArrowLeft, Loader2, TrendingUp, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import BenchmarkTable from "./BenchmarkTable"
 import { LabelList, RadialBar, RadialBarChart, PolarAngleAxis } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import "./custom.css"
 import "react-toastify/dist/ReactToastify.css"
@@ -18,15 +18,29 @@ export default function BenchmarkAnalysisPage() {
   const [isLoading, setIsLoading] = useState(true)
   const radialChartRef = useRef(null)
 
+  const [searchParams, setSearchParams] = useSearchParams()
+  const weightsFromUrl = searchParams.get("weights")
+
   // Fetch pie chart data
   const fetchPieChartData = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/pie-chart`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
+      let response
+      if (weightsFromUrl) {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/pie-chart`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ weights: JSON.parse(weightsFromUrl) }),
+        })
+      } else {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/api/pie-chart`, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      }
       const data = await response.json()
       if (data.error) {
         toast.error(data.error)
@@ -48,6 +62,10 @@ export default function BenchmarkAnalysisPage() {
     if (updatedPieChartData) {
       setPieChartData(updatedPieChartData)
     }
+
+    // Update URL with new weights
+    setSearchParams({ weights: JSON.stringify(weights) })
+
     // Smooth scroll to RadialChart
     if (radialChartRef.current) {
       radialChartRef.current.scrollIntoView({ behavior: "smooth", block: "center" })
@@ -55,27 +73,44 @@ export default function BenchmarkAnalysisPage() {
   }
 
   const handleBackClick = () => {
-    navigate(-1)
+    // Instead of navigate(-1), navigate to the drug formulation page with the current weights
+    const currentWeightsParam = searchParams.get("weights")
+
+    // Navigate to the root path with the weights parameter and state
+    navigate(`/rnd-formulation-drugs${currentWeightsParam ? `?weights=${currentWeightsParam}` : ""}`, {
+      state: {
+        selectedTabs: [
+          "Disease",
+          "Disease_Microbes",
+          "Disease_Mechanism",
+          "Drug_Microbes",
+          "Drug_Mechanism",
+          "Justification_for_Drug_Use",
+          "Disease_Sources",
+          "Drug_Sources",
+        ],
+      },
+    })
   }
 
   const reversedData = pieChartData ? [...pieChartData].reverse() : []
 
   const transformedData = reversedData
-  ? reversedData.map((item, index) => {
-      const chartColors = [
-        "hsl(139, 65%, 20%)", // --chart-1
-        "hsl(140, 74%, 44%)", // --chart-2
-        "hsl(142, 88%, 28%)", // --chart-3
-        "hsl(137, 55%, 15%)", // --chart-4
-        "hsl(141, 40%, 9%)",  // --chart-5
-      ]
-      return {
-        browser: item.name,
-        visitors: item.value,
-        fill: chartColors[index % chartColors.length],
-      }
-    })
-  : []
+    ? reversedData.map((item, index) => {
+        const chartColors = [
+          "hsl(139, 65%, 20%)", // --chart-1
+          "hsl(140, 74%, 44%)", // --chart-2
+          "hsl(142, 88%, 28%)", // --chart-3
+          "hsl(137, 55%, 15%)", // --chart-4
+          "hsl(141, 40%, 9%)", // --chart-5
+        ]
+        return {
+          browser: item.name,
+          visitors: item.value,
+          fill: chartColors[index % chartColors.length],
+        }
+      })
+    : []
 
   const chartConfig = {
     visitors: {
@@ -87,7 +122,7 @@ export default function BenchmarkAnalysisPage() {
         "hsl(140, 74%, 44%)", // --chart-2
         "hsl(142, 88%, 28%)", // --chart-3
         "hsl(137, 55%, 15%)", // --chart-4
-        "hsl(141, 40%, 9%)",  // --chart-5
+        "hsl(141, 40%, 9%)", // --chart-5
       ]
       config[index + 1] = {
         label: item.name,
@@ -166,7 +201,7 @@ export default function BenchmarkAnalysisPage() {
             "hsl(140, 74%, 44%)", // --chart-2
             "hsl(142, 88%, 28%)", // --chart-3
             "hsl(137, 55%, 15%)", // --chart-4
-            "hsl(141, 40%, 9%)",  // --chart-5
+            "hsl(141, 40%, 9%)", // --chart-5
           ]
           const y = legendY + 20 + index * 20
           const color = chartColors[index % chartColors.length]
@@ -188,7 +223,6 @@ export default function BenchmarkAnalysisPage() {
     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)))
     img.crossOrigin = "anonymous"
   }
-
 
   return (
     <div className="p-6 bg-background min-h-screen">
@@ -229,7 +263,10 @@ export default function BenchmarkAnalysisPage() {
               </CardHeader>
               <CardContent className="flex-1 pb-0 chart-container flex items-center justify-center">
                 {reversedData && reversedData.length > 0 && (
-                  <ChartContainer config={chartConfig} className="mx-auto w-[450px] h-[400px] aspect-square max-h-[450px]">
+                  <ChartContainer
+                    config={chartConfig}
+                    className="mx-auto w-[450px] h-[400px] aspect-square max-h-[450px]"
+                  >
                     <RadialBarChart
                       data={transformedData}
                       width={450}
@@ -264,10 +301,15 @@ export default function BenchmarkAnalysisPage() {
                 <div className="flex items-center gap-2 font-medium leading-none">
                   Top diseases by score <TrendingUp className="h-4 w-4" />
                 </div>
-                <div className="leading-none text-muted-foreground">Showing top 5 diseases based on current weights</div>
+                <div className="leading-none text-muted-foreground">
+                  Showing top 5 diseases based on current weights
+                </div>
               </CardFooter>
             </div>
-            <BenchmarkTable onWeightsUpdate={handleWeightsUpdate} />
+            <BenchmarkTable
+              onWeightsUpdate={handleWeightsUpdate}
+              initialWeights={weightsFromUrl ? JSON.parse(weightsFromUrl) : null}
+            />
           </div>
         )}
       </div>
