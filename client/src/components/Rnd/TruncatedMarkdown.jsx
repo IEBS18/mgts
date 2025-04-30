@@ -129,7 +129,7 @@ export function TruncatedMarkdown({ content, maxLength = 200 }) {
     let index = 0
 
     // Regex to match [color[text]] pattern
-    const regex = /\[(red|blue|green)\[(.*?)\]\]/g
+    const regex = /\[(red|blue|green|pink|yellow|purple|orange)\[(.*?)\]\]/g
     let match
 
     while ((match = regex.exec(text)) !== null) {
@@ -187,6 +187,14 @@ export function TruncatedMarkdown({ content, maxLength = 200 }) {
         return "bg-blue-100"
       case "green":
         return "bg-green-100"
+      case "pink":
+        return "bg-pink-100"
+      case "yellow":
+        return "bg-yellow-100"  
+      case "purple":
+        return "bg-purple-100"
+      case "orange":
+        return "bg-orange-100"    
       default:
         return "bg-green-100" // Default fallback
     }
