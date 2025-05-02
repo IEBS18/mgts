@@ -2,7 +2,7 @@ flask
 flask-cors
 nltk
 openpyxl
-pyscopg2
+psycopg2-binary
 pandas
 python-dotenv
 Requests
