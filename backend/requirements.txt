@@ -2,11 +2,10 @@ flask
 flask-cors
 nltk
 openpyxl
-pyscopg2
 pandas
 python-dotenv
 Requests
-elasticsearch
+elasticsearch==8.17.2
 scikit-learn
 numpy
 openai
