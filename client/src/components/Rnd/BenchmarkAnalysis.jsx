@@ -253,12 +253,12 @@ export default function BenchmarkAnalysisPage() {
               <CardHeader className="items-center pb-2 bg-[#f9faf5] rounded-[12px]">
                 <div className="flex justify-between items-center w-full">
                   <CardTitle className="text-xl font-semibold">Top 5 Diseases to Explore</CardTitle>
-                  <div className="flex gap-2">
+                  {/* <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full" onClick={downloadChart}>
                       <Download className="h-4 w-4" />
                       <span className="sr-only">Download</span>
                     </Button>
-                  </div>
+                  </div> */}
                 </div>
               </CardHeader>
               <CardContent className="flex-1 pb-0 chart-container flex items-center justify-center">

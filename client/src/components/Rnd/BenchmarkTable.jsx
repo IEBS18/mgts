@@ -674,6 +674,7 @@ export default function BenchmarkTable({ onWeightsUpdate, initialWeights }) {
 
       // Only update the weighted benchmark data, not the original data
       setBenchmarkData(bench.benchmark_table)
+      setOriginalBenchmarkData(bench.benchmark_table)
 
       if (onWeightsUpdate && pie.pie_chart_data) onWeightsUpdate(weights, pie.pie_chart_data)
       toast.success("Scores updated successfully")
