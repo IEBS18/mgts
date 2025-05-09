@@ -980,8 +980,9 @@ export default function BenchmarkTable({ onWeightsUpdate, initialWeights }) {
                             </svg>
                           )}
                         </button>
+
+                        <span className="text-xs ml-6 text-slate-500">{v.toFixed(2)}</span>
                       </label>
-                      <span className="text-xs text-slate-500">{v.toFixed(2)}</span>
                     </div>
                     <Slider
                       value={[v]}
