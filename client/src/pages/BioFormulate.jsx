@@ -1,12 +1,25 @@
-// import { Link } from "react-router-dom"
+// import { Link, useNavigate } from "react-router-dom"
 // import { ArrowRight, Database, FlaskRoundIcon as Flask, Microscope, Search, Zap } from "lucide-react"
+// import bioformulate from './bioformulate.jpg'
+// import { motion } from 'framer-motion';
+// import { useState } from "react";
 
 // export default function BioFormulate() {
+//    const [selectedTabsDrug, setSelectedTabsDrug] = useState(["Disease",
+//       "Justification_for_Drug_Use",
+//       "Disease_Mechanism",
+//       "Disease_Microbes",
+//       "Drug_Mechanism",
+//       "Drug_Microbes",
+//       "Disease_Sources",
+//       "Drug_Sources",]);
+//   const navigate = useNavigate();
+      
+ 
 //   return (
 //     <div className="flex flex-col min-h-screen">
 //       {/* Hero Section */}
-//       {/* <section className="bg-gradient-to-b from-[#6b8e23] to-[#9ACD32] text-white py-16 md:py-24"> */}
-//       <section className="bg-white text-[#9ACD32] py-16 md:py-24">
+//       <section className="bg-white text-[#6b8e23] py-16 md:py-24">
 //         <div className="container mx-auto px-4 md:px-6">
 //           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
 //             <div className="flex-1 space-y-4 text-center md:text-left">
@@ -16,37 +29,47 @@
 //                 </div>
 //                 <h1 className="text-3xl font-bold">BioFormulate</h1>
 //               </div>
-//               <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter">
-//                 Unlock New Therapeutic Applications
+//               <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-gray-900">
+//                 Rifaximin Reimagined
 //               </h2>
+//               <h4 className="text-xl md:text-xl lg:text-2xl font-bold tracking-tighter text-gray-900">
+//               Discovering New Applications via Mechanistic Analysis
+//               </h4>
 //               <p className="text-lg md:text-xl text-black/90 max-w-[600px]">
-//                 Analyze pharmaceutical ingredients and uncover new therapeutic applications using patents and research
-//                 insights.
+//               Explore BioFormulate's AI-driven platform to
+//                 evaluate Rifaximin's role in disease pathways, offering insights for drug repurposing in unexplored
+//                 therapeutic areas
 //               </p>
 //               <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center md:justify-start">
-//                 <Link
-//                   to="/search"
-//                   className="inline-flex h-12 items-center justify-center bg-[#6b8e23] px-6 font-medium text-white shadow transition-colors hover:bg-[#6b8e23]/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded-lg"
+//                 <button
+//                   onClick={() => {
+//                     navigate("/rnd-formulation-drugs", {
+//                       state: {
+//                         selectedTabs: selectedTabsDrug,
+//                       },
+//                     })}}
+//                   className="inline-flex h-12 items-center justify-center bg-[#6b8e23] px-6 font-medium text-white shadow transition-colors hover:bg-[#6b8e23]/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded-[20px]"
 //                 >
 //                   Get Started
 //                   <ArrowRight className="ml-2 h-4 w-4" />
-//                 </Link>
-//                 <Link
-//                   to="#demo"
-//                   className="inline-flex h-12 items-center justify-center rounded-md border border-[#9ACD32] bg-transparent px-6 font-medium text-black shadow-sm transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
-//                 >
-//                   See Demo
-//                 </Link>
+//                 </button>
 //               </div>
 //             </div>
 //             <div className="flex-1 flex justify-center">
-//             <div className="relative w-full max-w-md aspect-square">
-//                 <img
-//                   src="/placeholder.svg?height=400&width=400"
-//                   alt="BioFormulate Visualization"
-//                   className="rounded-lg shadow-xl w-full max-w-md aspect-square object-cover"
-//                 />
-//               </div>
+              
+//               <motion.div
+//           className="relative w-full max-w-md aspect-square"
+//           initial={{ opacity: 0, scale: 0.95 }}
+//           animate={{ opacity: 1, scale: 1 }}
+//           transition={{ duration: 0.8, ease: "easeOut" }}
+//         >
+//           <img
+//             src={bioformulate}
+//             alt="BioFormulate Visualization"
+//             className="rounded-lg shadow-xl w-full max-w-md aspect-square object-cover"
+//           />
+//         </motion.div>
+              
 //             </div>
 //           </div>
 //         </div>
@@ -58,8 +81,9 @@
 //           <div className="text-center mb-12">
 //             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Why BioFormulate?</h2>
 //             <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
-//               Traditional pharmaceutical research is time-consuming and costly. BioFormulate leverages AI and data
-//               analytics to accelerate discovery and development.
+//               Traditional drug repurposing lacks depth, speed, and mechanistic clarity. BioFormulate is an AI-powered
+//               platform that brings precision, flexibility, and scientific rigor to the repurposing process—starting with
+//               Rifaximin and extending beyond.
 //             </p>
 //           </div>
 
@@ -71,19 +95,55 @@
 //                   <div className="flex-shrink-0 h-6 w-6 rounded-full bg-[#6b8e23] flex items-center justify-center text-white font-medium">
 //                     1
 //                   </div>
-//                   <p className="text-gray-700">Pharmaceutical research requires analyzing vast amounts of data</p>
+//                   <p className="text-gray-700">
+//                     Overwhelming Data: Pharmaceutical research requires processing massive volumes of unstructured
+//                     data—from research papers to clinical studies.
+//                   </p>
 //                 </li>
 //                 <li className="flex gap-3">
 //                   <div className="flex-shrink-0 h-6 w-6 rounded-full bg-[#6b8e23] flex items-center justify-center text-white font-medium">
 //                     2
 //                   </div>
-//                   <p className="text-gray-700">Identifying new applications for existing ingredients is challenging</p>
+//                   <p className="text-gray-700">
+//                     Challenging Discovery: Identifying new applications for existing drugs is difficult without
+//                     mechanistic clarity or comprehensive cross-disease analysis.
+//                   </p>
 //                 </li>
 //                 <li className="flex gap-3">
 //                   <div className="flex-shrink-0 h-6 w-6 rounded-full bg-[#6b8e23] flex items-center justify-center text-white font-medium">
 //                     3
 //                   </div>
-//                   <p className="text-gray-700">Traditional methods are time-consuming and expensive</p>
+//                   <p className="text-gray-700">
+//                     Most Efforts Lack Mechanistic Backing: Most repurposing efforts rely on generic associations without
+//                     mechanistic backing.
+//                   </p>
+//                 </li>
+//                 <li className="flex gap-3">
+//                   <div className="flex-shrink-0 h-6 w-6 rounded-full bg-[#6b8e23] flex items-center justify-center text-white font-medium">
+//                     4
+//                   </div>
+//                   <p className="text-gray-700">
+//                     Lack of Comparative Benchmarking: Difficulty in comparing multiple diseases against a drug on a
+//                     single standardized scale.
+//                   </p>
+//                 </li>
+//                 <li className="flex gap-3">
+//                   <div className="flex-shrink-0 h-6 w-6 rounded-full bg-[#6b8e23] flex items-center justify-center text-white font-medium">
+//                     5
+//                   </div>
+//                   <p className="text-gray-700">
+//                     Rigid & Manual Benchmarking: Traditional approaches lack flexibility—researchers can't easily adjust
+//                     key parameters (KPIs) to reprioritize diseases.
+//                   </p>
+//                 </li>
+//                 <li className="flex gap-3">
+//                   <div className="flex-shrink-0 h-6 w-6 rounded-full bg-[#6b8e23] flex items-center justify-center text-white font-medium">
+//                     6
+//                   </div>
+//                   <p className="text-gray-700">
+//                     Time-Consuming & Expensive: Manual literature reviews and traditional development paths are slow,
+//                     costly, and resource-intensive.
+//                   </p>
 //                 </li>
 //               </ul>
 //             </div>
@@ -91,13 +151,29 @@
 //             <div className="bg-gray-50 rounded-lg p-6 shadow-sm">
 //               <h3 className="text-xl font-bold text-gray-900 mb-3">Our Solution</h3>
 //               <p className="text-gray-700 mb-4">
-//                 BioFormulate provides a comprehensive platform that analyzes patents, research papers, and clinical data
-//                 to uncover new therapeutic applications for existing pharmaceutical ingredients.
+//                 BioFormulate accelerates drug repurposing by providing an AI-powered intelligence layer that:
 //               </p>
-//               <p className="text-gray-700">
-//                 Our AI-powered system identifies patterns and connections that human researchers might miss,
-//                 accelerating the drug development process and reducing costs.
-//               </p>
+//               <ul className="space-y-3">
+//                 <li className="flex items-center gap-2 text-gray-700">
+//                   <div className="h-1.5 w-1.5 rounded-full bg-[#6b8e23]"></div>
+//                   <span>Maps drugs to diseases via mechanism-of-action and biological relevance</span>
+//                 </li>
+//                 <li className="flex items-center gap-2 text-gray-700">
+//                   <div className="h-1.5 w-1.5 rounded-full bg-[#6b8e23]"></div>
+//                   <span>
+//                     Analyzes real-world evidence, patents, research publications, and clinical trials to uncover
+//                     repurposing signals
+//                   </span>
+//                 </li>
+//                 <li className="flex items-center gap-2 text-gray-700">
+//                   <div className="h-1.5 w-1.5 rounded-full bg-[#6b8e23]"></div>
+//                   <span>Identifies novel off-label opportunities and emerging therapeutic use-cases</span>
+//                 </li>
+//                 <li className="flex items-center gap-2 text-gray-700">
+//                   <div className="h-1.5 w-1.5 rounded-full bg-[#6b8e23]"></div>
+//                   <span>Backs decisions with mechanistic justifications and cross-validation across data sources</span>
+//                 </li>
+//               </ul>
 //             </div>
 //           </div>
 //         </div>
@@ -109,60 +185,66 @@
 //           <div className="text-center mb-12">
 //             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Key Features</h2>
 //             <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
-//               Powerful tools to accelerate pharmaceutical research and development
+//               Powerful AI-driven repurposing tool to accelerate pharmaceutical research and development
 //             </p>
 //           </div>
 
-//           <div className="grid md:grid-cols-2 gap-8">
+//           <div className="grid md:grid-cols-3 gap-8">
 //             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
 //               <div className="h-12 w-12 rounded-lg bg-[#6b8e23]/10 flex items-center justify-center mb-4">
 //                 <Zap className="h-6 w-6 text-[#6b8e23]" />
 //               </div>
-//               <h3 className="text-xl font-bold text-gray-900 mb-3">Drug Repurposing Intelligence</h3>
+//               <h3 className="text-xl font-bold text-gray-900 mb-3">Custom KPI Weighting</h3>
 //               <p className="text-gray-700">
-//                 Discover new therapeutic applications for existing drugs by analyzing patterns across patents, clinical
-//                 trials, and research papers. Our system identifies potential new indications that might have been
-//                 overlooked.
+//                 Users can tailor how diseases are ranked based on priority indicators, allowing for personalized
+//                 analysis that matches specific research goals.
 //               </p>
-//               <ul className="mt-4 space-y-2">
-//                 <li className="flex items-center gap-2 text-gray-700">
-//                   <div className="h-1.5 w-1.5 rounded-full bg-[#6b8e23]"></div>
-//                   <span>Cross-reference drugs with diseases and mechanisms</span>
-//                 </li>
-//                 <li className="flex items-center gap-2 text-gray-700">
-//                   <div className="h-1.5 w-1.5 rounded-full bg-[#6b8e23]"></div>
-//                   <span>Identify potential off-label applications</span>
-//                 </li>
-//                 <li className="flex items-center gap-2 text-gray-700">
-//                   <div className="h-1.5 w-1.5 rounded-full bg-[#6b8e23]"></div>
-//                   <span>Analyze justifications for drug use in various conditions</span>
-//                 </li>
-//               </ul>
 //             </div>
 
 //             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
 //               <div className="h-12 w-12 rounded-lg bg-[#6b8e23]/10 flex items-center justify-center mb-4">
 //                 <Flask className="h-6 w-6 text-[#6b8e23]" />
 //               </div>
-//               <h3 className="text-xl font-bold text-gray-900 mb-3">Ingredient Intelligence</h3>
+//               <h3 className="text-xl font-bold text-gray-900 mb-3">Mechanism-Driven Insights</h3>
 //               <p className="text-gray-700">
-//                 Analyze pharmaceutical ingredients to understand their properties, interactions, and potential
-//                 applications. Our comprehensive database provides insights into stability, composition, and efficacy.
+//                 Go beyond symptoms—analyze and align drug mechanisms (like Rifaximin's) with disease biology at a
+//                 molecular level to validate therapeutic relevance.
 //               </p>
-//               <ul className="mt-4 space-y-2">
-//                 <li className="flex items-center gap-2 text-gray-700">
-//                   <div className="h-1.5 w-1.5 rounded-full bg-[#6b8e23]"></div>
-//                   <span>Detailed stability and interaction data</span>
-//                 </li>
-//                 <li className="flex items-center gap-2 text-gray-700">
-//                   <div className="h-1.5 w-1.5 rounded-full bg-[#6b8e23]"></div>
-//                   <span>Composition characteristics and solution forms</span>
-//                 </li>
-//                 <li className="flex items-center gap-2 text-gray-700">
-//                   <div className="h-1.5 w-1.5 rounded-full bg-[#6b8e23]"></div>
-//                   <span>Safety and efficacy study results</span>
-//                 </li>
-//               </ul>
+//             </div>
+
+//             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+//               <div className="h-12 w-12 rounded-lg bg-[#6b8e23]/10 flex items-center justify-center mb-4">
+//                 <Search className="h-6 w-6 text-[#6b8e23]" />
+//               </div>
+//               <h3 className="text-xl font-bold text-gray-900 mb-3">Full Visibility</h3>
+//               <p className="text-gray-700">
+//                 Analyze both top-ranked and long-tail diseases with side-by-side benchmarking data for comprehensive
+//                 evaluation of repurposing opportunities.
+//               </p>
+//             </div>
+//           </div>
+
+//           <div className="grid md:grid-cols-2 gap-8 mt-8 mx-20">
+//             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+//               <div className="h-12 w-12 rounded-lg bg-[#6b8e23]/10 flex items-center justify-center mb-4">
+//                 <Database className="h-6 w-6 text-[#6b8e23]" />
+//               </div>
+//               <h3 className="text-xl font-bold text-gray-900 mb-3">End-to-End Justification</h3>
+//               <p className="text-gray-700">
+//                 Get precise, mechanistic reasons for why a drug like Rifaximin should or should not work in each disease
+//                 context. Each match is backed by microbe associations, mechanisms, and source references.
+//               </p>
+//             </div>
+
+//             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+//               <div className="h-12 w-12 rounded-lg bg-[#6b8e23]/10 flex items-center justify-center mb-4">
+//                 <Zap className="h-6 w-6 text-[#6b8e23]" />
+//               </div>
+//               <h3 className="text-xl font-bold text-gray-900 mb-3">Faster Decision-Making</h3>
+//               <p className="text-gray-700">
+//                 Streamlined platform reduces time from hypothesis to actionable insight, allowing researchers to make
+//                 informed decisions about drug repurposing opportunities quickly.
+//               </p>
 //             </div>
 //           </div>
 //         </div>
@@ -178,134 +260,37 @@
 //             </p>
 //           </div>
 
-//           <div className="grid md:grid-cols-3 gap-8">
-//             <div className="text-center">
-//               <div className="h-16 w-16 rounded-full bg-[#6b8e23] flex items-center justify-center mx-auto mb-4 text-white text-xl font-bold">
+//           <div className="grid md:grid-cols-2 gap-8">
+//             <div className="bg-gray-50 rounded-lg p-6 shadow-sm">
+//               <div className="h-16 w-16 rounded-full bg-[#6b8e23] flex items-center justify-center mb-4 text-white text-xl font-bold">
 //                 1
 //               </div>
-//               <h3 className="text-xl font-bold text-gray-900 mb-2">Search</h3>
+//               <h3 className="text-xl font-bold text-gray-900 mb-2">Column Selection & Filtering</h3>
 //               <p className="text-gray-700">
-//                 Enter an ingredient or drug name to begin your research. Our system will search across our comprehensive
-//                 database.
+//                 Select which mapped columns (like disease mechanism, drug mechanism, microbes, sources, etc.) to include
+//                 or exclude for analysis, helping narrow down the search and focus on specific aspects of interest.
 //               </p>
 //             </div>
-//             <div className="text-center">
-//               <div className="h-16 w-16 rounded-full bg-[#6b8e23] flex items-center justify-center mx-auto mb-4 text-white text-xl font-bold">
+//             <div className="bg-gray-50 rounded-lg p-6 shadow-sm">
+//               <div className="h-16 w-16 rounded-full bg-[#6b8e23] flex items-center justify-center mb-4 text-white text-xl font-bold">
 //                 2
 //               </div>
-//               <h3 className="text-xl font-bold text-gray-900 mb-2">Filter</h3>
+//               <h3 className="text-xl font-bold text-gray-900 mb-2">Benchmark and Analyze Diseases</h3>
 //               <p className="text-gray-700">
-//                 Select relevant topics and parameters to narrow down your search and focus on specific aspects of
-//                 interest.
+//                 View benchmarking of top diseases and customize KPI weightages, if needed, to match specific priorities.
+//                 Analyze high-ranking diseases in detail to assess rifaximin's repurposing potential.
 //               </p>
-//             </div>
-//             <div className="text-center">
-//               <div className="h-16 w-16 rounded-full bg-[#6b8e23] flex items-center justify-center mx-auto mb-4 text-white text-xl font-bold">
-//                 3
-//               </div>
-//               <h3 className="text-xl font-bold text-gray-900 mb-2">Analyze</h3>
-//               <p className="text-gray-700">
-//                 Review comprehensive insights, connections, and potential applications based on patents and research
-//                 data.
-//               </p>
-//             </div>
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Sample Output / Demo */}
-//       <section className="py-16 bg-gray-50" id="demo">
-//         <div className="container mx-auto px-4 md:px-6">
-//           <div className="text-center mb-12">
-//             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Sample Output</h2>
-//             <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
-//               See how BioFormulate delivers actionable insights
-//             </p>
-//           </div>
-
-//           <div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-4xl mx-auto">
-//             <div className="bg-[#6b8e23] p-4 flex items-center gap-3">
-//               <div className="bg-white rounded-full p-1.5">
-//                 <Microscope className="h-6 w-6 text-[#6b8e23]" />
-//               </div>
-//               <h3 className="text-xl font-bold text-white">BioFormulate</h3>
-//             </div>
-//             <div className="p-6">
-//               <div className="grid grid-cols-2 gap-4 mb-6">
-//                 <button className="py-2 px-4 rounded-md bg-[#6b8e23] text-white font-medium">
-//                   Search by Ingredient
-//                 </button>
-//                 <button className="py-2 px-4 rounded-md bg-white border border-[#6b8e23] text-[#6b8e23] font-medium">
-//                   Search by Drug
-//                 </button>
-//               </div>
-
-//               <div className="mb-6">
-//                 <label className="block text-sm font-medium text-gray-700 mb-1">Ingredient Name</label>
-//                 <div className="relative">
-//                   <input
-//                     type="text"
-//                     placeholder="Type Ingredient Name"
-//                     className="w-full rounded-md border border-gray-300 py-2 pl-3 pr-10"
-//                     defaultValue="Hyaluronic Acid"
-//                   />
-//                   <Search className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
-//                 </div>
-//               </div>
-
-//               <div className="mb-6">
-//                 <label className="block text-sm font-medium text-gray-700 mb-2">Select Additional Topics (Tabs)</label>
-//                 <div className="flex flex-wrap gap-2">
-//                   <button className="py-1.5 px-3 rounded-md bg-[#6b8e23] text-white text-sm">Select All</button>
-//                   <button className="py-1.5 px-3 rounded-md border border-[#6b8e23] text-[#6b8e23] text-sm">
-//                     Stability Conditions
-//                   </button>
-//                   <button className="py-1.5 px-3 rounded-md border border-[#6b8e23] text-[#6b8e23] text-sm">
-//                     Interaction
-//                   </button>
-//                   <button className="py-1.5 px-3 rounded-md border border-[#6b8e23] text-[#6b8e23] text-sm">
-//                     Composition
-//                   </button>
-//                 </div>
-//               </div>
-
-//               <div className="bg-gray-50 p-4 rounded-md">
-//                 <h4 className="font-bold text-gray-900 mb-2">Sample Results</h4>
-//                 <p className="text-gray-700 mb-3">
-//                   Hyaluronic Acid has been identified in 245 patents and 128 research papers.
-//                 </p>
-//                 <div className="grid grid-cols-2 gap-4">
-//                   <div className="bg-white p-3 rounded border border-gray-200">
-//                     <h5 className="font-medium text-gray-900">Key Applications</h5>
-//                     <ul className="mt-2 text-sm text-gray-700 space-y-1">
-//                       <li>• Dermal fillers</li>
-//                       <li>• Osteoarthritis treatment</li>
-//                       <li>• Wound healing</li>
-//                       <li>• Ophthalmic solutions</li>
-//                     </ul>
-//                   </div>
-//                   <div className="bg-white p-3 rounded border border-gray-200">
-//                     <h5 className="font-medium text-gray-900">Emerging Research</h5>
-//                     <ul className="mt-2 text-sm text-gray-700 space-y-1">
-//                       <li>• Drug delivery systems</li>
-//                       <li>• Tissue engineering</li>
-//                       <li>• Cancer therapy</li>
-//                       <li>• Neural regeneration</li>
-//                     </ul>
-//                   </div>
-//                 </div>
-//               </div>
 //             </div>
 //           </div>
 //         </div>
 //       </section>
 
 //       {/* Who It's For */}
-//       <section className="py-16 bg-white" id="who-its-for">
+//       <section className="py-16 bg-gray-50" id="who-its-for">
 //         <div className="container mx-auto px-4 md:px-6">
 //           <div className="text-center mb-12">
 //             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-//               Built for Scientists, CDMOs, and R&D Teams
+//               Built for Scientists, CDMOs, and R&D Teams Driving Drug Repurposing
 //             </h2>
 //             <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
 //               BioFormulate empowers professionals across the pharmaceutical industry
@@ -313,50 +298,37 @@
 //           </div>
 
 //           <div className="grid md:grid-cols-3 gap-8">
-//             <div className="bg-gray-50 rounded-lg p-6 shadow-sm">
+//             <div className="bg-white rounded-lg p-6 shadow-sm">
 //               <div className="h-12 w-12 rounded-lg bg-[#6b8e23]/10 flex items-center justify-center mb-4">
 //                 <Microscope className="h-6 w-6 text-[#6b8e23]" />
 //               </div>
-//               <h3 className="text-xl font-bold text-gray-900 mb-3">Formulators</h3>
+//               <h3 className="text-xl font-bold text-gray-900 mb-3">Clinical Strategy Teams</h3>
+//               <h2 className="text-[16px] font-bold text-gray-900 mb-3">Discover repurposing paths backed by biology</h2>
 //               <p className="text-gray-700">
-//                 Optimize compositions with comprehensive data on ingredient interactions, stability conditions, and
-//                 formulation characteristics.
+//               Use BioFormulate to uncover new therapeutic applications for drugs like Rifaximin, grounded in mechanistic insights, microbiome associations, disease pathways, and reference-backed evidence. Go beyond symptoms to formulate data-driven strategies for clinical evaluation and formulation planning.
 //               </p>
 //             </div>
 
-//             <div className="bg-gray-50 rounded-lg p-6 shadow-sm">
+//             <div className="bg-white rounded-lg p-6 shadow-sm">
 //               <div className="h-12 w-12 rounded-lg bg-[#6b8e23]/10 flex items-center justify-center mb-4">
 //                 <Database className="h-6 w-6 text-[#6b8e23]" />
 //               </div>
-//               <h3 className="text-xl font-bold text-gray-900 mb-3">Clinical Strategy Teams</h3>
+//               <h3 className="text-xl font-bold text-gray-900 mb-3">R&D Scientists</h3>
+//               <h2 className="text-[16px] font-bold text-gray-900 mb-3">Validate drug-disease fit with confidence</h2>
 //               <p className="text-gray-700">
-//                 Explore drug repurposing opportunities by identifying new therapeutic applications for existing
-//                 compounds based on research and patent data.
+//               Accelerate research by comparing drug mechanisms with disease biology at the molecular level. Gain clarity on where and why a drug may work—or not—using microbiome links, pathways, and supporting evidence.
 //               </p>
 //             </div>
 
-//             <div className="bg-gray-50 rounded-lg p-6 shadow-sm">
+//             <div className="bg-white rounded-lg p-6 shadow-sm">
 //               <div className="h-12 w-12 rounded-lg bg-[#6b8e23]/10 flex items-center justify-center mb-4">
 //                 <Search className="h-6 w-6 text-[#6b8e23]" />
 //               </div>
-//               <h3 className="text-xl font-bold text-gray-900 mb-3">R&D Scientists</h3>
+//               <h3 className="text-xl font-bold text-gray-900 mb-3">Regulatory Affairs Teams</h3>
+//               <h2 className="text-[16px] font-bold text-gray-900 mb-3">Make confident, compliant development decisions</h2>
 //               <p className="text-gray-700">
-//                 Accelerate research by accessing comprehensive data on pharmaceutical ingredients, their properties, and
-//                 potential applications.
+//               Leverage BioFormulate to support regulatory submissions with scientifically grounded evidence. From microbial associations to mechanistic justifications, ensure repurposing proposals are backed by traceable, peer-reviewed sources and clear biological rationale.
 //               </p>
-//             </div>
-//           </div>
-
-//           <div className="mt-12 text-center">
-//             <div className="inline-flex items-center justify-center gap-2 bg-gray-100 px-3 py-1 rounded-full text-sm text-gray-800 mb-4">
-//               <span className="h-2 w-2 rounded-full bg-[#6b8e23]"></span>
-//               Trusted by leading pharmaceutical companies
-//             </div>
-//             <div className="flex flex-wrap justify-center gap-8 md:gap-12 opacity-70">
-//               <img src="/placeholder.svg?height=40&width=120" alt="Company logo" width={120} height={40} />
-//               <img src="/placeholder.svg?height=40&width=120" alt="Company logo" width={120} height={40} />
-//               <img src="/placeholder.svg?height=40&width=120" alt="Company logo" width={120} height={40} />
-//               <img src="/placeholder.svg?height=40&width=120" alt="Company logo" width={120} height={40} />
 //             </div>
 //           </div>
 //         </div>
@@ -369,17 +341,21 @@
 //             Ready to transform your pharmaceutical research?
 //           </h2>
 //           <p className="text-lg text-white/90 max-w-2xl mx-auto mb-8">
-//             Join leading researchers and companies who are accelerating drug discovery and development with
-//             BioFormulate.
+//             Join leading researchers and companies who are uncovering new indications and validating drug potential
+//             using BioFormulate
 //           </p>
-//           <Link
-//             to="/search"
-//             className="inline-flex h-12 items-center justify-center rounded-md bg-white px-8 font-medium text-[#6b8e23] shadow transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
-//           >
-//             Get Started
-//             <ArrowRight className="ml-2 h-4 w-4" />
-//           </Link>
-//           <div className="mt-6 text-sm text-white/80">No credit card required • Free trial available</div>
+//           <button
+//                   onClick={() => {
+//                     navigate("/rnd-formulation-drugs", {
+//                       state: {
+//                         selectedTabs: selectedTabsDrug,
+//                       },
+//                     })}}
+//                   className="inline-flex h-12 items-center justify-center bg-white px-6 font-medium text-[#6b8e23] shadow transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded-[20px]"
+//                 >
+//                   Get Started
+//                   <ArrowRight className="ml-2 h-4 w-4" />
+//           </button>
 //         </div>
 //       </section>
 
@@ -395,8 +371,8 @@
 //                 <span className="text-xl font-bold text-white">BioFormulate</span>
 //               </div>
 //               <p className="text-gray-400 mb-4">
-//                 Analyze pharmaceutical ingredients and uncover new therapeutic applications using patents and research
-//                 insights.
+//                 Discover new therapeutic applications for known drugs through mechanistic evidence, microbial links, and
+//                 real-world research
 //               </p>
 //               <div className="flex gap-4">
 //                 <a href="#" className="text-gray-400 hover:text-white">
@@ -423,18 +399,8 @@
 //                     </a>
 //                   </li>
 //                   <li>
-//                     <a href="#demo" className="hover:text-white">
-//                       Demo
-//                     </a>
-//                   </li>
-//                   <li>
-//                     <a href="#" className="hover:text-white">
-//                       Pricing
-//                     </a>
-//                   </li>
-//                   <li>
-//                     <a href="#" className="hover:text-white">
-//                       API
+//                     <a href="#how-it-works" className="hover:text-white">
+//                       How It Works
 //                     </a>
 //                   </li>
 //                 </ul>
@@ -442,23 +408,14 @@
 //               <div>
 //                 <h3 className="text-white font-bold mb-4">Resources</h3>
 //                 <ul className="space-y-2">
+                  
 //                   <li>
-//                     <a href="#" className="hover:text-white">
-//                       Documentation
-//                     </a>
-//                   </li>
-//                   <li>
-//                     <a href="#" className="hover:text-white">
-//                       Guides
-//                     </a>
-//                   </li>
-//                   <li>
-//                     <a href="#" className="hover:text-white">
+//                     <a href="https://insimine.com/case-studies" target="_blank" className="hover:text-white">
 //                       Case Studies
 //                     </a>
 //                   </li>
 //                   <li>
-//                     <a href="#" className="hover:text-white">
+//                     <a href="https://insimine.com/blogs" target="_blank" className="hover:text-white">
 //                       Blog
 //                     </a>
 //                   </li>
@@ -468,23 +425,13 @@
 //                 <h3 className="text-white font-bold mb-4">Company</h3>
 //                 <ul className="space-y-2">
 //                   <li>
-//                     <a href="#" className="hover:text-white">
+//                     <a href="https://insimine.com/aboutus" target="_blank" className="hover:text-white">
 //                       About
 //                     </a>
 //                   </li>
 //                   <li>
-//                     <a href="#" className="hover:text-white">
-//                       Careers
-//                     </a>
-//                   </li>
-//                   <li>
-//                     <a href="#" className="hover:text-white">
+//                     <a href="https://insimine.com/bookings" target="_blank" className="hover:text-white">
 //                       Contact
-//                     </a>
-//                   </li>
-//                   <li>
-//                     <a href="#" className="hover:text-white">
-//                       Privacy
 //                     </a>
 //                   </li>
 //                 </ul>
@@ -501,24 +448,32 @@
 // }
 
 
-import { Link, useNavigate } from "react-router-dom"
+
+
+
+"use client"
+
+import { useNavigate } from "react-router-dom"
 import { ArrowRight, Database, FlaskRoundIcon as Flask, Microscope, Search, Zap } from "lucide-react"
-import bioformulate from './bioformulate.jpg'
-import { motion } from 'framer-motion';
-import { useState } from "react";
+import bioformulate from "./bioformulate.jpg"
+import { motion } from "framer-motion"
+import { useState } from "react"
 
 export default function BioFormulate() {
-   const [selectedTabsDrug, setSelectedTabsDrug] = useState(["Disease",
-      "Justification_for_Drug_Use",
-      "Disease_Mechanism",
-      "Disease_Microbes",
-      "Drug_Mechanism",
-      "Drug_Microbes",
-      "Disease_Sources",
-      "Drug_Sources",]);
-  const navigate = useNavigate();
-      
- 
+  const [selectedTabsDrug, setSelectedTabsDrug] = useState([
+    "Disease",
+    "Justification_for_Drug_Use",
+    "Disease_Mechanism",
+    "Disease_Microbes",
+    "Drug_Mechanism",
+    "Drug_Microbes",
+    "Disease_Sources",
+    "Drug_Sources",
+  ])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedDrug, setSelectedDrug] = useState("Rifaximin")
+  const navigate = useNavigate()
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -533,24 +488,18 @@ export default function BioFormulate() {
                 <h1 className="text-3xl font-bold">BioFormulate</h1>
               </div>
               <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-gray-900">
-                Rifaximin Reimagined
+                Drug Repurposing Platform
               </h2>
               <h4 className="text-xl md:text-xl lg:text-2xl font-bold tracking-tighter text-gray-900">
-              Discovering New Applications via Mechanistic Analysis
+                Discovering New Applications via Mechanistic Analysis
               </h4>
               <p className="text-lg md:text-xl text-black/90 max-w-[600px]">
-              Explore BioFormulate's AI-driven platform to
-                evaluate Rifaximin's role in disease pathways, offering insights for drug repurposing in unexplored
-                therapeutic areas
+                Explore BioFormulate's AI-driven platform to evaluate drug mechanisms in disease pathways, offering
+                insights for drug repurposing in unexplored therapeutic areas
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center md:justify-start">
                 <button
-                  onClick={() => {
-                    navigate("/rnd-formulation-drugs", {
-                      state: {
-                        selectedTabs: selectedTabsDrug,
-                      },
-                    })}}
+                  onClick={() => setIsModalOpen(true)}
                   className="inline-flex h-12 items-center justify-center bg-[#6b8e23] px-6 font-medium text-white shadow transition-colors hover:bg-[#6b8e23]/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded-[20px]"
                 >
                   Get Started
@@ -559,20 +508,18 @@ export default function BioFormulate() {
               </div>
             </div>
             <div className="flex-1 flex justify-center">
-              
               <motion.div
-          className="relative w-full max-w-md aspect-square"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <img
-            src={bioformulate}
-            alt="BioFormulate Visualization"
-            className="rounded-lg shadow-xl w-full max-w-md aspect-square object-cover"
-          />
-        </motion.div>
-              
+                className="relative w-full max-w-md aspect-square"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              >
+                <img
+                  src={bioformulate || "/placeholder.svg"}
+                  alt="BioFormulate Visualization"
+                  className="rounded-lg shadow-xl w-full max-w-md aspect-square object-cover"
+                />
+              </motion.div>
             </div>
           </div>
         </div>
@@ -808,7 +755,9 @@ export default function BioFormulate() {
               <h3 className="text-xl font-bold text-gray-900 mb-3">Clinical Strategy Teams</h3>
               <h2 className="text-[16px] font-bold text-gray-900 mb-3">Discover repurposing paths backed by biology</h2>
               <p className="text-gray-700">
-              Use BioFormulate to uncover new therapeutic applications for drugs like Rifaximin, grounded in mechanistic insights, microbiome associations, disease pathways, and reference-backed evidence. Go beyond symptoms to formulate data-driven strategies for clinical evaluation and formulation planning.
+                Use BioFormulate to uncover new therapeutic applications for drugs like Rifaximin, grounded in
+                mechanistic insights, microbiome associations, disease pathways, and reference-backed evidence. Go
+                beyond symptoms to formulate data-driven strategies for clinical evaluation and formulation planning.
               </p>
             </div>
 
@@ -819,7 +768,9 @@ export default function BioFormulate() {
               <h3 className="text-xl font-bold text-gray-900 mb-3">R&D Scientists</h3>
               <h2 className="text-[16px] font-bold text-gray-900 mb-3">Validate drug-disease fit with confidence</h2>
               <p className="text-gray-700">
-              Accelerate research by comparing drug mechanisms with disease biology at the molecular level. Gain clarity on where and why a drug may work—or not—using microbiome links, pathways, and supporting evidence.
+                Accelerate research by comparing drug mechanisms with disease biology at the molecular level. Gain
+                clarity on where and why a drug may work—or not—using microbiome links, pathways, and supporting
+                evidence.
               </p>
             </div>
 
@@ -828,9 +779,13 @@ export default function BioFormulate() {
                 <Search className="h-6 w-6 text-[#6b8e23]" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Regulatory Affairs Teams</h3>
-              <h2 className="text-[16px] font-bold text-gray-900 mb-3">Make confident, compliant development decisions</h2>
+              <h2 className="text-[16px] font-bold text-gray-900 mb-3">
+                Make confident, compliant development decisions
+              </h2>
               <p className="text-gray-700">
-              Leverage BioFormulate to support regulatory submissions with scientifically grounded evidence. From microbial associations to mechanistic justifications, ensure repurposing proposals are backed by traceable, peer-reviewed sources and clear biological rationale.
+                Leverage BioFormulate to support regulatory submissions with scientifically grounded evidence. From
+                microbial associations to mechanistic justifications, ensure repurposing proposals are backed by
+                traceable, peer-reviewed sources and clear biological rationale.
               </p>
             </div>
           </div>
@@ -848,16 +803,11 @@ export default function BioFormulate() {
             using BioFormulate
           </p>
           <button
-                  onClick={() => {
-                    navigate("/rnd-formulation-drugs", {
-                      state: {
-                        selectedTabs: selectedTabsDrug,
-                      },
-                    })}}
-                  className="inline-flex h-12 items-center justify-center bg-white px-6 font-medium text-[#6b8e23] shadow transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded-[20px]"
-                >
-                  Get Started
-                  <ArrowRight className="ml-2 h-4 w-4" />
+            onClick={() => setIsModalOpen(true)}
+            className="inline-flex h-12 items-center justify-center bg-white px-6 font-medium text-[#6b8e23] shadow transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded-[20px]"
+          >
+            Get Started
+            <ArrowRight className="ml-2 h-4 w-4" />
           </button>
         </div>
       </section>
@@ -911,14 +861,18 @@ export default function BioFormulate() {
               <div>
                 <h3 className="text-white font-bold mb-4">Resources</h3>
                 <ul className="space-y-2">
-                  
                   <li>
-                    <a href="https://insimine.com/case-studies" target="_blank" className="hover:text-white">
+                    <a
+                      href="https://insimine.com/case-studies"
+                      target="_blank"
+                      className="hover:text-white"
+                      rel="noreferrer"
+                    >
                       Case Studies
                     </a>
                   </li>
                   <li>
-                    <a href="https://insimine.com/blogs" target="_blank" className="hover:text-white">
+                    <a href="https://insimine.com/blogs" target="_blank" className="hover:text-white" rel="noreferrer">
                       Blog
                     </a>
                   </li>
@@ -928,12 +882,22 @@ export default function BioFormulate() {
                 <h3 className="text-white font-bold mb-4">Company</h3>
                 <ul className="space-y-2">
                   <li>
-                    <a href="https://insimine.com/aboutus" target="_blank" className="hover:text-white">
+                    <a
+                      href="https://insimine.com/aboutus"
+                      target="_blank"
+                      className="hover:text-white"
+                      rel="noreferrer"
+                    >
                       About
                     </a>
                   </li>
                   <li>
-                    <a href="https://insimine.com/bookings" target="_blank" className="hover:text-white">
+                    <a
+                      href="https://insimine.com/bookings"
+                      target="_blank"
+                      className="hover:text-white"
+                      rel="noreferrer"
+                    >
                       Contact
                     </a>
                   </li>
@@ -946,6 +910,65 @@ export default function BioFormulate() {
           </div>
         </div>
       </footer>
+
+      {/* Drug Selection Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="p-4 border-b">
+              <h3 className="text-xl font-semibold text-gray-900">Select a Drug</h3>
+              <p className="text-sm text-gray-600 mt-1">Choose a drug to analyze its formulation</p>
+            </div>
+            <div className="p-6 space-y-4">
+              {["Rifaximin", "Vancomycin", "Metronidazole", "Fidaxomicin"].map((drug) => (
+                <div
+                  key={drug}
+                  onClick={() => setSelectedDrug(drug)}
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                    selectedDrug === drug
+                      ? "border-[#6b8e23] bg-[#f1f8e9] text-[#6b8e23]"
+                      : "border-gray-200 hover:border-[#6b8e23] hover:bg-[#f9fbe7]"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        selectedDrug === drug ? "border-[#6b8e23]" : "border-gray-300"
+                      }`}
+                    >
+                      {selectedDrug === drug && <div className="w-3 h-3 rounded-full bg-[#6b8e23]"></div>}
+                    </div>
+                    <span className="font-medium">{drug}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-4 border-t flex justify-end gap-3">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-[20px] hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setIsModalOpen(false)
+                  navigate("/rnd-formulation-drugs", {
+                    state: {
+                      selectedTabs: selectedTabsDrug,
+                      selectedDrug: selectedDrug,
+                    },
+                  })
+                }}
+                className="px-4 py-2 bg-[#6b8e23] text-white rounded-[20px] hover:bg-[#5a7a1e] flex items-center"
+              >
+                Continue
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

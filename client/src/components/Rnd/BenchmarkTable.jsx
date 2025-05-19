@@ -33,7 +33,8 @@ export default function BenchmarkTable({ onWeightsUpdate, initialWeights }) {
       gut_microbiome_Association: 0.2,
       justification: 0.25,
       prevalence: 0.2,
-      bausch_presence: 0.15,
+      unmet_needs: 0.15,
+      // bausch_presence: 0.15,
       // safety_efficacy: 0.1,
     },
   )
@@ -328,7 +329,8 @@ export default function BenchmarkTable({ onWeightsUpdate, initialWeights }) {
         "Gut Microbiome Association",
         "Justification",
         "Prevalence",
-        "Bausch",
+        "Unmet Needs",
+        // "Bausch",
       ],
     ]
 
@@ -343,7 +345,8 @@ export default function BenchmarkTable({ onWeightsUpdate, initialWeights }) {
           item.score_breakdown_distribution.Gut_Microbiome_Association || "",
           item.score_breakdown_distribution.Rifaximin_Treatment || "",
           item.score_breakdown_distribution.Prevalence || "",
-          item.score_breakdown_distribution.Bausch_Presence || "",
+          item.score_breakdown_distribution.Unmet_Needs || "",
+          // item.score_breakdown_distribution.Bausch_Presence || "",
         )
       } else {
         // Add empty cells if breakdown not available
@@ -365,7 +368,8 @@ export default function BenchmarkTable({ onWeightsUpdate, initialWeights }) {
       { wch: 25 }, // Gut Microbiome Association
       { wch: 15 }, // Justification
       { wch: 15 }, // Prevalence
-      { wch: 15 }, // Bausch
+      { wch: 15 }, // Unmet_Needs
+      // { wch: 15 }, // Bausch
     ]
     ws["!cols"] = colWidths
 
@@ -406,7 +410,8 @@ export default function BenchmarkTable({ onWeightsUpdate, initialWeights }) {
     // ["Mechanism", "Gut_Microbiome_Association"],
     ["Justification", "Rifaximin_Treatment"],
     ["Prevalence", "Prevalence"],
-    ["Bausch", "Bausch_Presence"],
+    ["Unmet Needs", "Unmet_Needs"],
+    // ["Bausch", "Bausch_Presence"],
     // ["Safety", "Safety_Efficacy"],
   ]
 

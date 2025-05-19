@@ -87,7 +87,8 @@ default_weights = {
     "Gut_Microbiome_Association": 0.15,
     "Rifaximin_Treatment": 0.20,
     "Prevalence": 0.20,
-    "Bausch_Presence": 0.15
+    "Unmet_Needs": 0.15
+    # "Bausch_Presence": 0.15
 }
 
 @rnd_blueprint.route('/api/rnd-formulation-drug', methods=['GET'])
@@ -145,7 +146,8 @@ current_weights = {
     "Gut_Microbiome_Association": 0.15,
     "Rifaximin_Treatment": 0.20,
     "Prevalence": 0.20,
-    "Bausch_Presence": 0.15
+    "Unmet_Needs": 0.15
+    # "Bausch_Presence": 0.15
 }
 
 # Route to handle the benchmark table (Excel-based or recalculated if weights are updated)
@@ -167,7 +169,8 @@ def get_benchmark_table():
                 "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.175),
                 "Rifaximin_Treatment": data['weights'].get('justification', 0.25),
                 "Prevalence": data['weights'].get('prevalence', 0.175),
-                "Bausch_Presence": data['weights'].get('bausch_presence', 0.10)
+                "Unmet_Needs": data['weights'].get('unmet_needs', 0.10)
+                # "Bausch_Presence": data['weights'].get('bausch_presence', 0.10)
 
             }
 
@@ -302,7 +305,8 @@ def get_pie_chart():
                 "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.175),
                 "Rifaximin_Treatment": data['weights'].get('justification', 0.25),
                 "Prevalence": data['weights'].get('prevalence', 0.175),
-                "Bausch_Presence": data['weights'].get('bausch_presence', 0.10)
+                "Unmet_Needs": data['weights'].get('unmet_needs', 0.10)
+                # "Bausch_Presence": data['weights'].get('bausch_presence', 0.10)
 
             }
             benchmark_scores = []
