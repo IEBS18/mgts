@@ -71,11 +71,9 @@ def get_processed_results():
     
 ## SEARCH BY DRUG RND Formulation    
 try:
-    EXCEL_FILE_PATH = "./rifaximin_highlight_score.xlsx"
-    # EXCEL_FILE_PATH = "./gut_microbiome_documents_output_file.xlsx"
+    EXCEL_FILE_PATH = "./Rifaximin_drug.xlsx"
 except:
-    EXCEL_FILE_PATH = "backend/rifaximin_highlight_score.xlsx"
-    # EXCEL_FILE_PATH = "backend/gut_microbiome_documents_output_file.xlsx"
+    EXCEL_FILE_PATH = "backend/Rifaximin_drug.xlsx"
 
 print(EXCEL_FILE_PATH)
 # Default Weights
@@ -226,63 +224,6 @@ def get_benchmark_table():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
-
-#             for index, row in df.iterrows():
-#                 scores, total = benchmark_score_llama(
-#                     enrollment=row['enrollment'],
-#                     mechanism_text=row['disease_mechanism'],
-#                     justification=row['justification_for_drug_use'],
-#                     prevalence=row['prevalence'],
-#                     bausch_presence_text=row['bausch_presence'],
-#                     safety=row['safety'],
-#                     efficacy=row['efficacy'],
-#                     weights=updated_weights  # Use the updated weights
-#                 )
-#                 # print(benchmark_scores)
-#                 benchmark_scores.append({
-#                     "disease": row['disease'],
-#                     "benchmark_score": total,
-#                     "score_breakdown_distribution": updated_weights
-#                 })
-            
-#             # benchmark_table = pd.DataFrame(benchmark_scores)
-#             benchmark_table = pd.DataFrame(benchmark_scores).sort_values(by="benchmark_score", ascending=False)
-#             response_data = {
-#                 "benchmark_table": benchmark_table.to_dict(orient='records'),
-#                 "message": "Benchmark Table recalculated successfully"
-#             }
-#         else:
-#             # Fetch pre-calculated data from the Excel sheet
-#             xl = pd.ExcelFile(EXCEL_FILE_PATH)
-#             df = xl.parse('Sheet1')
-
-#             # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
-#             df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
-
-#             # Sort by 'Benchmark_Score' to get the top 5 diseases
-#             # top_scores = df.nlargest(5, 'benchmark_score')  # Top 5 diseases based on benchmark score
-#             df=pd.DataFrame(df).sort_values(by="benchmark_score", ascending=False)
-#             top_scores =df.drop_duplicates(subset='disease', keep='first')
-
-#             # Create the benchmark table with diseases, benchmark scores, and score breakdown
-            
-
-# # Assuming 'score_breakdown_distribution' is a string representation of a dictionary
-#             top_scores['score_breakdown_distribution'] = top_scores['score_breakdown_distribution'].apply(ast.literal_eval)
-
-#             benchmark_table = top_scores[['disease', 'benchmark_score', 'score_breakdown_distribution']]
-
-#             response_data = {
-#                 "benchmark_table": benchmark_table.to_dict(orient='records'),
-#                 "message": "Benchmark Table retrieved successfully from Excel"
-#             }
-
-#         return jsonify(response_data), 200
-
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 400
-
 
 
 # Route to handle pie chart for top benchmark scores (Excel-based or recalculated if weights are updated)
