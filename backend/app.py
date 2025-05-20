@@ -19,7 +19,7 @@ app = Flask(__name__)
 # Allow cross-origin requests from specific hosts
 CORS(app, supports_credentials=True, origins=[
     "http://localhost:5173",
-    "http://68.154.56.138:3000", 
+    "http://68.154.56.138:3000",
     "http://localhost:5174", 
     "http://127.0.0.1:5000",
     "http://127.0.0.1:3000",
