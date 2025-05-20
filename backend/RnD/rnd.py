@@ -176,7 +176,7 @@ def get_benchmark_table():
                 try:
                     score_str = row['score_breakdown_distribution']
                     score_json = json.loads(score_str.replace("'", '"')) if isinstance(score_str, str) else score_str
-
+                    print(score_json)
                     total_score = sum(score_json[key] * updated_weights[key] for key in updated_weights)
 
                 except Exception as e:
@@ -186,7 +186,7 @@ def get_benchmark_table():
                 benchmark_scores.append({
                     "disease": row['disease'],
                     "benchmark_score": round(total_score, 2),
-                    "score_breakdown_distribution": updated_weights
+                    "score_breakdown_distribution": score_json
                 })
 
             benchmark_table = pd.DataFrame(benchmark_scores).sort_values(by="benchmark_score", ascending=False)

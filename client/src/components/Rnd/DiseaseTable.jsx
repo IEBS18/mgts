@@ -878,11 +878,17 @@ export default function DiseaseTable({
                       {orderedTabs
                         .filter((tab) => visibleColumns.includes(tab))
                         .map((topic) => (
-                          <td key={topic} className="p-4 align-top w-[400px] max-w-[400px] text-sm">
+                          <td
+                            key={topic}
+                            className={`p-4 align-top text-sm ${topic === "Drug_Sources" ? "w-[600px] max-w-[600px] break-words" : "w-[400px] max-w-[400px]"
+                              }`}
+                          >
                             {topic === "Disease"
                               ? capitalizeName(renderCellContent(rec, topic))
                               : renderCellContent(rec, topic)}
                           </td>
+
+
                         ))}
                     </tr>
                   ))

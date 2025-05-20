@@ -269,8 +269,13 @@ export default function DrugFormulation() {
         setSseError(data.error)
         toast.error(data.error)
       } else {
-        setTableData(data.data)
-        const uniqueDiseases = [...new Set(data.data.map((d) => d.disease))]
+        const sortedData = [...data.data].sort((a, b) =>
+          a.disease.localeCompare(b.disease, undefined, { sensitivity: "base" })
+        )
+
+        setTableData(sortedData)
+
+        const uniqueDiseases = [...new Set(sortedData.map((d) => d.disease))]
         setDiseases(uniqueDiseases)
       }
     } catch (err) {

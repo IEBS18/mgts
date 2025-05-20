@@ -6,7 +6,7 @@ psycopg2-binary
 pandas
 python-dotenv
 Requests
-elasticsearch
+elasticsearch==8.17.2
 scikit-learn
 numpy
 openai

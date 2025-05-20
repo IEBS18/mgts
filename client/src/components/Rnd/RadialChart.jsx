@@ -499,10 +499,10 @@ function RadialChart({
         <div className="flex justify-between items-center w-full">
           <CardTitle className="text-xl font-semibold">Top 5 Diseases to Explore</CardTitle>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full" onClick={downloadChart}>
+            {/* <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full" onClick={downloadChart}>
               <Download className="h-4 w-4" />
               <span className="sr-only">Download</span>
-            </Button>
+            </Button> */}
             <Button
               variant="outline"
               size="sm"
@@ -562,10 +562,10 @@ function RadialChart({
             <div className="p-4 border-b flex justify-between items-center">
               <h3 className="text-xl font-semibold">Disease Distribution</h3>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full" onClick={downloadChart}>
+                {/* <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full" onClick={downloadChart}>
                   <Download className="h-4 w-4" />
                   <span className="sr-only">Download</span>
-                </Button>
+                </Button> */}
                 <Button
                   variant="outline"
                   size="sm"
