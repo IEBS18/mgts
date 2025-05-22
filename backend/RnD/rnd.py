@@ -33,6 +33,7 @@ def rnd_formulation_llama():
     size = request.args.get('size', default=2, type=int)
     # Accept requested fields as a comma-separated list
     requested_fields = request.args.get('requested_fields', '')
+    
     # Log the raw input
     print("Raw requested_fields:", repr(requested_fields))
     print("Type of requested_fields:", type(requested_fields))
@@ -91,155 +92,79 @@ default_weights = {
     # "Bausch_Presence": 0.15
 }
 
+
+
+#==== BENCHMARK TABLE SCORE API ROUTE ====
+# Default Weights (initial weights for the benchmark score calculation)
+
+
+# ====== /api/rnd-formulation-drug ======
 @rnd_blueprint.route('/api/rnd-formulation-drug', methods=['GET'])
 def get_rnd_formulation_drug():
     try:
-        drug_name = request.args.get('drug_name')
-        requested_tabs_raw = request.args.get('selected_tabs')  # e.g., "enrollment,justification"
+        drug_names_raw = request.args.get('drug_name', '')
+        requested_tabs_raw = request.args.get('selected_tabs')
 
-        if not drug_name:
+        if not drug_names_raw:
             raise ValueError("Missing 'drug_name' parameter in request")
-
         if not requested_tabs_raw:
             raise ValueError("Missing 'selected_tabs' parameter in request")
 
-        # Construct Excel path dynamically
-        
+        drug_names = [name.strip().lower() for name in drug_names_raw.split(',') if name.strip()]
+
         if not os.path.exists(EXCEL_FILE_PATH):
-            raise FileNotFoundError(f"Excel file for {drug_name} not found at {EXCEL_FILE_PATH}")
+            raise FileNotFoundError(f"Excel file not found at {EXCEL_FILE_PATH}")
 
         requested_tabs = [tab.strip().lower().replace(" ", "_") for tab in requested_tabs_raw.split(',')]
-
-
         xl = pd.ExcelFile(EXCEL_FILE_PATH)
-        # Read the single sheet into a DataFrame
         df = xl.parse('Sheet1')
-        
-        
-        # Sanitize column names (strip spaces, lowercase, replace spaces with underscores)
         df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
-        
+
         print("Sanitized columns in the Excel file:", df.columns)
 
-        # Ensure the requested columns exist in the DataFrame (case insensitive)
+        if 'drug_name' in df.columns:
+            df = df[df['drug_name'].str.lower().isin(drug_names)]
+
+        if df.empty:
+            raise ValueError(f"No data found for drugs: {', '.join(drug_names)}")
+
         missing_columns = [col for col in requested_tabs if col not in df.columns]
         if missing_columns:
             raise ValueError(f"Missing columns in the Excel file: {', '.join(missing_columns)}")
 
-        # Extract the requested columns
         data = df[requested_tabs].to_dict(orient='records')
 
-        # Send back the relevant data
-        response_data = {
+        return jsonify({
             "data": data,
             "message": "Columns retrieved successfully"
-        }
-        
-        return jsonify(response_data), 200
-    
+        }), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-    
 
-#==== BENCHMARK TABLE SCORE API ROUTE ====
-# Default Weights (initial weights for the benchmark score calculation)
-current_weights = {
-    "No_of_Patient_Treated": 0.20,
-    "Gut_Microbiome_Association": 0.15,
-    "Rifaximin_Treatment": 0.20,
-    "Prevalence": 0.20,
-    "Unmet_Needs": 0.15
-    # "Bausch_Presence": 0.15
-}
 
-# Route to handle the benchmark table (Excel-based or recalculated if weights are updated)
+# ====== /api/benchmark-table ======
 @rnd_blueprint.route('/api/benchmark-table', methods=['GET', 'POST'])
-# def get_benchmark_table():
-#     try:
-#         drug_name = request.args.get('drug_name')
-
-#         if not drug_name:
-#             raise ValueError("Missing 'drug_name' parameter in request")
-
-#         # excel_filename = f"{drug_name.lower()}_highlight_score.xlsx"
-#         # EXCEL_FILE_PATH = os.path.join("backend", excel_filename)
-
-#         if not os.path.exists(EXCEL_FILE_PATH):
-#             raise FileNotFoundError(f"Excel file for {drug_name} not found at {EXCEL_FILE_PATH}")
-
-#         xl = pd.ExcelFile(EXCEL_FILE_PATH)
-#         df = xl.parse('Sheet1')
-#         df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
-
-#         if request.method == 'POST':
-#             data = request.get_json()
-#             updated_weights = {
-#                 "No_of_Patient_Treated": data['weights'].get('enrollment', 0.2),
-#                 "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.175),
-#                 "Rifaximin_Treatment": data['weights'].get('justification', 0.25),
-#                 "Prevalence": data['weights'].get('prevalence', 0.175),
-#                 "Unmet_Needs": data['weights'].get('unmet_needs', 0.10)
-#             }
-
-#             benchmark_scores = []
-#             for index, row in df.iterrows():
-#                 try:
-#                     score_str = row['score_breakdown_distribution']
-#                     score_json = json.loads(score_str.replace("'", '"')) if isinstance(score_str, str) else score_str
-#                     total_score = sum(score_json[key] * updated_weights[key] for key in updated_weights)
-#                 except Exception as e:
-#                     print(f"⚠️ Error parsing score breakdown on row {index}: {e}")
-#                     total_score = 0
-
-#                 benchmark_scores.append({
-#                     "disease": row['disease'],
-#                     "benchmark_score": round(total_score, 2),
-#                     "score_breakdown_distribution": updated_weights
-#                 })
-
-#             benchmark_table = pd.DataFrame(benchmark_scores).sort_values(by="benchmark_score", ascending=False)
-
-#             return jsonify({
-#                 "benchmark_table": benchmark_table.to_dict(orient='records'),
-#                 "message": f"✅ Benchmark Table recalculated for {drug_name}"
-#             }), 200
-
-#         else:
-#             df = df.sort_values(by="benchmark_score", ascending=False)
-#             top_scores = df.drop_duplicates(subset='disease', keep='first')
-#             top_scores['score_breakdown_distribution'] = top_scores['score_breakdown_distribution'].apply(ast.literal_eval)
-
-#             benchmark_table = top_scores[['disease', 'benchmark_score', 'score_breakdown_distribution']]
-
-#             return jsonify({
-#                 "benchmark_table": benchmark_table.to_dict(orient='records'),
-#                 "message": f"✅ Benchmark Table retrieved successfully for {drug_name}"
-#             }), 200
-
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 400
 def get_benchmark_table():
     try:
-        drug_name = request.args.get('drug_name', '').strip().lower()
- 
-        # Validate Excel path exists
+        drug_names_raw = request.args.get('drug_name', '')
+        drug_names = [name.strip().lower() for name in drug_names_raw.split(',') if name.strip()]
+
         if not os.path.exists(EXCEL_FILE_PATH):
             raise FileNotFoundError(f"Excel file not found at {EXCEL_FILE_PATH}")
- 
-        # Load and process Excel
+
         xl = pd.ExcelFile(EXCEL_FILE_PATH)
         df = xl.parse('Sheet1')
         df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
- 
-        # Filter if drug_name is passed
-        if drug_name:
+
+        if drug_names:
             if 'drug_name' not in df.columns:
                 raise ValueError("Missing 'drug_name' column in data.")
-            df = df[df['drug_name'].str.lower() == drug_name]
- 
+            df = df[df['drug_name'].str.lower().isin(drug_names)]
+
         if df.empty:
-            raise ValueError(f"No data found for drug: {drug_name or 'all'}")
- 
+            raise ValueError(f"No data found for drugs: {', '.join(drug_names) or 'all'}")
+
         if request.method == 'POST':
             data = request.get_json()
             updated_weights = {
@@ -249,7 +174,7 @@ def get_benchmark_table():
                 "Prevalence": data['weights'].get('prevalence', 0.175),
                 "Unmet_Needs": data['weights'].get('unmet_needs', 0.10)
             }
- 
+
             benchmark_scores = []
             for index, row in df.iterrows():
                 try:
@@ -259,53 +184,57 @@ def get_benchmark_table():
                 except Exception as e:
                     print(f"Error parsing score breakdown on row {index}: {e}")
                     total_score = 0
- 
+
                 benchmark_scores.append({
                     "disease": row['disease'],
                     "benchmark_score": round(total_score, 2),
                     "score_breakdown_distribution": updated_weights
                 })
- 
+
             benchmark_table = pd.DataFrame(benchmark_scores).sort_values(by="benchmark_score", ascending=False)
- 
+
             return jsonify({
                 "benchmark_table": benchmark_table.to_dict(orient='records'),
-                "message": f"Benchmark Table recalculated for {drug_name or 'all'}"
+                "message": f"Benchmark Table recalculated for {', '.join(drug_names) or 'all'}"
             }), 200
- 
+
         else:  # GET
-            df = df.sort_values(by="benchmark_score", ascending=False)
-            df = df.drop_duplicates(subset='disease', keep='first')
+            df = df.sort_values(by="benchmark_score", ascending=False).drop_duplicates(subset='disease', keep='first')
+
             if 'score_breakdown_distribution' in df.columns:
                 df['score_breakdown_distribution'] = df['score_breakdown_distribution'].apply(
                     lambda x: ast.literal_eval(x) if isinstance(x, str) else x
                 )
- 
+
             benchmark_table = df[['disease', 'benchmark_score', 'score_breakdown_distribution']]
- 
+
             return jsonify({
                 "benchmark_table": benchmark_table.to_dict(orient='records'),
-                "message": f"Benchmark Table retrieved successfully for {drug_name or 'all'}"
+                "message": f"Benchmark Table retrieved successfully for {', '.join(drug_names) or 'all'}"
             }), 200
- 
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-# Route to handle pie chart for top benchmark scores (Excel-based or recalculated if weights are updated)
+
+# ====== /api/pie-chart ======
 @rnd_blueprint.route('/api/pie-chart', methods=['GET', 'POST'])
 def get_pie_chart():
     try:
-        drug_name = request.args.get('drug_name', '').strip().lower()
+        drug_names_raw = request.args.get('drug_name', '')
+        drug_names = [name.strip().lower() for name in drug_names_raw.split(',') if name.strip()]
 
         xl = pd.ExcelFile(EXCEL_FILE_PATH)
         df = xl.parse('Sheet1')
         df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
 
-        if drug_name:
-            df = df[df['drug_name'].str.lower() == drug_name]
+        if drug_names:
+            if 'drug_name' not in df.columns:
+                raise ValueError("Missing 'drug_name' column in data.")
+            df = df[df['drug_name'].str.lower().isin(drug_names)]
 
         if df.empty:
-            raise ValueError(f"No data found for drug: {drug_name}")
+            raise ValueError(f"No data found for drugs: {', '.join(drug_names)}")
 
         if request.method == 'POST':
             data = request.get_json()
@@ -339,10 +268,6 @@ def get_pie_chart():
             df = df.drop_duplicates(subset='disease', keep='first')
             top_scores = df.nlargest(5, 'benchmark_score')
 
-        # pie_chart_data = [
-        #     {"name": row['disease'], "value": row['benchmark_score']}
-        #     for _, row in top_scores.iterrows()
-        # ]
         pie_chart_data = [
             {"name": row['disease'], "value": row['benchmark_score']}
             for _, row in top_scores.iterrows()
@@ -350,11 +275,215 @@ def get_pie_chart():
 
         return jsonify({
             "pie_chart_data": pie_chart_data,
-            "message": "Pie chart data generated successfully"
+            "message": f"Pie chart data generated successfully for {', '.join(drug_names) or 'all'}"
         }), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+# Route to handle the benchmark table (Excel-based or recalculated if weights are updated)
+# @rnd_blueprint.route('/api/benchmark-table', methods=['GET', 'POST'])
+# # def get_benchmark_table():
+# #     try:
+# #         drug_name = request.args.get('drug_name')
+
+# #         if not drug_name:
+# #             raise ValueError("Missing 'drug_name' parameter in request")
+
+# #         # excel_filename = f"{drug_name.lower()}_highlight_score.xlsx"
+# #         # EXCEL_FILE_PATH = os.path.join("backend", excel_filename)
+
+# #         if not os.path.exists(EXCEL_FILE_PATH):
+# #             raise FileNotFoundError(f"Excel file for {drug_name} not found at {EXCEL_FILE_PATH}")
+
+# #         xl = pd.ExcelFile(EXCEL_FILE_PATH)
+# #         df = xl.parse('Sheet1')
+# #         df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+
+# #         if request.method == 'POST':
+# #             data = request.get_json()
+# #             updated_weights = {
+# #                 "No_of_Patient_Treated": data['weights'].get('enrollment', 0.2),
+# #                 "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.175),
+# #                 "Rifaximin_Treatment": data['weights'].get('justification', 0.25),
+# #                 "Prevalence": data['weights'].get('prevalence', 0.175),
+# #                 "Unmet_Needs": data['weights'].get('unmet_needs', 0.10)
+# #             }
+
+# #             benchmark_scores = []
+# #             for index, row in df.iterrows():
+# #                 try:
+# #                     score_str = row['score_breakdown_distribution']
+# #                     score_json = json.loads(score_str.replace("'", '"')) if isinstance(score_str, str) else score_str
+# #                     total_score = sum(score_json[key] * updated_weights[key] for key in updated_weights)
+# #                 except Exception as e:
+# #                     print(f"⚠️ Error parsing score breakdown on row {index}: {e}")
+# #                     total_score = 0
+
+# #                 benchmark_scores.append({
+# #                     "disease": row['disease'],
+# #                     "benchmark_score": round(total_score, 2),
+# #                     "score_breakdown_distribution": updated_weights
+# #                 })
+
+# #             benchmark_table = pd.DataFrame(benchmark_scores).sort_values(by="benchmark_score", ascending=False)
+
+# #             return jsonify({
+# #                 "benchmark_table": benchmark_table.to_dict(orient='records'),
+# #                 "message": f"✅ Benchmark Table recalculated for {drug_name}"
+# #             }), 200
+
+# #         else:
+# #             df = df.sort_values(by="benchmark_score", ascending=False)
+# #             top_scores = df.drop_duplicates(subset='disease', keep='first')
+# #             top_scores['score_breakdown_distribution'] = top_scores['score_breakdown_distribution'].apply(ast.literal_eval)
+
+# #             benchmark_table = top_scores[['disease', 'benchmark_score', 'score_breakdown_distribution']]
+
+# #             return jsonify({
+# #                 "benchmark_table": benchmark_table.to_dict(orient='records'),
+# #                 "message": f"✅ Benchmark Table retrieved successfully for {drug_name}"
+# #             }), 200
+
+# #     except Exception as e:
+# #         return jsonify({"error": str(e)}), 400
+# def get_benchmark_table():
+#     try:
+#         drug_name = request.args.get('drug_name', '').strip().lower()
+ 
+#         # Validate Excel path exists
+#         if not os.path.exists(EXCEL_FILE_PATH):
+#             raise FileNotFoundError(f"Excel file not found at {EXCEL_FILE_PATH}")
+ 
+#         # Load and process Excel
+#         xl = pd.ExcelFile(EXCEL_FILE_PATH)
+#         df = xl.parse('Sheet1')
+#         df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+ 
+#         # Filter if drug_name is passed
+#         if drug_name:
+#             if 'drug_name' not in df.columns:
+#                 raise ValueError("Missing 'drug_name' column in data.")
+#             df = df[df['drug_name'].str.lower() == drug_name]
+ 
+#         if df.empty:
+#             raise ValueError(f"No data found for drug: {drug_name or 'all'}")
+ 
+#         if request.method == 'POST':
+#             data = request.get_json()
+#             updated_weights = {
+#                 "No_of_Patient_Treated": data['weights'].get('enrollment', 0.2),
+#                 "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.175),
+#                 "Rifaximin_Treatment": data['weights'].get('justification', 0.25),
+#                 "Prevalence": data['weights'].get('prevalence', 0.175),
+#                 "Unmet_Needs": data['weights'].get('unmet_needs', 0.10)
+#             }
+ 
+#             benchmark_scores = []
+#             for index, row in df.iterrows():
+#                 try:
+#                     score_str = row['score_breakdown_distribution']
+#                     score_json = json.loads(score_str.replace("'", '"')) if isinstance(score_str, str) else score_str
+#                     total_score = sum(score_json[key] * updated_weights[key] for key in updated_weights)
+#                 except Exception as e:
+#                     print(f"Error parsing score breakdown on row {index}: {e}")
+#                     total_score = 0
+ 
+#                 benchmark_scores.append({
+#                     "disease": row['disease'],
+#                     "benchmark_score": round(total_score, 2),
+#                     "score_breakdown_distribution": updated_weights
+#                 })
+ 
+#             benchmark_table = pd.DataFrame(benchmark_scores).sort_values(by="benchmark_score", ascending=False)
+ 
+#             return jsonify({
+#                 "benchmark_table": benchmark_table.to_dict(orient='records'),
+#                 "message": f"Benchmark Table recalculated for {drug_name or 'all'}"
+#             }), 200
+ 
+#         else:  # GET
+#             df = df.sort_values(by="benchmark_score", ascending=False)
+#             df = df.drop_duplicates(subset='disease', keep='first')
+#             if 'score_breakdown_distribution' in df.columns:
+#                 df['score_breakdown_distribution'] = df['score_breakdown_distribution'].apply(
+#                     lambda x: ast.literal_eval(x) if isinstance(x, str) else x
+#                 )
+ 
+#             benchmark_table = df[['disease', 'benchmark_score', 'score_breakdown_distribution']]
+ 
+#             return jsonify({
+#                 "benchmark_table": benchmark_table.to_dict(orient='records'),
+#                 "message": f"Benchmark Table retrieved successfully for {drug_name or 'all'}"
+#             }), 200
+ 
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 400
+
+# # Route to handle pie chart for top benchmark scores (Excel-based or recalculated if weights are updated)
+# @rnd_blueprint.route('/api/pie-chart', methods=['GET', 'POST'])
+# def get_pie_chart():
+#     try:
+#         drug_name = request.args.get('drug_name', '').strip().lower()
+
+#         xl = pd.ExcelFile(EXCEL_FILE_PATH)
+#         df = xl.parse('Sheet1')
+#         df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+
+#         if drug_name:
+#             df = df[df['drug_name'].str.lower() == drug_name]
+
+#         if df.empty:
+#             raise ValueError(f"No data found for drug: {drug_name}")
+
+#         if request.method == 'POST':
+#             data = request.get_json()
+#             updated_weights = {
+#                 "No_of_Patient_Treated": data['weights'].get('enrollment', 0.2),
+#                 "Gut_Microbiome_Association": data['weights'].get('mechanism', 0.175),
+#                 "Rifaximin_Treatment": data['weights'].get('justification', 0.25),
+#                 "Prevalence": data['weights'].get('prevalence', 0.175),
+#                 "Unmet_Needs": data['weights'].get('unmet_needs', 0.10)
+#             }
+
+#             benchmark_scores = []
+#             for index, row in df.iterrows():
+#                 try:
+#                     score_str = row['score_breakdown_distribution']
+#                     score_json = json.loads(score_str.replace("'", '"')) if isinstance(score_str, str) else score_str
+#                     total_score = sum(score_json[key] * updated_weights[key] for key in updated_weights)
+#                 except Exception as e:
+#                     print(f"⚠️ Error parsing score breakdown on row {index}: {e}")
+#                     total_score = 0
+
+#                 benchmark_scores.append({
+#                     "disease": row['disease'],
+#                     "benchmark_score": round(total_score, 2),
+#                 })
+
+#             benchmark_df = pd.DataFrame(benchmark_scores).drop_duplicates(subset='disease', keep='first')
+#             top_scores = benchmark_df.nlargest(5, 'benchmark_score')
+
+#         else:
+#             df = df.drop_duplicates(subset='disease', keep='first')
+#             top_scores = df.nlargest(5, 'benchmark_score')
+
+#         # pie_chart_data = [
+#         #     {"name": row['disease'], "value": row['benchmark_score']}
+#         #     for _, row in top_scores.iterrows()
+#         # ]
+#         pie_chart_data = [
+#             {"name": row['disease'], "value": row['benchmark_score']}
+#             for _, row in top_scores.iterrows()
+#         ]
+
+#         return jsonify({
+#             "pie_chart_data": pie_chart_data,
+#             "message": "Pie chart data generated successfully"
+#         }), 200
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 400
 
 @rnd_blueprint.route('/rnd-excel-export', methods=['POST'])
 def rnd_excel_export():
