@@ -6,7 +6,7 @@ import { ToastContainer, toast } from "react-toastify"
 import { ArrowLeft, Loader2, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import BenchmarkTable from "./BenchmarkTable"
-import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts"
+import { PolarAngleAxis, LabelList, RadialBar, RadialBarChart } from "recharts"
 import { CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import "./custom.css"
@@ -93,7 +93,137 @@ export default function BenchmarkAnalysisPage() {
     })
   }
 
-  const reversedData = pieChartData ? [...pieChartData].reverse() : []
+  // const reversedData = pieChartData ? [...pieChartData].reverse() : []
+
+  // const transformedData = reversedData
+  //   ? reversedData.map((item, index) => {
+  //       const chartColors = [
+  //         "hsl(139, 65%, 20%)", // --chart-1
+  //         "hsl(140, 74%, 44%)", // --chart-2
+  //         "hsl(142, 88%, 28%)", // --chart-3
+  //         "hsl(137, 55%, 15%)", // --chart-4
+  //         "hsl(141, 40%, 9%)", // --chart-5
+  //       ]
+  //       return {
+  //         browser: item.name,
+  //         visitors: item.value,
+  //         fill: chartColors[index % chartColors.length],
+  //       }
+  //     })
+  //   : []
+
+  // const chartConfig = {
+  //   visitors: {
+  //     label: "Score",
+  //   },
+  //   ...(reversedData?.reduce((config, item, index) => {
+  //     const chartColors = [
+  //       "hsl(139, 65%, 20%)", // --chart-1
+  //       "hsl(140, 74%, 44%)", // --chart-2
+  //       "hsl(142, 88%, 28%)", // --chart-3
+  //       "hsl(137, 55%, 15%)", // --chart-4
+  //       "hsl(141, 40%, 9%)", // --chart-5
+  //     ]
+  //     config[index + 1] = {
+  //       label: item.name,
+  //       color: chartColors[index % chartColors.length],
+  //     }
+  //     return config
+  //   }, {}) || {}),
+  // }
+
+  // const CustomTooltipContent = ({ active, payload }) => {
+  //   if (active && payload && payload.length) {
+  //     return (
+  //       <div className="bg-white p-2 border border-gray-200 rounded shadow-sm">
+  //         <p className="font-medium capitalize">{payload[0].payload.browser}</p>
+  //         <p className="text-sm">Score: {payload[0].value}</p>
+  //       </div>
+  //     )
+  //   }
+  //   return null
+  // }
+
+  // // const downloadChart = () => {
+  // //   const svgElement = document.querySelector(".chart-container svg")
+  // //   if (!svgElement) {
+  // //     console.error("SVG element not found")
+  // //     return
+  // //   }
+
+  // //   const svgClone = svgElement.cloneNode(true)
+  // //   svgClone.setAttribute("style", "background-color: white;")
+
+  // //   const titleElement = document.createElementNS("http://www.w3.org/2000/svg", "text")
+  // //   titleElement.setAttribute("x", "50%")
+  // //   titleElement.setAttribute("y", "20")
+  // //   titleElement.setAttribute("text-anchor", "middle")
+  // //   titleElement.setAttribute("font-family", "Arial")
+  // //   titleElement.setAttribute("font-size", "16")
+  // //   titleElement.setAttribute("font-weight", "bold")
+  // //   titleElement.textContent = "Top 5 Diseases by Score"
+  // //   svgClone.appendChild(titleElement)
+
+  // //   const textElements = svgClone.querySelectorAll("text")
+  // //   textElements.forEach((text) => {
+  // //     text.setAttribute("fill", "black")
+  // //     text.setAttribute("style", "font-family: Arial; visibility: visible;")
+  // //   })
+
+  // //   const labelElements = svgClone.querySelectorAll(".recharts-label")
+  // //   labelElements.forEach((label) => {
+  // //     label.setAttribute("fill", "white")
+  // //     label.setAttribute("style", "font-family: Arial; visibility: visible;")
+  // //   })
+
+  // //   const svgData = new XMLSerializer().serializeToString(svgClone)
+
+  // //   const canvas = document.createElement("canvas")
+  // //   const ctx = canvas.getContext("2d")
+
+  // //   const img = new Image()
+  // //   img.onload = () => {
+  // //     canvas.width = img.width
+  // //     canvas.height = img.height
+  // //     ctx.fillStyle = "white"
+  // //     ctx.fillRect(0, 0, canvas.width, canvas.height)
+  // //     ctx.drawImage(img, 0, 0)
+
+  // //     if (reversedData && reversedData.length > 0) {
+  // //       const legendY = canvas.height - 80
+  // //       ctx.font = "12px Arial"
+  // //       ctx.fillStyle = "black"
+  // //       ctx.fillText("Legend:", 20, legendY)
+
+  // //       reversedData.forEach((item, index) => {
+  // //         const chartColors = [
+  // //           "hsl(139, 65%, 20%)", // --chart-1
+  // //           "hsl(140, 74%, 44%)", // --chart-2
+  // //           "hsl(142, 88%, 28%)", // --chart-3
+  // //           "hsl(137, 55%, 15%)", // --chart-4
+  // //           "hsl(141, 40%, 9%)", // --chart-5
+  // //         ]
+  // //         const y = legendY + 20 + index * 20
+  // //         const color = chartColors[index % chartColors.length]
+  // //         ctx.fillStyle = color
+  // //         ctx.fillRect(20, y - 10, 15, 15)
+
+  // //         ctx.fillStyle = "black"
+  // //         ctx.fillText(`${item.name}: ${item.value}`, 45, y)
+  // //       })
+  // //     }
+
+  // //     const pngFile = canvas.toDataURL("image/png")
+  // //     const downloadLink = document.createElement("a")
+  // //     downloadLink.download = "disease-chart.png"
+  // //     downloadLink.href = pngFile
+  // //     downloadLink.click()
+  // //   }
+
+  // //   img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)))
+  // //   img.crossOrigin = "anonymous"
+  // // }
+const reversedData = pieChartData ? [...pieChartData].reverse() : []
 
   const transformedData = reversedData
     ? reversedData.map((item, index) => {
@@ -249,7 +379,7 @@ export default function BenchmarkAnalysisPage() {
         ) : (
           // RadialChart sits ABOVE BenchmarkTable
           <div className="grid grid-cols-1 gap-12 mb-4">
-            <div ref={radialChartRef} className="h-auto w-full mx-auto">
+            <div ref={radialChartRef} className="h-[500px] w-[1000px] mx-auto">
               <CardHeader className="items-center pb-2 bg-[#f9faf5] rounded-[12px]">
                 <div className="flex justify-between items-center w-full">
                   <CardTitle className="text-xl font-semibold">Top 5 Diseases to Explore</CardTitle>
@@ -261,44 +391,43 @@ export default function BenchmarkAnalysisPage() {
                   </div> */}
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 pb-0 chart-container flex items-center justify-center pt-4 px-4">
+              <CardContent className="flex-1 pb-0 chart-container flex items-center justify-center">
                 {reversedData && reversedData.length > 0 && (
-                  <ChartContainer config={chartConfig} className="mx-auto w-full h-[400px] aspect-square">
-                    <RadarChart
+                  <ChartContainer
+                    config={chartConfig}
+                    className="mx-auto w-[450px] h-[400px] aspect-square max-h-[450px]"
+                  >
+                    <RadialBarChart
                       data={transformedData}
                       width={450}
                       height={450}
+                      startAngle={180}
+                      endAngle={0}
+                      innerRadius={40}
                       outerRadius={180}
-                      margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
+                      barSize={40}
                     >
-                      <PolarAngleAxis
-                        dataKey="browser"
-                        tick={{
-                          fill: "#333",
-                          fontSize: 14,
-                          fontWeight: "500",
-                        }}
-                        tickLine={false}
-                      />
-                      <PolarGrid />
+                      <PolarAngleAxis type="number" domain={[0, 5]} tick={false} />
                       <ChartTooltip cursor={false} content={<CustomTooltipContent />} />
-                      <Radar
-                        dataKey="visitors"
-                        fill={transformedData.length > 0 ? transformedData[0].fill : "hsl(139, 65%, 20%)"}
-                        fillOpacity={0.6}
-                        stroke={transformedData.length > 0 ? transformedData[0].fill : "hsl(139, 65%, 20%)"}
-                        dot={{
-                          r: 4,
-                          fill: (entry) => entry.fill,
-                          fillOpacity: 1,
-                          strokeWidth: 0,
-                        }}
-                      />
-                    </RadarChart>
+                      <RadialBar dataKey="visitors" background={{ fill: "#fff" }} cornerRadius={5}>
+                        <LabelList
+                          position="insideStart"
+                          dataKey="browser"
+                          className="fill-white capitalize mix-blend-luminosity text-[10px] font-medium"
+                          formatter={(value) => value}
+                          style={{
+                            backgroundColor: "white",
+                            padding: "2px 4px",
+                            borderRadius: "2px",
+                            textTransform: "capitalize",
+                          }}
+                        />
+                      </RadialBar>
+                    </RadialBarChart>
                   </ChartContainer>
                 )}
               </CardContent>
-              <CardFooter className="flex-col gap-2 text-sm mt-4">
+              <CardFooter className="flex-col gap-2 text-sm mt-[-160px]">
                 <div className="flex items-center gap-2 font-medium leading-none">
                   Top diseases by score <TrendingUp className="h-4 w-4" />
                 </div>
