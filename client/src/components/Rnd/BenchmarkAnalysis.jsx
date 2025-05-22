@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { ToastContainer, toast } from "react-toastify"
-import { ArrowLeft, Loader2, TrendingUp, Download } from "lucide-react"
+import { ArrowLeft, Loader2, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import BenchmarkTable from "./BenchmarkTable"
-import { LabelList, RadialBar, RadialBarChart, PolarAngleAxis } from "recharts"
+import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts"
 import { CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import "./custom.css"
@@ -249,55 +249,56 @@ export default function BenchmarkAnalysisPage() {
         ) : (
           // RadialChart sits ABOVE BenchmarkTable
           <div className="grid grid-cols-1 gap-12 mb-4">
-            <div ref={radialChartRef} className="h-[500px] w-[1000px] mx-auto">
+            <div ref={radialChartRef} className="h-auto w-full mx-auto">
               <CardHeader className="items-center pb-2 bg-[#f9faf5] rounded-[12px]">
                 <div className="flex justify-between items-center w-full">
                   <CardTitle className="text-xl font-semibold">Top 5 Diseases to Explore</CardTitle>
-                  <div className="flex gap-2">
+                  {/* <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full" onClick={downloadChart}>
                       <Download className="h-4 w-4" />
                       <span className="sr-only">Download</span>
                     </Button>
-                  </div>
+                  </div> */}
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 pb-0 chart-container flex items-center justify-center">
+              <CardContent className="flex-1 pb-0 chart-container flex items-center justify-center pt-4 px-4">
                 {reversedData && reversedData.length > 0 && (
-                  <ChartContainer
-                    config={chartConfig}
-                    className="mx-auto w-[450px] h-[400px] aspect-square max-h-[450px]"
-                  >
-                    <RadialBarChart
+                  <ChartContainer config={chartConfig} className="mx-auto w-full h-[400px] aspect-square">
+                    <RadarChart
                       data={transformedData}
                       width={450}
                       height={450}
-                      startAngle={180}
-                      endAngle={0}
-                      innerRadius={40}
                       outerRadius={180}
-                      barSize={40}
+                      margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
                     >
-                      <PolarAngleAxis type="number" domain={[0, 5]} tick={false} />
+                      <PolarAngleAxis
+                        dataKey="browser"
+                        tick={{
+                          fill: "#333",
+                          fontSize: 14,
+                          fontWeight: "500",
+                        }}
+                        tickLine={false}
+                      />
+                      <PolarGrid />
                       <ChartTooltip cursor={false} content={<CustomTooltipContent />} />
-                      <RadialBar dataKey="visitors" background={{ fill: "#fff" }} cornerRadius={5}>
-                        <LabelList
-                          position="insideStart"
-                          dataKey="browser"
-                          className="fill-white capitalize mix-blend-luminosity text-[10px] font-medium"
-                          formatter={(value) => value}
-                          style={{
-                            backgroundColor: "white",
-                            padding: "2px 4px",
-                            borderRadius: "2px",
-                            textTransform: "capitalize",
-                          }}
-                        />
-                      </RadialBar>
-                    </RadialBarChart>
+                      <Radar
+                        dataKey="visitors"
+                        fill={transformedData.length > 0 ? transformedData[0].fill : "hsl(139, 65%, 20%)"}
+                        fillOpacity={0.6}
+                        stroke={transformedData.length > 0 ? transformedData[0].fill : "hsl(139, 65%, 20%)"}
+                        dot={{
+                          r: 4,
+                          fill: (entry) => entry.fill,
+                          fillOpacity: 1,
+                          strokeWidth: 0,
+                        }}
+                      />
+                    </RadarChart>
                   </ChartContainer>
                 )}
               </CardContent>
-              <CardFooter className="flex-col gap-2 text-sm mt-[-160px]">
+              <CardFooter className="flex-col gap-2 text-sm mt-4">
                 <div className="flex items-center gap-2 font-medium leading-none">
                   Top diseases by score <TrendingUp className="h-4 w-4" />
                 </div>

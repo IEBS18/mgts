@@ -74,7 +74,7 @@ const BioFormulateHeader = () => {
             <DropdownMenuItem className="hover:bg-[#e0f3c4] hover:rounded-[12px]">
             <a href="https://www.iebrain.com/" target="_blank" className="flex flex-row gap-2">
               <Building2 className="w-4 h-4 mr-2"/>
-              Ingenious-e-brains
+              Ingenious-e-brain
               </a>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
