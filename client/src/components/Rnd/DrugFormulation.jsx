@@ -23,6 +23,7 @@
 //   const [visibleColumns, setVisibleColumns] = useState([])
 //   const [searchParams] = useSearchParams()
 //   const weightsFromUrl = searchParams.get("weights")
+//   const [tableRefreshTrigger, setTableRefreshTrigger] = useState(0)
 
 //   // Fetch pie chart data
 //   const fetchPieChartData = async (weights = null) => {
@@ -77,8 +78,13 @@
 //         setSseError(data.error)
 //         toast.error(data.error)
 //       } else {
-//         setTableData(data.data)
-//         const uniqueDiseases = [...new Set(data.data.map((d) => d.disease))]
+//         const sortedData = [...data.data].sort((a, b) =>
+//           a.disease.localeCompare(b.disease, undefined, { sensitivity: "base" })
+//         )
+
+//         setTableData(sortedData)
+
+//         const uniqueDiseases = [...new Set(sortedData.map((d) => d.disease))]
 //         setDiseases(uniqueDiseases)
 //       }
 //     } catch (err) {
@@ -127,6 +133,10 @@
 //     if (pieChartData) {
 //       setPieChartData(pieChartData)
 //     }
+
+//     // Force refresh of the BenchmarkSummaryTable by updating a state variable
+//     // This is a workaround if the component doesn't directly respond to prop changes
+//     setTableRefreshTrigger(Date.now())
 //   }
 
 //   const navigateToFullBenchmark = () => {
@@ -168,6 +178,7 @@
 //               onViewFullBenchmark={navigateToFullBenchmark}
 //               pieChartData={pieChartData}
 //               weightsFromUrl={weightsFromUrl}
+//               key={tableRefreshTrigger} // Force re-render when weights change
 //             />
 //           </div>
 //         </div>
@@ -186,13 +197,13 @@
 //       </div>
 //     </div>
 //   )
-// } 
+// }
 
 
-"use client"
+// "use client"
 
 import { useState, useEffect } from "react"
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { ToastContainer, toast } from "react-toastify"
 import RadialChart from "./RadialChart"
 import BenchmarkTableSummary from "./BenchmarkSummary"
@@ -201,8 +212,7 @@ import "react-toastify/dist/ReactToastify.css"
 import "./custom.css" // Import your custom CSS file
 
 export default function DrugFormulation() {
-  const location = useLocation()
-  const { selectedTabs = [] } = location.state || {}
+  // No need to get selectedTabs from location.state
   const navigate = useNavigate()
   const [pieChartData, setPieChartData] = useState(null)
   const [tableData, setTableData] = useState([])
@@ -211,7 +221,6 @@ export default function DrugFormulation() {
   const [orderedTabs, setOrderedTabs] = useState([])
   const [selectedDisease, setSelectedDisease] = useState("all")
   const [diseases, setDiseases] = useState([])
-  const [visibleColumns, setVisibleColumns] = useState([])
   const [searchParams] = useSearchParams()
   const weightsFromUrl = searchParams.get("weights")
   const [tableRefreshTrigger, setTableRefreshTrigger] = useState(0)
@@ -270,7 +279,7 @@ export default function DrugFormulation() {
         toast.error(data.error)
       } else {
         const sortedData = [...data.data].sort((a, b) =>
-          a.disease.localeCompare(b.disease, undefined, { sensitivity: "base" })
+          a.disease.localeCompare(b.disease, undefined, { sensitivity: "base" }),
         )
 
         setTableData(sortedData)
@@ -295,30 +304,22 @@ export default function DrugFormulation() {
   }, [weightsFromUrl])
 
   useEffect(() => {
-    const uniqueSelectedTabs = Array.from(new Set(selectedTabs))
     const columnOrder = [
       "Disease",
       "Disease_Microbes",
       "Disease_Mechanism",
-      // "Drug_Title",
       "Drug_Microbes",
       "Drug_Mechanism",
       "Justification_for_Drug_Use",
       "Disease_Sources",
-      // "Disease_Title",
       "Drug_Sources",
     ]
-    const orderedTabs = columnOrder.filter((tab) => uniqueSelectedTabs.includes(tab))
-    setOrderedTabs(orderedTabs)
 
-    // Initialize visible columns to be all ordered tabs
-    if (visibleColumns.length === 0) {
-      setVisibleColumns(orderedTabs)
-    }
+    setOrderedTabs(columnOrder)
 
-    const requestedFields = orderedTabs.join(",")
+    const requestedFields = columnOrder.join(",")
     fetchTableData(requestedFields, selectedDisease)
-  }, [selectedTabs, selectedDisease])
+  }, [selectedDisease])
 
   const handleWeightsUpdate = (weights, pieChartData) => {
     if (pieChartData) {
@@ -332,17 +333,6 @@ export default function DrugFormulation() {
 
   const navigateToFullBenchmark = () => {
     navigate("/benchmark-analysis" + (weightsFromUrl ? `?weights=${weightsFromUrl}` : ""))
-  }
-
-  const toggleColumnVisibility = (columnOrColumns) => {
-    if (Array.isArray(columnOrColumns)) {
-      // If an array is passed, directly set the visible columns
-      setVisibleColumns(columnOrColumns)
-    } else {
-      // Maintain backward compatibility for toggling a single column
-      const column = columnOrColumns
-      setVisibleColumns((prev) => (prev.includes(column) ? prev.filter((col) => col !== column) : [...prev, column]))
-    }
   }
 
   return (
@@ -382,8 +372,6 @@ export default function DrugFormulation() {
           selectedDisease={selectedDisease}
           setSelectedDisease={setSelectedDisease}
           diseases={diseases}
-          visibleColumns={visibleColumns}
-          toggleColumnVisibility={toggleColumnVisibility}
         />
       </div>
     </div>
