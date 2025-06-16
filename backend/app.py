@@ -998,8 +998,8 @@ def search_tpp_by_drug():
         modality_mask = df['Modality'].str.contains(modality, case=False, na=False) if modality else pd.Series([True] * len(df))
 
         # Combine the conditions using AND logic
-        combined_mask = disease_mask & modality_mask
-
+        # combined_mask = disease_mask | modality_mask --> OR LOGIC USE "|"... AND KE LIYE USE "&" 
+        combined_mask = disease_mask & (modality_mask | ~modality_mask)
         # Apply the combined filter to the DataFrame
         filtered_df = df[combined_mask]
 
