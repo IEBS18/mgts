@@ -85,7 +85,7 @@ function ChatBot({ chatMessages, setChatMessages, fulldata, isMinimized, onToggl
               {/* Chat Header */}
               <div className="bg-[#4B6601] py-3 px-4">  
                 <div className="flex items-center justify-between">
-                  <h2 className="text-white font-semibold">PharmaX Bot</h2>
+                  <h2 className="text-white font-semibold">InsiOnyx Bot</h2>
                   <Button
                     size="icon"
                     variant="ghost"

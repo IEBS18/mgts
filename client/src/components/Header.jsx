@@ -109,7 +109,7 @@ const Header = () => {
         </a>
         <h1 className="px-4 text-white">|</h1>
         <a href="/dashboard" className="font-bold text-white hover:text-white">
-          Pharma<span className="text-[#a6ce39]">X</span>
+          <span>InsiOnyx</span>
         </a>
       </div>
 

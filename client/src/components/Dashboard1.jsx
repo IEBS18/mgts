@@ -51,7 +51,7 @@ export default function Dashboard1() {
       <main className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
           <header className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold">Welcome to PharmaX Copilot <span className="text-sm font-normal bg-yellow-200 px-2 py-1 rounded">BETA</span></h1>
+            <h1 className="text-3xl font-bold">Welcome to InsiOnyx Copilot <span className="text-sm font-normal bg-yellow-200 px-2 py-1 rounded">BETA</span></h1>
             <Bell className="h-6 w-6" />
           </header>
 

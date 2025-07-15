@@ -67,7 +67,7 @@ const Dashboard = () => {
       {/* Centered Header */}
       <header className="text-center mb-8">
         <h1 className="text-5xl font-bold text-gray-800 mt-8">
-          Welcome to <span className="text-[#a6ce39]">PharmaX</span>
+          Welcome to <span className="text-[#a6ce39]">InsiOnyx</span>
         </h1>
         <p className="text-lg text-muted-foreground mt-4">
           Explore insights, analytics, and forecasting tools for informed decision-making.

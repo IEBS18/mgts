@@ -15,7 +15,7 @@ function Authenticate() {
                 <div className='flex flex-row'>
                     <div className='flex flex-col justify-center mr-8'>
                         <h1 className='font-roboto text-3xl font-medium leading-[56.25px] text-right text-white' >Welcome to</h1>
-                        <p className='font-roboto text-9xl font-medium leading-[56.25px] text-left text-white'>PharmaX:</p>
+                        <p className='font-roboto text-9xl font-medium leading-[56.25px] text-left text-white'>InsiOnyx:</p>
                         <div className='flex flex-row'>
                             {/* <p className='font-roboto text-7xl font-medium leading-[56.25px] text-left text-white mt-8'>InsiMine:</p> */}
                             {/* <div className="flex flex-col justify-center ml-4">

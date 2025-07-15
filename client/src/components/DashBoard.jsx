@@ -161,7 +161,7 @@ export default function Dashboard() {
           >
             <header className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-bold">
-                Welcome to <span className="text-[#95D524]">PharmaX</span>{" "}
+                Welcome to <span className="text-[#95D524]">InsiOnyx</span>{" "}
                 Copilot
                 <span className="text-sm font-normal bg-yellow-200 px-2 py-1 rounded ml-2">
                   BETA
