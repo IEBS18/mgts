@@ -21,6 +21,7 @@ import { cn } from "@/utils/cn";
 
 // Import the DiseaseOverviewModal at the top
 import DiseaseOverviewModal from "./DiseaseOverviewModal"; // Ensure the correct import path
+// import DiseaseOverviewPage from "./DiseaseOverviewPage";
 
 const DiseaseSearchPage = () => {
   const location = useLocation();
@@ -630,6 +631,12 @@ const DiseaseSearchPage = () => {
     }
   }, [searchResults]);
 
+  
+  useEffect(() => {
+      // Scroll to the top when the component mounts
+      window.scrollTo(0, 0);
+    }, []);
+
   return (
     <div>
       {loading ? (
@@ -720,11 +727,6 @@ const DiseaseSearchPage = () => {
                     isChatMinimized={isChatMinimized}
                     diseaseName={activeTabContent.diseaseName}
                     data={activeTabContent.data}
-                  // years={activeTabContent.years}
-                  // forecast_years={activeTabContent.forecast_years}
-                  // combinedPrevalence={activeTabContent.combinedPrevalence}
-                  // marketPredictions={activeTabContent.marketPredictions}
-                  // marketSize={activeTabContent.marketSize}
                   />
                 )}
 
@@ -733,8 +735,6 @@ const DiseaseSearchPage = () => {
                     isChatMinimized={isChatMinimized}
                     diseaseName={activeTabContent.diseaseName}
                     allData={activeTabContent.data}
-                  // allYears={activeTabContent.allYears}
-                  // combinedTherapyCost={activeTabContent.combinedTherapyCost}
                   />
                 )}
               </div>

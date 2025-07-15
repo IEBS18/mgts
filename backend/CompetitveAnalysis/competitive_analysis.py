@@ -122,6 +122,7 @@ def generate_disease_analysis():
 @competitive_analysis_blueprint.route('/get-drug-data', methods=['POST'])
 def get_drug_data():
     try:
+        print(request.headers)
         # Get active ingredient from request
         active_ingredient = request.json.get('active_ingredient')
         print(active_ingredient)

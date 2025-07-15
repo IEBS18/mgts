@@ -23,8 +23,9 @@ CORS(app, supports_credentials=True, origins=[
     "http://localhost:5174", 
     "http://127.0.0.1:5000",
     "http://127.0.0.1:3000",
-    "http://20.189.113.232:3000"
-])
+    "http://20.189.113.232:3000",
+    "https://a8af-14-97-31-82.ngrok-free.app",
+],methods=["POST", "GET", "OPTIONS"])
 
 # # Register Blueprints with a URL prefix
 app.register_blueprint(auth_blueprint)

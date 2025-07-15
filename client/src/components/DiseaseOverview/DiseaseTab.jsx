@@ -4,8 +4,8 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ArrowUpDown, ChevronDown, Download } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ArrowUpDown, Download, Filter } from "lucide-react";
 import {
   useReactTable,
   flexRender,
@@ -15,7 +15,6 @@ import {
   getSortedRowModel
 } from "@tanstack/react-table";
 import { toast } from "react-toastify"; // For user feedback
-import { cn } from "@/utils/cn"; // Ensure this path is correct
 
 const DiseaseTab = ({
   diseaseInfo,
@@ -191,29 +190,29 @@ const DiseaseTab = ({
     <>
                 <div className="flex items-center mb-4 gap-4 justify-between">
             <div className="flex justify-between items-center">
-              <h1 className="text-2xl w-1/2 font-bold text-gray-800">
-                Disease Overview: <span className="text-[#54681D]">{diseaseInfo.Disease || "Unknown Disease"}</span>
+              <h1 className="text-xl w-2/3 font-bold text-gray-800">
+                Disease Overview: <span className="text-[#a6ce39]">{diseaseInfo.Disease || "Unknown Disease"}</span>
               </h1>
-              <div className="flex w-1/2 justify-end ml-[300px]">
+              <div className="flex w-1/3 justify-end ml-[360px]">
                 <div className="flex gap-x-4 ml-auto">
                   <Button
                     onClick={handleRelevantDrugsSearch}
                     disabled={isSearching}
-                    className="bg-[#54681D] text-white hover:bg-[#95b833] rounded-[12px] w-[200px]"
+                    className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[8px] w-[160px]"
                   >
                     {isSearching ? 'Loading...' : 'Show Relevant Drugs'}
                   </Button>
                   <Button
                     onClick={handleMarketEstimation}
                     disabled={isSearchingCP}
-                    className="bg-[#54681D] text-white hover:bg-[#95b833] rounded-[12px] w-[200px]"
+                    className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[8px] w-[140px]"
                   >
                     {isSearchingCP ? 'Loading...' : 'Market Estimation'}
                   </Button>
                   <Button
                     onClick={handleTherapyCost}
                     disabled={isSearchingCT}
-                    className="bg-[#54681D] text-white hover:bg-[#95b833] rounded-[12px] w-[200px]"
+                    className="bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-[8px] w-[180px]"
                   >
                     {isSearchingCT ? 'Loading...' : 'Therapy Cost Estimation'}
                   </Button>
@@ -232,59 +231,51 @@ const DiseaseTab = ({
         )}
         <div className="flex items-center justify-between py-4 gap-2">
           {/* Filter Topics Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="rounded-lg bg-[#54681D] hover:bg-darkBlue text-white">
-                Filter Topics <ChevronDown className="ml-2 h-4 w-4" />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="bg-white text-[#a6ce39] border-[#a6ce39] hover:bg-[#f0f8e5] flex items-center rounded-lg gap-2">
+                <Filter className="h-4 w-4" />
+                Filter
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-white pt-3" side="left" align="end">
-              {allowedKeys.map((topic) => (
-                <DropdownMenuCheckboxItem
-                  key={topic}
-                  checked={selectedTopics.includes(topic)}
-                  onCheckedChange={() => handleTopicSelection(topic)}
-                >
-                  {topic}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Columns Dropdown */}
-          {/* <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="ml-auto rounded-lg bg-green text-white hover:bg-darkBlue hover:text-white">
-                Columns <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white pt-3">
-              {tableInstance.getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu> */}
+            </PopoverTrigger>
+            <PopoverContent className="w-80 bg-white rounded-lg max-h-[400px] overflow-y-auto scrollbar-hide">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-bold mb-2 text-[#a6ce39] ">Topic</h3>
+                  {allowedKeys.map((topic) => (
+                    <div key={topic} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`topic-${topic}`}
+                        checked={selectedTopics.includes(topic)}
+                        onCheckedChange={() => handleTopicSelection(topic)}
+                      />
+                      <label htmlFor={`topic-${topic}`}>{topic}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
 
           {/* Export Button */}
           <Button
-            className='bg-[#54681D] rounded-lg hover:bg-darkBlue text-white'
+            className='bg-[#a6ce39] text-white hover:bg-[#95b833] rounded-lg'
             disabled={isDiseaseExporting}
             onClick={handleExportClick}
           >
             <Download className="mr-2 h-4 w-4" />
-            {isDiseaseExporting ? 'Exporting...' : 'Export Selected Rows'}
+            {isDiseaseExporting ? 'Exporting...' : 'Export'}
           </Button>
         </div>
-
+        <div className="flex gap-2 flex-wrap">
+        {selectedTopics.length > 0 && (
+          <div className="flex items-center bg-[#e5f7d9] text-[#4d7c1a] px-3 py-1 rounded-lg">
+            <span className="text-sm font-semibold">
+              Topic: {selectedTopics.join(", ")}
+            </span>
+          </div>
+        )}
+      </div>
         {/* Data Table */}
         <div className="rounded-md border">
           <Table>

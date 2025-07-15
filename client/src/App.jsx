@@ -2,36 +2,39 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "@/pages/Layout";
-// import Dashboard from "@/pages/Dashboard";
-// import DiseaseSearchPage from "./components/DiseaseOverview/DiseaseSearchPage";
-// import DrugResultsPage from "./components/DiseaseOverview/DrugResultPage";
-// import SymptomResultsPage from "./components/DiseaseOverview/SymptomsResultPage";
-// import DiseaseAnalysis from "./components/CompetitiveAnalysis/CompetitiveLandscapeSearchPage";
+import Dashboard from "@/pages/Dashboard";
+import DiseaseSearchPage from "./components/DiseaseOverview/DiseaseSearchPage";
+import DrugResultsPage from "./components/DiseaseOverview/DrugResultPage";
+import SymptomResultsPage from "./components/DiseaseOverview/SymptomsResultPage";
+import DiseaseAnalysis from "./components/CompetitiveAnalysis/CompetitiveLandscapeSearchPage";
 import PrivateRoute from "./components/Authenticate/PrivateRoute";
 import Authenticate from "./components/Authenticate/Authenticate";
-// import { DrugComparisonTable } from "./components/DiseaseOverview/DrugComparisonTable";
-// import CompetitorAnalysis from "./components/PricePrediction/PricePrediction";
-// import CompetitiveLandscapeDrugPage from "./components/CompetitiveAnalysis/CompetitiveLandscapeDrugPage";
-// import { FormularyDashboard } from "./components/Formulary/FormularyDashboard";
-// import TPPDrugPage from "./components/DiseaseOverview/TPPDrugPage";
-// import { TPPComparison } from "./components/DiseaseOverview/TPPComparison";
-// import { ComparePlans } from "./components/Formulary/ComparePlans";
-// import RNDFormulation from "./components/Rnd/RNDFormulation";
+import { DrugComparisonTable } from "./components/DiseaseOverview/DrugComparisonTable";
+import CompetitorAnalysis from "./components/PricePrediction/PricePrediction";
+import CompetitiveLandscapeDrugPage from "./components/CompetitiveAnalysis/CompetitiveLandscapeDrugPage";
+import { FormularyDashboard } from "./components/Formulary/FormularyDashboard";
+import TPPDrugPage from "./components/DiseaseOverview/TPPDrugPage";
+import { TPPComparison } from "./components/DiseaseOverview/TPPComparison";
+import { ComparePlans } from "./components/Formulary/ComparePlans";
+import RNDFormulation from "./components/Rnd/RNDFormulation";
 import DrugFormulation from './components/Rnd/DrugFormulation'
-// import FormularyDrugPage from "./components/Formulary/FormularyDrugPage";
-// import { FormularyComparison } from "./components/Formulary/FormularyComparison";
-// import SettingsPage from "./components/Settings/Settings";
-// import HomePage from "./pages/HomePage";
+import FormularyDrugPage from "./components/Formulary/FormularyDrugPage";
+import { FormularyComparison } from "./components/Formulary/FormularyComparison";
+import SettingsPage from "./components/Settings/Settings";
+import HomePage from "./pages/HomePage";
 import BioFormulate from "./pages/BioFormulate";
 import BioFormulateLayout from "./pages/BioFormulateLayout";
 import BenchmarkAnalysisPage from "./components/Rnd/BenchmarkAnalysis";
+import DiseaseOverviewPage from "./components/DiseaseOverview/DiseaseOverviewPage";
+import CompetitiveAnalysisPage from "./components/CompetitiveAnalysis/CompetitveAnalysisPage";
+import PricePredictionPage from "./components/PricePrediction/PricePredictionPage";
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Authenticate />} />
-        {/* <Route
+        <Route
           path="/dashboard"
           element={
             <PrivateRoute>
@@ -40,7 +43,7 @@ function App() {
               </Layout>
             </PrivateRoute>
           }
-        /> */}
+        />
         {/* <Route
           path="/dashboard"
           element={
@@ -51,7 +54,7 @@ function App() {
             </PrivateRoute>
           }
         /> */}
-        <Route
+        {/* <Route
           path="/dashboard"
           element={
             <PrivateRoute>
@@ -60,8 +63,8 @@ function App() {
               </BioFormulateLayout>
             </PrivateRoute>
           }
-        />
-        {/* <Route
+        /> */}
+        <Route
           path="/settings/:tab"
           element={
             <PrivateRoute>
@@ -81,6 +84,16 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path='/disease-overview'
+          element={
+            <PrivateRoute>
+              <Layout>
+                <DiseaseOverviewPage />
+              </Layout>
+            </PrivateRoute>
+          }
+          />
         <Route
           path="/disease-search"
           element={
@@ -112,6 +125,16 @@ function App() {
           }
         />
         <Route
+          path='/competitive-analysis'
+          element={
+            <PrivateRoute>
+              <Layout>
+                <CompetitiveAnalysisPage />
+              </Layout>
+            </PrivateRoute>
+          }
+          />
+        <Route
           path="/competitive-landscape-by-disease"
           element={
             <PrivateRoute>
@@ -141,6 +164,16 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path='/price-prediction-modal'
+          element={
+            <PrivateRoute>
+              <Layout>
+                <PricePredictionPage />
+              </Layout>
+            </PrivateRoute>
+          }
+          />
         <Route
           path="/price-prediction"
           element={
@@ -221,7 +254,7 @@ function App() {
             </PrivateRoute>
           }
         />
-        */}
+       
         <Route
           path="/rnd-formulation-drugs"
           element={
